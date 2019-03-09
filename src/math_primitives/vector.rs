@@ -1,92 +1,61 @@
-use std::iter::IntoIterator;
-use super::matrix::Matrix;
-use std::ops::{ AddAssign, Mul };
-use num::Zero;
-
-pub trait Vectors<T> { }
-
-impl<T> Vectors<T> for Vector<T> { }
-
-// TODO: impl ErrorHandling
-#[derive(Debug)]
-pub enum VectorErr
-{
-    Multiplication(VectorMulErr)
-} 
+use std::ops::Mul;
+use std::fmt::Debug;
+use std::result::Result;
 
 #[derive(Debug)]
-pub enum VectorMulErr
+pub enum VectorError
 {
+    Multiplication(String),
+    InvalidIndex(String),
+}
+
+impl VectorError
+{
+    pub fn as_result<T>(self) -> Result<T,Self> { Err(self) }
+    pub fn invalid_index<T: Debug>(index:T, len:T) -> Self { VectorError::InvalidIndex(format!("index ({:?}) exceeds length of vector ({:?})", index, len)) }
 
 }
 
 #[derive(Debug, PartialEq)]
-pub struct Vector<T>
+pub struct Vector<T> { inner: Vec<T> }
+
+impl<T: Copy> Vector<T>
 {
-    pub inner: Vec<T>
+    pub fn new(inner: Vec<T>) -> Self { Self{inner} }
+
+    pub fn push(&mut self, val: T) { self.inner.push(val); }
+
+    pub fn get(&self, index: usize) -> Result<T,VectorError> 
+    {
+        match index < self.inner.len()
+        {
+            true => Ok(self.inner[index]), 
+            false => VectorError::invalid_index(index, self.inner.len()).as_result(),
+        }  
+    }
 }
 
 impl<T> IntoIterator for Vector<T>
 {
     type Item = T;
     type IntoIter = std::vec::IntoIter<T>;
-
     fn into_iter(self) -> Self::IntoIter
     {
         self.inner.into_iter()
     }
-} 
+}
 
-impl<T> Mul<Matrix<T>> for Vector<T>
+impl<T: Copy> Mul<T> for Vector<T>
 where
-    for <'c>
-    &'c T: Mul<&'c T,Output=T>, 
-    T: Zero
-    + AddAssign
+    T: Mul<T,Output=T>
 {
-    type Output=Result<Self,VectorErr>;
-
-    fn mul(self, rhs: Matrix<T>) -> Self::Output
+    type Output=Self;
+    fn mul(self, rhs: T) -> Self
     {
-        let mut c = Vector::new_empty();
-        for i in 0..rhs.dim
-        {
-            let mut val = T::zero();
-            for k in 0..rhs.dim
-            {
-                val += &self.inner[k] * rhs.inner.get( &(i, k) ).unwrap();
-            }
-            c.inner.push(val);
+        Self{ 
+            inner: self.into_iter()
+                .map(|x| rhs*x)
+                .collect::<Vec<_>>() 
         }
-        Ok(c)
-    }
-}
-
-impl<T> Vector<T>
-{
-    pub fn new_empty() -> Self { Self{inner: Vec::new()} }
-
-    pub fn new_with_inner(inner: Vec<T>) -> Self { Self{ inner } }
-}
-
-#[cfg(test)]
-mod tests
-{
-    use super::super::matrix::Matrix;
-    use super::*;
-
-    #[test]
-    fn test_matrix_dot_vector()
-    {
-        let inner = vec![ 1.0, 2.0, 3.0, 4.0, 1.0, 2.0, 3.0, 4.0, 1.0, 2.0, 3.0, 4.0, 1.0, 2.0, 3.0, 4.0 ];
-        let A = Matrix::new_with_inner(inner);
-
-        let inner = vec![ 1.0, 2.0, 3.0, 4.0 ];
-        let B = Vector::new_with_inner(inner);
-
-        let inner = vec![ 30.0, 30.0, 30.0, 30.0 ];
-        let exp = Vector::new_with_inner(inner);
-
-        assert_eq!((B*A).unwrap(), exp);
-    }
+    } 
 }

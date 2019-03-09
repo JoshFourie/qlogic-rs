@@ -1,7 +1,8 @@
 use num_integer::Roots;
 use std::fmt::Debug;
 use std::ops::{ Mul, AddAssign, Div, Rem };
-use num::{ Float, Zero };
+use num::{ Zero };
+use crate::math_primitives::vector::Vector;
 
 #[derive(Debug)]
 enum MatrixError
@@ -18,9 +19,10 @@ impl MatrixError
 
 }
 
-// We only consider square matrices.
-#[derive(Debug, PartialEq)]
-struct Matrix<T>
+/************** WARNING!!! *******************/
+// We only consider square matrices for quantum mechanics.
+#[derive(Debug, PartialEq, Clone)]
+pub struct Matrix<T>
 {
     inner: Vec<T>,
     dim: usize,
@@ -50,15 +52,10 @@ where
         }
     }
 
-    fn push(&mut self, val: T) {
-        self.inner.push(val);
-    }
+    fn push(&mut self, val: T) {self.inner.push(val);}
 
     // row-major permutation.
-    fn permute_rows(self) -> std::vec::IntoIter<T>
-    {
-        self.into_iter()
-    }
+    fn permute_rows(self) -> std::vec::IntoIter<T> {self.into_iter()}
 
     // col-major permutation.
     fn permute_cols(self) -> std::vec::IntoIter<T>
@@ -170,6 +167,29 @@ where
             } 
         }
         new.dim = len;
+        new 
+    }
+}
+
+impl<T: Copy> Mul<Vector<T>> for Matrix<T>
+where
+    T: Mul<T,Output=T>
+    + AddAssign
+    + Zero
+{
+    type Output=Vector<T>;
+    fn mul(self, rhs: Vector<T>) -> Self::Output
+    {
+        let mut new = Vector::new(Vec::new());
+        for i in 0..self.dim {
+            let mut sigma = T::zero();
+            for k in 0..self.dim {
+                let aik = self.get(i,k).unwrap();
+                let b = rhs.get(k).unwrap();
+                sigma += aik*b;
+            }
+            new.push(sigma);
+        }
         new
     }
 }
@@ -230,5 +250,13 @@ mod tests
         let test = Matrix::new(vec![1,2,3,4]).kronecker_product(Matrix::new(vec![0,5,6,7]));
         let exp = Matrix::new(vec![0,5,0,10,6,7,12,14,0,15,0,20,18,21,24,28]);
         assert_eq!(test,exp);
+    }
+
+    #[test]
+    fn test_matrix_vector_product()
+    {
+        let test = Matrix::new(vec![1,2,1,0,1,0,2,3,4])*Vector::new(vec![2,6,1]);
+        let exp = Vector::new(vec![15,6,26]);
+        assert_eq!(test, exp);
     }
 }
