@@ -1,7 +1,7 @@
 use num_integer::Roots;
 use std::fmt::Debug;
-use std::ops::{ Mul, AddAssign };
-use num::Zero;
+use std::ops::{ Mul, AddAssign, Div, Rem };
+use num::{ Float, Zero };
 
 #[derive(Debug)]
 enum MatrixError
@@ -39,6 +39,8 @@ impl<T> IntoIterator for Matrix<T>
 }
 
 impl<T: Copy> Matrix<T>
+where
+    T: Mul<T,Output=T>
 {
     fn new(inner: Vec<T>) -> Self 
     {
@@ -74,7 +76,8 @@ impl<T: Copy> Matrix<T>
 
     fn get(&self, row: usize, col: usize) -> Result<T, MatrixError>
     {
-        let index = row*self.dim+col;
+        println!("{} {} {}", row, col, self.dim);
+        let index = row*self.dim +col;
         match index < self.inner.len()
         {
             true => Ok(self.inner[index]),
@@ -94,9 +97,32 @@ impl<T: Copy> Matrix<T>
         }
     }
 
+    // (A(x)B)ij = (a)|(i-1)/p|+1,|(j-1)/q|+1 dot (b)(i-1)%p,(j-1)%q+1
+    // where (A(x)B) repr. output at a position i,j
+    // a & b repr. elements in matrices 
+    // p & q repr. dimension of B
     fn kronecker_product(self, rhs: Self) -> Self
     {
-        
+        let pq =rhs.dim as f32;
+        let dim = self.dim*rhs.dim;
+        let mut new = Self::new(Vec::new());
+        for i in 0..dim {
+            let i = i as f32;
+            for j in 0..dim {
+                let j = j as f32;              
+                let a = self.get(
+                    (f32::floor( (i-1.0).div(pq) )+1.0) as usize,
+                    (f32::floor( (j-1.0).div(pq) )+1.0) as usize,
+                ).unwrap();
+                let b = rhs.get(
+                    ((i-1.0).rem(pq)+1.0) as usize,
+                    ((j-1.0).rem(pq)+1.0) as usize,
+                ).unwrap();
+                new.push(a*b);
+            }
+        }
+        new.dim=dim;
+        new
     }
 }
 
@@ -195,5 +221,14 @@ mod tests
         let test = Matrix::new(vec![0, 1, 2, 3, 4, 5, 6, 7, 8])*Matrix::new(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
         let exp = Matrix::new(vec![15, 18, 21, 42, 54, 66, 69, 90, 111]);
         assert_eq!(test, exp);
+    }
+
+    #[test]
+    fn test_kronecker_product()
+    {
+        println!("{}",f32::floor( (2_f32-1_f32).div(3_f32) )+1_f32);
+        let test = Matrix::new(vec![1,2,3,4]).kronecker_product(Matrix::new(vec![0,5,6,7]));
+        let exp = Matrix::new(vec![0,5,0,10,6,7,12,14,0,15,0,20,18,21,24,28]);
+        assert_eq!(test,exp);
     }
 }
