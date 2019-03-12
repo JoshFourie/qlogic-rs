@@ -1,23 +1,9 @@
 use num_integer::Roots;
-use std::fmt::Debug;
-use std::ops::{ Mul, AddAssign, Div, Rem };
-use num::{ Zero };
-use crate::math_primitives::vector::Vector;
+use std::ops::{Div, Rem};
+use num::Complex;
+use crate::math_primitives::interface::{ QuantumUnit, ComplexMatrixAlgebra, VectorAlgebra, MatrixAlgebra };
+use crate::math_primitives::error::MatrixError;
 
-#[derive(Debug)]
-enum MatrixError
-{
-    InvalidIndex(String),
-    InvalidDimension(String),
-}
-
-impl MatrixError
-{
-    fn as_result<T>(self) -> Result<T, Self> { Err(self) } 
-    fn invalid_index<T: Debug>(row:T, col:T, len:T) -> Self { MatrixError::InvalidIndex(format!("index ({:?},{:?}) exceeds max dimension of ({:?},{:?})", row, col, len, len)) }
-    fn invalid_dimension<T: Debug>(dim1:T, dim2:T) -> Self { MatrixError::InvalidDimension(format!("cannot multiply inequal dimensions: {:?} != {:?}", dim1, dim2)) }
-
-}
 
 /************** WARNING!!! *******************/
 // We only consider square matrices for quantum mechanics.
@@ -27,6 +13,8 @@ pub struct Matrix<T>
     inner: Vec<T>,
     dim: usize,
 }
+
+pub type ComplexMatrix<T> = Matrix<Complex<T>>;
 
 // row major iteration.
 impl<T> IntoIterator for Matrix<T>
@@ -40,17 +28,14 @@ impl<T> IntoIterator for Matrix<T>
     }
 }
 
-impl<T: Copy> Matrix<T>
-where
-    T: Mul<T,Output=T>
+impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
 {
-    fn new(inner: Vec<T>) -> Self 
-    {
-        Self {
-            dim: inner.len().sqrt(),
-            inner: inner,
-        }
-    }
+    type Inner = Vec<T>;
+    type Error = MatrixError;
+
+    fn dim(&self) -> usize { self.dim }
+
+    fn into_inner(self) -> Vec<T> { self.inner } 
 
     fn push(&mut self, val: T) {self.inner.push(val);}
 
@@ -100,9 +85,9 @@ where
     // rust zero-indexes vecs but the above indexes at 1, we sub 1 after
     // casting to usize to circumvent the limitation.
     // we are also dealing with square matrices so p & q are identical. 
-    fn kronecker_product(self, rhs: Self) -> Self
+    fn kronecker(self, rhs: Self) -> Self
     {
-        let mut new = Self::new(Vec::new());
+        let mut new = Self::from(Vec::new());
         let dim = self.dim*rhs.dim;
         let pq =rhs.dim as f32;
         for i in 1..=dim {
@@ -123,37 +108,28 @@ where
         new.dim=dim;
         new
     }
-}
 
-impl<T: Copy> Mul<T> for Matrix<T>
-where
-    T: Mul<T,Output=T>
-{
-    type Output=Self;
-    fn mul(self, rhs: T) -> Self
+    fn transpose(self) -> Self
     {
-        Self {
-            dim: self.dim,
-            inner: self.into_iter()
-                .map(|val| val*rhs)
-                .collect::<Vec<T>>()            
-        }
+        Self::from(
+            self.permute_cols().collect::<Vec<_>>()
+        )
     }
-}
 
-impl<T: Copy> Mul<Self> for Matrix<T>
-where   
-    T: Mul<T,Output=T>
-    + AddAssign
-    + Zero
-{
-    type Output = Self;
+    fn scalar(self, rhs: T) -> Self
+    {
+        Self::from( 
+            self.into_iter()
+            .map(|val| val*rhs)
+            .collect::<Vec<T>>()   
+        )
+    }
 
-    fn mul(self, rhs: Self) -> Self
+    fn cross(self, rhs: Self) -> Self
     {
         assert_eq!(self.dim,rhs.dim);
         let len = self.dim;
-        let mut new = Self::new(Vec::new());
+        let mut new = Self::from(Vec::new());
         for i in 0..len {
             for j in 0..len {
                 let mut sigma = T::zero();
@@ -167,20 +143,12 @@ where
             } 
         }
         new.dim = len;
-        new 
+        new
     }
-}
 
-impl<T: Copy> Mul<Vector<T>> for Matrix<T>
-where
-    T: Mul<T,Output=T>
-    + AddAssign
-    + Zero
-{
-    type Output=Vector<T>;
-    fn mul(self, rhs: Vector<T>) -> Self::Output
+    fn vector_product<V: VectorAlgebra<T>>(self, rhs: V) -> V
     {
-        let mut new = Vector::new(Vec::new());
+        let mut new = V::from(Vec::new());
         for i in 0..self.dim {
             let mut sigma = T::zero();
             for k in 0..self.dim {
@@ -191,72 +159,36 @@ where
             new.push(sigma);
         }
         new
+    } 
+}
+ 
+impl<T:QuantumUnit> ComplexMatrixAlgebra for ComplexMatrix<T>
+where
+    Self: MatrixAlgebra<Complex<T>>,
+{
+    fn complex_conjugate(self) -> Self
+    {
+        Self::from(self.into_iter()
+            .map(|c| c.conj() )
+            .collect::<Vec<_>>()
+        )
+    }
+
+    fn hermitian_conjugate(self) -> Self
+    {
+        Self::from(self.permute_cols()
+            .map(|c| c.conj() )
+            .collect::<Vec<_>>()   
+        )
     }
 }
 
-#[cfg(test)]
-mod tests 
+impl<T> From<Vec<T>> for Matrix<T>
 {
-    //                                  0 1 2 
-    //  0, 1, 2, 3, 4, 5, 6, 7, 8 -->   3 4 5 
-    //                                  6 7 8 
-
-    use super::*;
-
-    #[test]
-    fn test_column_permutation()
-    {
-        let exp = vec![0, 3, 6, 1, 4, 7, 2, 5, 8].into_iter();
-        let test = Matrix::new(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]).permute_cols();
-        for (exp, test) in exp.into_iter()
-            .zip( test )
-        {
-            assert_eq!(exp, test);
+    fn from(inner: Vec<T>) -> Self {
+        Self {
+            dim: inner.len().sqrt(),
+            inner: inner
         }
-    }
-
-    #[test]
-    fn test_matrix_get()
-    {   
-        let test = Matrix::new(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
-        assert_eq!(test.get(1,1).unwrap(), 4);
-        assert_eq!(test.get(1,2).unwrap(), 5);
-        assert_eq!(test.get(2,1).unwrap(), 7);
-        match test.get(2,8) {
-            Err(_) => { },
-            _ => panic!("MatrixError was not returned as expected")
-        }
-    }
-
-    #[test]
-    fn test_scalar_mul()
-    {
-        let test = Matrix::new(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
-        let exp = Matrix::new(vec![0, 3, 6, 9, 12, 15, 18, 21, 24]);
-        assert_eq!(test*3, exp);
-    }
-
-    #[test]
-    fn test_matrix_dot_product()
-    {
-        let test = Matrix::new(vec![0, 1, 2, 3, 4, 5, 6, 7, 8])*Matrix::new(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
-        let exp = Matrix::new(vec![15, 18, 21, 42, 54, 66, 69, 90, 111]);
-        assert_eq!(test, exp);
-    }
-
-    #[test]
-    fn test_kronecker_product()
-    {
-        let test = Matrix::new(vec![1,2,3,4]).kronecker_product(Matrix::new(vec![0,5,6,7]));
-        let exp = Matrix::new(vec![0,5,0,10,6,7,12,14,0,15,0,20,18,21,24,28]);
-        assert_eq!(test,exp);
-    }
-
-    #[test]
-    fn test_matrix_vector_product()
-    {
-        let test = Matrix::new(vec![1,2,1,0,1,0,2,3,4])*Vector::new(vec![2,6,1]);
-        let exp = Vector::new(vec![15,6,26]);
-        assert_eq!(test, exp);
     }
 }

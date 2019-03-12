@@ -1,31 +1,30 @@
 use std::ops::Mul;
-use std::fmt::Debug;
 use std::result::Result;
-
-#[derive(Debug)]
-pub enum VectorError
-{
-    Multiplication(String),
-    InvalidIndex(String),
-}
-
-impl VectorError
-{
-    pub fn as_result<T>(self) -> Result<T,Self> { Err(self) }
-    pub fn invalid_index<T: Debug>(index:T, len:T) -> Self { VectorError::InvalidIndex(format!("index ({:?}) exceeds length of vector ({:?})", index, len)) }
-
-}
+use num::Complex;
+use crate::math_primitives::interface::{QuantumUnit, MatrixAlgebra, ComplexVectorAlgebra, VectorAlgebra};
+use crate::math_primitives::error::VectorError;
+/* 
+Provided: 
+[x] Dot product
+[x] Inner product
+[x] Tensor product
+*/
 
 #[derive(Debug, PartialEq)]
 pub struct Vector<T> { inner: Vec<T> }
 
-impl<T: Copy> Vector<T>
+impl<T:QuantumUnit> VectorAlgebra<T> for Vector<T>
 {
-    pub fn new(inner: Vec<T>) -> Self { Self{inner} }
+    type Inner = Vec<T>;
+    type Error = VectorError;
 
-    pub fn push(&mut self, val: T) { self.inner.push(val); }
+    fn into_inner(self) -> Vec<T> { self.inner } 
 
-    pub fn get(&self, index: usize) -> Result<T,VectorError> 
+    fn push(&mut self, val: T) { self.inner.push(val); }
+
+    fn len(&self) -> usize { self.inner.len() }
+
+    fn get(&self, index: usize) -> Result<T,VectorError> 
     {
         match index < self.inner.len()
         {
@@ -33,6 +32,55 @@ impl<T: Copy> Vector<T>
             false => VectorError::invalid_index(index, self.inner.len()).as_result(),
         }  
     }
+
+    default fn dot(self,rhs:Self) -> T
+    {
+        self.into_iter()
+            .zip(rhs.into_iter())
+            .fold(T::zero(),|acc,(a,b)| acc+(a*b))
+    }
+
+    fn tensor(self,rhs:Self) -> Self
+    {
+        let mut scratch=Vec::new();
+        for i in 0..self.len() {
+            for j in 0..rhs.len() {
+                scratch.push(self.inner[i]*rhs.inner[j])
+            }
+        }
+        Self::from(scratch)
+    }
+
+    fn matrix_product<M: MatrixAlgebra<T>>(self, rhs: M) -> Self
+    {
+        let mut new = Self::from(Vec::new());
+        for i in 0..rhs.dim() {
+            let mut sigma = T::zero();
+            for k in 0..rhs.dim() {
+                let aik = rhs.get(i,k).unwrap();
+                let b = self.get(k).unwrap();
+                sigma += aik*b;
+            }
+            new.push(sigma);
+        }
+        new
+    }
+}
+
+impl<T:QuantumUnit> ComplexVectorAlgebra<T> for Vector<Complex<T>>
+{
+    fn dot(self,rhs:Self) -> Complex<T>
+    {
+        self.into_iter()
+            .zip(rhs.into_iter())
+            .map(|(a,b)| a.conj()*b)
+            .sum()
+    }
+}
+
+impl<T> From<Vec<T>> for Vector<T> 
+{
+    fn from(inner: Vec<T>) -> Self { Self{inner} }
 }
 
 impl<T> IntoIterator for Vector<T>
