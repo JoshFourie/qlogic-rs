@@ -1,12 +1,15 @@
+// We only consider square matrices for quantum mechanics.
+
+/***** Imports ********/
+
 use num_integer::Roots;
 use std::ops::{Div, Rem};
 use num::Complex;
-use crate::math_primitives::interface::{ QuantumUnit, ComplexMatrixAlgebra, VectorAlgebra, MatrixAlgebra };
-use crate::math_primitives::error::MatrixError;
+use super::{ QuantumUnit, ComplexMatrixAlgebra, VectorAlgebra, MatrixAlgebra };
+use super::error::MatrixError;
 
+/***** Struct ********/
 
-/************** WARNING!!! *******************/
-// We only consider square matrices for quantum mechanics.
 #[derive(Debug, PartialEq, Clone)]
 pub struct Matrix<T>
 {
@@ -15,6 +18,8 @@ pub struct Matrix<T>
 }
 
 pub type ComplexMatrix<T> = Matrix<Complex<T>>;
+
+/***** Impl ********/
 
 // row major iteration.
 impl<T> IntoIterator for Matrix<T>
@@ -160,6 +165,40 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
         }
         new
     } 
+
+    fn diagonal(&self) -> Self::Inner
+    {
+        let mut d = Vec::new();
+        for j in 0..self.dim {
+            d.push(self.get(j, j).unwrap())
+        }
+        d
+    }
+
+    fn trace(self) -> T
+    {
+        let sigma = T::zero();
+        for val in self.diagonal()
+            .into_iter()
+        {
+            sigma += val;
+        }
+        sigma
+    }
+
+    fn eigen_value(self) -> T
+    {
+        
+    }
+
+    fn identity(self) -> Self
+    {
+        let i = Self::from(vec![T::zero(); self.dim*self.dim]);
+        for j in 0..self.dim {
+            i.set(j,j,T::one()).unwrap()
+        }
+        self.cross(i)
+    }    
 }
  
 impl<T:QuantumUnit> ComplexMatrixAlgebra for ComplexMatrix<T>

@@ -1,7 +1,6 @@
-use crate::math_primitives::matrix::Matrix;
-use crate::math_primitives::interface::{ QuantumUnit, MatrixAlgebra };
-use crate::qubit::Qubit;
-use std::ops::Mul ;
+use crate::math::{ Matrix, QuantumUnit, MatrixAlgebra, VectorAlgebra };
+use crate::qubit::{ Qubit, QuantumBit };
+use std::ops::Mul;
 
 #[derive(Debug,PartialEq)]
 pub struct Operator<T: Copy> 
@@ -28,16 +27,15 @@ where
 
     pub fn into_inner(self) -> Matrix<T> { self.inner }
 
-    pub fn tensor_product(self, rhs: Self) -> Self
+    pub fn tensor(self, rhs: Self) -> Self
     {
         Self::from( self.inner.kronecker(rhs.inner) )
     }
 }
 
-impl<T: Copy> Mul<Qubit<T>> for Operator<T>
+impl<T:QuantumUnit> Mul<Qubit<T>> for Operator<T>
 where
     Matrix<T>: MatrixAlgebra<T>,
-    T: QuantumUnit
 {
     type Output = Qubit<T>;
     fn mul(self, rhs: Qubit<T>) -> Qubit<T>

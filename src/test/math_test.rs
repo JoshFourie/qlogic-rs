@@ -1,10 +1,6 @@
-use crate::math_primitives::{vector::*, matrix::{Matrix, ComplexMatrix}  };
-use num::Complex;
-
 mod vector_test
 {
-    use super::*;
-    use crate::math_primitives::interface::*;
+    use crate::math::*;
 
     #[test]
     fn test_scalar_dot_product()
@@ -24,8 +20,8 @@ mod vector_test
 
 mod matrix_test
 {
-    use super::*;
-    use crate::math_primitives::interface::*;
+    use num::Complex;
+    use crate::math::*;
 
     #[test]
     fn test_column_permutation()
@@ -111,6 +107,14 @@ mod matrix_test
             Complex::new(1.0,-3.0), Complex::new(1.0,-1.0), 
             Complex::new(0.0,-2.0), Complex::new(1.0,4.0)  
         ]);
+        assert_eq!(test,exp);
+    }
+
+    #[test]
+    fn test_identity_matrix()
+    {
+        let exp = Matrix::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
+        let test = Matrix::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]).identity();
         assert_eq!(test,exp);
     }
 }

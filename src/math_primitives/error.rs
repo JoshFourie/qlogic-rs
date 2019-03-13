@@ -1,4 +1,8 @@
+/***** Imports ********/
+
 use std::fmt::Debug;
+
+/***** Enums ********/
 
 #[derive(Debug)]
 pub enum MatrixError
@@ -6,6 +10,15 @@ pub enum MatrixError
     InvalidIndex(String),
     InvalidDimension(String),
 }
+
+#[derive(Debug)]
+pub enum VectorError
+{
+    Multiplication(String),
+    InvalidIndex(String),
+}
+
+/***** Impls ********/
 
 impl MatrixError
 {
@@ -15,14 +28,6 @@ impl MatrixError
     
     pub fn invalid_dimension<T: Debug>(dim1:T, dim2:T) -> Self { MatrixError::InvalidDimension(format!("cannot multiply inequal dimensions: {:?} != {:?}", dim1, dim2)) }
 
-}
-
-
-#[derive(Debug)]
-pub enum VectorError
-{
-    Multiplication(String),
-    InvalidIndex(String),
 }
 
 impl VectorError

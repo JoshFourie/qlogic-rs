@@ -2,6 +2,8 @@
 
 pub mod math_primitives;
 pub mod qubit;
-pub mod operators;
+pub mod ops;
+
+use math_primitives as math;
 
 #[cfg(test)] mod test;

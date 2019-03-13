@@ -1,17 +1,17 @@
+/***** Imports ********/
+
 use std::ops::Mul;
 use std::result::Result;
 use num::Complex;
-use crate::math_primitives::interface::{QuantumUnit, MatrixAlgebra, ComplexVectorAlgebra, VectorAlgebra};
-use crate::math_primitives::error::VectorError;
-/* 
-Provided: 
-[x] Dot product
-[x] Inner product
-[x] Tensor product
-*/
+use super::{QuantumUnit, MatrixAlgebra, ComplexVectorAlgebra, VectorAlgebra};
+use super::error::VectorError;
+
+/***** Structs ********/
 
 #[derive(Debug, PartialEq)]
 pub struct Vector<T> { inner: Vec<T> }
+
+/***** Impls ********/
 
 impl<T:QuantumUnit> VectorAlgebra<T> for Vector<T>
 {

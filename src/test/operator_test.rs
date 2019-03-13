@@ -1,5 +1,5 @@
 use crate::qubit::*;
-use crate::operators::*;
+use crate::ops::*;
 
 #[test]
 fn test_pauli_x_gate()
