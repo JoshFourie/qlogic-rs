@@ -1,4 +1,4 @@
-use crate::math::{ Matrix, QuantumUnit, MatrixAlgebra, VectorAlgebra };
+use crate::math::{ Matrix, QuantumUnit, MatrixAlgebra };
 use crate::qubit::{ Qubit, QuantumBit };
 use std::ops::Mul;
 

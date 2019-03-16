@@ -16,6 +16,7 @@ pub enum VectorError
 {
     Multiplication(String),
     InvalidIndex(String),
+    Computational(String)
 }
 
 /***** Impls ********/
@@ -35,4 +36,6 @@ impl VectorError
     pub fn as_result<T>(self) -> Result<T,Self> { Err(self) }
     
     pub fn invalid_index<T: Debug>(index:T, len:T) -> Self { VectorError::InvalidIndex(format!("index ({:?}) exceeds length of vector ({:?})", index, len)) }
+
+    pub fn computational(err: &'static str) -> Self { VectorError::Computational(format!("Computational error: { }", err)) }
 }

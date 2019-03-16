@@ -5,7 +5,7 @@
 use num_integer::Roots;
 use std::ops::{Div, Rem};
 use num::Complex;
-use super::{ QuantumUnit, ComplexMatrixAlgebra, VectorAlgebra, MatrixAlgebra };
+use super::{ QuantumUnit, QuantumScalar, ComplexMatrixAlgebra, VectorAlgebra, MatrixAlgebra };
 use super::error::MatrixError;
 
 /***** Struct ********/
@@ -38,10 +38,13 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
     type Inner = Vec<T>;
     type Error = MatrixError;
 
+    // dimension getter function.
     fn dim(&self) -> usize { self.dim }
 
+    // inner getter function. 
     fn into_inner(self) -> Vec<T> { self.inner } 
 
+    // append to inner val.
     fn push(&mut self, val: T) {self.inner.push(val);}
 
     // row-major permutation.
@@ -61,6 +64,29 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
         scratch.into_iter()
     }
 
+    // pull out a copy of a row at a given index.
+    fn extract_row(&self, r: usize) -> Self::Inner
+    {
+        let mut v: Vec<T> = Vec::new();
+        for c in 0..self.dim() {
+            let val = self.get(r,c).unwrap();
+            v.push(val)
+        }
+        v
+    }
+
+    // pull out a copy of a col at a given index.
+    fn extract_col(&self, c: usize) -> Self::Inner
+    {
+        let mut v: Vec<T> = Vec::new();
+        for r in 0..self.dim() {
+            let val = self.get(r,c).unwrap();
+            v.push(val)
+        }
+        v
+    }
+
+    // retrieve value at an index. May fail.
     fn get(&self, row: usize, col: usize) -> Result<T, MatrixError>
     {
         let index = row*self.dim +col;
@@ -71,6 +97,7 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
         }   
     }
 
+    // set a value at an index. May fail.
     fn set(&mut self, row: usize, col: usize, val: T) -> Result<(), MatrixError>
     {
         match row+col<self.inner.len()
@@ -114,6 +141,7 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
         new
     }
 
+    // transposes by col permutation set as rows of the new matrix.
     fn transpose(self) -> Self
     {
         Self::from(
@@ -121,6 +149,7 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
         )
     }
 
+    // scalar multiplication.
     fn scalar(self, rhs: T) -> Self
     {
         Self::from( 
@@ -130,6 +159,7 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
         )
     }
 
+    // standard matrix multiplication
     fn cross(self, rhs: Self) -> Self
     {
         assert_eq!(self.dim,rhs.dim);
@@ -151,6 +181,8 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
         new
     }
 
+
+    // vector_product to allow us to skip a for loop.
     fn vector_product<V: VectorAlgebra<T>>(self, rhs: V) -> V
     {
         let mut new = V::from(Vec::new());
@@ -166,6 +198,7 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
         new
     } 
 
+    // returns the diagonal of the Matrix.
     fn diagonal(&self) -> Self::Inner
     {
         let mut d = Vec::new();
@@ -175,9 +208,10 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
         d
     }
 
+    // trace is the sum of the diagonals.
     fn trace(self) -> T
     {
-        let sigma = T::zero();
+        let mut sigma = T::zero();
         for val in self.diagonal()
             .into_iter()
         {
@@ -186,28 +220,120 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
         sigma
     }
 
-    fn eigen_value(self) -> T
+    // matrix addition.
+    fn addition(self, rhs: Self) -> Self
     {
-        
+        Self::from( 
+            self.permute_rows()
+            .zip(rhs.permute_rows())
+            .map(|(lhs,rhs)| lhs+rhs)
+            .collect::<Vec<_>>()
+        )
     }
 
-    fn identity(self) -> Self
+    fn subtraction(self, rhs: Self) -> Self
     {
-        let i = Self::from(vec![T::zero(); self.dim*self.dim]);
-        for j in 0..self.dim {
-            i.set(j,j,T::one()).unwrap()
-        }
-        self.cross(i)
-    }    
-}
+        Self::from( 
+            self.permute_rows()
+            .zip(rhs.permute_rows())
+            .map(|(lhs,rhs)| lhs-rhs)
+            .collect::<Vec<_>>()
+        )
+    }
+
+    /* fn eigen_value(self) -> T
+    {
+        
+    } */
  
+    fn apply_to_each<F: Fn(T)->T>(self, action: F) -> Self
+    {
+        self.into_iter()
+            .map(|x| action(x))
+            .collect::<Vec<_>>()
+            .into()
+    }
+
+    fn minor(&mut self, m: &Self, d: usize)
+    {
+        for i in 0..d { self.set(i,i,T::one()).unwrap(); }
+        for i in d..m.dim() {
+            for j in d..m.dim() {
+                let x = m.get(i,j).unwrap();
+                self.set(i,j,x).unwrap(); 
+            }
+        }
+    }
+
+    fn identity(&self) -> Self
+    {
+        let mut id: Self = vec![T::zero(); self.dim*self.dim].into();
+        for j in 0..self.dim {
+            id.set(j,j,T::one()).unwrap()
+        }
+        id
+    }    
+
+    // TODO
+    default fn qr_decomp<W>(self) -> Self 
+    where
+        W: VectorAlgebra<T>
+    {
+        self
+    }
+}
+
+// default impl picks up the complex case.
+impl<T: QuantumScalar> MatrixAlgebra<T> for Matrix<T>
+{
+    /* 
+    any matrix m x n can be decomposed into the product of Q: orthoganl matrix && and R: upper right triangle
+    input: matrix
+    process: 
+        1.  let the Householder H = I - (2/v^T v)vv^T, 
+            where v = u / u1 
+            u = a + sign(a1) ∥a∥2 e1,
+            a = col vector,
+            e1 = vector::[1, 0 .. 0]^T,
+        2. applying H to the Matrix A zeroes the sub-diagonal elements for the col.
+        3. the alg. needs to move onto the next col without disrupting the previous calculations.
+        4. take the minor of the matrix at the required position.
+        5. reapply H.
+    */
+    fn qr_decomp<W>(&self) -> Self
+    where 
+        W: VectorAlgebra<T>,
+    {
+        let mut A: Self = self.clone();
+        let mut B: Vec<T> = Vec::new();
+        for i in 1..=self.dim() {
+            let alpha: W = self.extract_col(i-1).into();
+            let e1: W = vec![T::zero(); self.dim()-i].into();
+            let a1 = alpha.get(0).unwrap();
+            let norm = alpha.eucl_dist();
+            let mu = alpha.addition(e1.scalar(norm * a1.signum()));
+            let mu1 = mu.eucl_dist();
+            let phi = mu.apply_to_each(|c| c.div(mu1)) ;
+            let H: Self = A.identity().subtraction( phi
+                .clone()
+                .outer_product::<Self>(phi)
+                .scalar(T::one()+T::one()) 
+            );
+            
+        }
+        B.into().transpose()
+    }
+} 
+
 impl<T:QuantumUnit> ComplexMatrixAlgebra for ComplexMatrix<T>
 where
     Self: MatrixAlgebra<Complex<T>>,
+    Complex<T>: QuantumUnit
 {
     fn complex_conjugate(self) -> Self
     {
-        Self::from(self.into_iter()
+        Self::from(
+            self.permute_rows()
             .map(|c| c.conj() )
             .collect::<Vec<_>>()
         )
