@@ -74,7 +74,7 @@ where
 
     fn subtraction(self, rhs: Self) -> Self;
 
-    fn qr_decomp<W: VectorAlgebra<T>>(self) -> Self;
+    fn qr_decomp<W: VectorAlgebra<T>>(&self) -> Self;
 }
 
 pub trait ComplexMatrixAlgebra
@@ -108,7 +108,7 @@ where
 
     fn tensor(self,rhs:Self) -> Self;
 
-    fn outer_product<M: MatrixAlgebra<T>>(self, rhs: Self) -> M;
+    fn kronecker<M: MatrixAlgebra<T>>(self, rhs: Self) -> M;
 
     fn addition(self, rhs: Self) -> Self;
     
@@ -116,7 +116,7 @@ where
 
     fn matrix_product<M: MatrixAlgebra<T>>(self, rhs: M) -> Self;
 
-    fn eucl_dist(&self) -> T;
+    fn eucl_norm(&self) -> T;
 }
 
 pub trait ComplexVectorAlgebra
@@ -137,6 +137,10 @@ impl QuantumUnit for f64 {
     fn pow64(self, rhs: f64) -> Self { self.powf(rhs) }     
     fn sqroot(self) -> Self { self.sqrt() }
 }
+
+impl QuantumScalar for f32 { }
+impl QuantumScalar for f64 { }
+
 impl QuantumUnit for num::Complex<f32> {
     fn pow64(self, rhs: f64) -> Self { self.powf(rhs as f32) }     
     fn sqroot(self) -> Self { self.sqrt() }

@@ -61,7 +61,7 @@ impl<T:QuantumUnit> VectorAlgebra<T> for Vector<T>
 
     // to construct a register we need a tensor that builds a vector,
     // but for general numops we require a tensor that also builds M.
-    fn outer_product<M: MatrixAlgebra<T>>(self, rhs: Self) -> M 
+    fn kronecker<M: MatrixAlgebra<T>>(self, rhs: Self) -> M 
     {
         let mut m=Vec::new();
         for i in 0..self.len() {
@@ -87,7 +87,7 @@ impl<T:QuantumUnit> VectorAlgebra<T> for Vector<T>
         new
     }
 
-    fn eucl_dist(&self) -> T  
+    fn eucl_norm(&self) -> T  
     { 
         self.inner.iter()
             .fold(T::zero(), |acc,x| acc + x.pow64(2.0))

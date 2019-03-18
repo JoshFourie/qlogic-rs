@@ -144,9 +144,7 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
     // transposes by col permutation set as rows of the new matrix.
     fn transpose(self) -> Self
     {
-        Self::from(
-            self.permute_cols().collect::<Vec<_>>()
-        )
+        self.permute_cols().collect::<Vec<_>>().into()
     }
 
     // scalar multiplication.
@@ -275,11 +273,11 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
     }    
 
     // TODO
-    default fn qr_decomp<W>(self) -> Self 
+    default fn qr_decomp<W>(&self) -> Self 
     where
         W: VectorAlgebra<T>
     {
-        self
+        vec![T::zero(); self.dim()].into()
     }
 }
 
@@ -304,24 +302,41 @@ impl<T: QuantumScalar> MatrixAlgebra<T> for Matrix<T>
     where 
         W: VectorAlgebra<T>,
     {
+        // we will rip away apart when we delete cols and rows.
         let mut A: Self = self.clone();
-        let mut B: Vec<T> = Vec::new();
-        for i in 1..=self.dim() {
-            let alpha: W = self.extract_col(i-1).into();
-            let e1: W = vec![T::zero(); self.dim()-i].into();
+
+        // B is our matrix that we are returning.
+        let mut B: Self = vec![T::zero(); self.dim()*self.dim()].into();
+
+        // we are operating on every column.
+        // we need a new iteration each time because we are working with a different matrix.
+        for i in 0..self.dim() {
+            //  pulling out the a1, a and e1 values.
+            let alpha: W = self.extract_col(i).into();
+            let mut _e = vec![T::zero(); self.dim()];
+            _e[0] = T::one();
+            let e1: W = _e.into();
             let a1 = alpha.get(0).unwrap();
-            let norm = alpha.eucl_dist();
+            // building u
+            let norm = alpha.eucl_norm();
             let mu = alpha.addition(e1.scalar(norm * a1.signum()));
-            let mu1 = mu.eucl_dist();
+            let mu1 = mu.eucl_norm();
+            // transforming u -> V.
             let phi = mu.apply_to_each(|c| c.div(mu1)) ;
-            let H: Self = A.identity().subtraction( phi
-                .clone()
-                .outer_product::<Self>(phi)
-                .scalar(T::one()+T::one()) 
-            );
+            // pulling together to generate H. We don't need to transpose because it is meaningless for 
+            // the machine when we are calculating the outer product of a vector
+            let H: Self = A
+                .identity()
+                .subtraction( phi
+                    .clone()
+                    .kronecker::<Self>(phi)
+                    .scalar(T::one()+T::one())
+                );
+            // we need to apply H to A and permute through the rows of the minor.    
             
-        }
-        B.into().transpose()
+        } 
+        // B.transpose()
+        B
     }
 } 
 
@@ -356,4 +371,44 @@ impl<T> From<Vec<T>> for Matrix<T>
             inner: inner
         }
     }
+}
+
+#[test]
+fn test_qr_decomp() {
+    use super::Vector;
+
+    let exp: Matrix<f64> = vec![2,6,10,14,4,12,20,28,6,18,30,42,8,24,40,56].into_iter().map(|n| n as f64).collect::<Vec<_>>().into();
+    println!("{:?}", &exp.qr_decomp::<Vector<f64>>());
+
+    /* for i in 0..exp.dim() {
+        //  pulling out the a1, a and e1 values.
+        let alpha: Vector<f64> = exp.extract_col(i).into();
+        println!("{:?}", &alpha); 
+        let mut _e1 = vec![0.0; exp.dim()];
+        _e1[0]= 1.0;
+        let mut e1: Vector<f64> = _e1.into();
+        println!("{:?}", &e1); 
+        let a1 = alpha.get(0).unwrap();
+        println!("{:?}", &a1); 
+        // building u
+        let norm = alpha.eucl_norm();
+        let mu = alpha.addition(e1.scalar(norm * a1.signum()));
+        let mu1 = mu.eucl_norm();
+        // transforming u -> V.
+        let phi = mu.apply_to_each(|c| c.div(mu1)) ;
+        // pulling together to generate H. We don't need to transpose because it is meaningless for 
+        // the machine when we are calculating the outer product of a vector
+        let H: Matrix<f64> = exp
+            .identity()
+            .subtraction( phi
+                .clone()
+                .kronecker::<Matrix<f64>>(phi)
+                .scalar(2.0)
+            );
+        println!("{:?}", &H);
+        // we need to apply H to A and permute through the rows of the minor.
+        let b = H.cross(exp.clone());      
+        println!("{:?}",b);   
+     
+    } */
 }

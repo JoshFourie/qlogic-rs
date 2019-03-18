@@ -12,7 +12,7 @@ mod vector_test
     #[test]
     fn test_vector_tensor_product()
     {
-        let test = Vector::from(vec![2,4,6,8]).tensor(Vector::from(vec![1,3,5,7]));
+        let test: Matrix<isize> = Vector::from(vec![2,4,6,8]).kronecker(Vector::from(vec![1,3,5,7]));
         let exp = Matrix::from(vec![2,6,10,14,4,12,20,28,6,18,30,42,8,24,40,56]);
         assert_eq!(test,exp);
     }
