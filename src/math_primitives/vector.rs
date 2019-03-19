@@ -102,6 +102,15 @@ impl<T:QuantumUnit> VectorAlgebra<T> for Vector<T>
             .into()
     }
 
+    fn subtraction(self, rhs: Self) -> Self
+    {
+        self.into_iter().zip(rhs.into_iter())
+            .map(|(l,r)| l-r)
+            .collect::<Vec<_>>()
+            .into()
+    }
+
+
     fn scalar(self, rhs: T) -> Self { self.apply_to_each(|x| x*rhs) }
 
 }

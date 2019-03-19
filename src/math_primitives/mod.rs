@@ -74,7 +74,9 @@ where
 
     fn subtraction(self, rhs: Self) -> Self;
 
-    fn qr_decomp<W: VectorAlgebra<T>>(&self) -> Self;
+    fn decompose<W: VectorAlgebra<T>>(&self) -> Self;
+    
+    // fn destructor(self);
 }
 
 pub trait ComplexMatrixAlgebra
@@ -111,6 +113,8 @@ where
     fn kronecker<M: MatrixAlgebra<T>>(self, rhs: Self) -> M;
 
     fn addition(self, rhs: Self) -> Self;
+
+    fn subtraction(self, rhs: Self) -> Self;
     
     fn scalar(self, rhs: T) -> Self;
 
