@@ -388,12 +388,12 @@ where
     let mut _R: Vec<M> = Vec::new();
 
     // for k in 0..M.dim() {
-    let k=0;
+    for k in 0..M.dim()-1 {
             
             println!("M: 
             {:?}", M);
         let x: V = M.extract_col(k).into();
-        let alpha: T =  x.eucl_norm();
+        let alpha: T = x.get(k+1).unwrap().signum() * x.eucl_norm();
             println!("alpha: 
             {:?}", alpha);
         let epsilon: V = {
@@ -419,13 +419,15 @@ where
             println!("vvT: 
             {:?}", vvT);
         let Qk: M = I.subtraction(vvT.scalar( (T::one()+T::one()).div(mu_norm*mu_norm) ));             
-            println!("Qk: 
+            println!("Q1: 
             {:?}", Qk);
+        _R.push(Qk.clone());
+        _Q.push(Qk.clone().transpose());
+              
+        
         let mut Q = Qk.cross(M.clone());
             println!("Q: 
             {:?}", Q);
-        _R.push(Q.clone());
-        _Q.push(Q.clone().transpose());
         // correct until we pull the minor.
 
         for i in 0..Q.dim() {
@@ -440,8 +442,9 @@ where
             
             
             ");
-    // }
-    let k=1;
+    }
+    // } 
+    /* let k=1;
             println!("M: 
             {:?}", M);
         let x: V = M.extract_col(k).into();
@@ -471,15 +474,16 @@ where
             println!("vvT: 
             {:?}", vvT);
         let Qk: M = I.subtraction(vvT.scalar( (T::one()+T::one()).div(mu_norm*mu_norm) ));             
-            println!("Qk: 
+            println!("Q2: 
             {:?}", Qk);
+        _R.push(Qk.clone());
+        _Q.push(Qk.clone().transpose());
+
+
         let mut Q = Qk.cross(M.clone());
             println!("Q: 
             {:?}", Q);
-        _R.push(Q.clone());
-        _Q.push(Q.clone().transpose());
         // correct until we pull the minor.
-
         for i in 0..Q.dim() {
             Q.set(k,i,T::zero()).unwrap();
             Q.set(i,k,T::zero()).unwrap();
@@ -488,16 +492,23 @@ where
         M = Q;
             println!("M: 
             {:?}",M);
-            println!("R_vec: 
-                {:?}", _R);
             println!("
             
             
             ");
-    let R: M = _R.into_iter().fold(M.identity(), |acc,r| acc.cross(r));
+    */ 
+
+    let R: M = _R.into_iter()
+        .rev()
+        .fold(M.identity(), |acc,q| acc.cross(q));       
         println!("R: 
         {:?}", R);
-    let Q: M = _Q.into_iter().fold(M.identity(), |acc,q| acc.cross(q));
+
+    let Q: M = _Q.into_iter()
+        .fold(M.identity(), |acc,q| acc.cross(q));
+        println!("Q: 
+        {:?}", Q);
+        
     (Q,R)
 }
 
@@ -509,5 +520,5 @@ fn test_decomp()
     let A: Matrix<f32> =  vec![14.0, 21.0, -14.0, 0.0, 175.0, -70.0, 0.0, 0.0, -35.0].into();
     // let test = Q.cross(R);
     
-    assert_eq!(A,Q);
+    assert_eq!(A,R.cross(M));
 }
