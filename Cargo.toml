@@ -8,3 +8,6 @@ edition = "2018"
 num = "0.2"
 num-integer = "0.1"
 num-traits = "0.2"
+
+[dev-dependencies]
+assert_approx_eq = "1.1.0"

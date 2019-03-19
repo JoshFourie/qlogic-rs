@@ -121,14 +121,14 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
     {
         let mut new = Self::from(Vec::new());
         let dim = self.dim*rhs.dim;
-        let pq =rhs.dim as f32;
+        let pq =rhs.dim as f64;
         for i in 1..=dim {
-            let i = i as f32;
+            let i = i as f64;
             for j in 1..=dim {
-                let j = j as f32;              
+                let j = j as f64;              
                 let a = self.get(
-                    (f32::floor( (i-1.0).div(pq)+1.0 )) as usize -1,
-                    (f32::floor( (j-1.0).div(pq)+1.0 )) as usize -1,
+                    (f64::floor( (i-1.0).div(pq)+1.0 )) as usize -1,
+                    (f64::floor( (j-1.0).div(pq)+1.0 )) as usize -1,
                 ).unwrap();
                 let b = rhs.get(
                     ((i-1.0).rem(pq)+1.0) as usize -1,
@@ -389,136 +389,57 @@ where
 
     // for k in 0..M.dim() {
     for k in 0..M.dim()-1 {
-            
-            println!("M: 
-            {:?}", M);
         let x: V = M.extract_col(k).into();
         let alpha: T = x.get(k+1).unwrap().signum() * x.eucl_norm();
-            println!("alpha: 
-            {:?}", alpha);
         let epsilon: V = {
             let mut _e = vec![T::zero(); M.dim()];
             _e[k]=T::one();
             _e.into()
         };
-            println!("epsilon: 
-            {:?}", epsilon);
-            println!("x: 
-            {:?}", x);
         let mu: V = x.subtraction(epsilon.scalar(alpha));
-            println!("mu: 
-            {:?}", mu);
         let mu_norm: T = mu.eucl_norm();
-            println!("mu_norm: 
-            {:?}", mu_norm);
-        // let phi: V = mu.apply_to_each(|u| u.div(mu_norm));
         let I = M.identity();
-            println!("I: 
-            {:?}", I);
         let vvT: M = mu.clone().kronecker(mu);
-            println!("vvT: 
-            {:?}", vvT);
-        let Qk: M = I.subtraction(vvT.scalar( (T::one()+T::one()).div(mu_norm*mu_norm) ));             
-            println!("Q1: 
-            {:?}", Qk);
+        let Qk: M = I.subtraction(vvT.scalar( (T::one()+T::one()).div(mu_norm*mu_norm) ));
         _R.push(Qk.clone());
         _Q.push(Qk.clone().transpose());
-              
         
         let mut Q = Qk.cross(M.clone());
-            println!("Q: 
-            {:?}", Q);
-        // correct until we pull the minor.
-
         for i in 0..Q.dim() {
             Q.set(k,i,T::zero()).unwrap();
             Q.set(i,k,T::zero()).unwrap();
         }
         Q.set(k,k,T::one()).unwrap();
         M = Q;
-            println!("M: 
-            {:?}",M);
-            println!("
-            
-            
-            ");
     }
-    // } 
-    /* let k=1;
-            println!("M: 
-            {:?}", M);
-        let x: V = M.extract_col(k).into();
-        let alpha: T =   x.eucl_norm();
-            println!("alpha: 
-            {:?}", alpha);
-        let epsilon: V = {
-            let mut _e = vec![T::zero(); M.dim()];
-            _e[k]=T::one();
-            _e.into()
-        };
-            println!("epsilon: 
-            {:?}", epsilon);
-            println!("x: 
-            {:?}", x);
-        let mu: V = x.subtraction(epsilon.scalar(alpha));
-            println!("mu: 
-            {:?}", mu);
-        let mu_norm: T = mu.eucl_norm();
-            println!("mu_norm: 
-            {:?}", mu_norm);
-        // let phi: V = mu.apply_to_each(|u| u.div(mu_norm));
-        let I = M.identity();
-            println!("I: 
-            {:?}", I);
-        let vvT: M = mu.clone().kronecker(mu);
-            println!("vvT: 
-            {:?}", vvT);
-        let Qk: M = I.subtraction(vvT.scalar( (T::one()+T::one()).div(mu_norm*mu_norm) ));             
-            println!("Q2: 
-            {:?}", Qk);
-        _R.push(Qk.clone());
-        _Q.push(Qk.clone().transpose());
-
-
-        let mut Q = Qk.cross(M.clone());
-            println!("Q: 
-            {:?}", Q);
-        // correct until we pull the minor.
-        for i in 0..Q.dim() {
-            Q.set(k,i,T::zero()).unwrap();
-            Q.set(i,k,T::zero()).unwrap();
-        }
-        Q.set(k,k,T::one()).unwrap();
-        M = Q;
-            println!("M: 
-            {:?}",M);
-            println!("
-            
-            
-            ");
-    */ 
-
     let R: M = _R.into_iter()
         .rev()
         .fold(M.identity(), |acc,q| acc.cross(q));       
-        println!("R: 
-        {:?}", R);
-
     let Q: M = _Q.into_iter()
         .fold(M.identity(), |acc,q| acc.cross(q));
-        println!("Q: 
-        {:?}", Q);
-        
     (Q,R)
 }
 
-#[test]
-fn test_decomp()
-{
-    let M: Matrix<f32> = vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0].into();
-    let (Q,R): (Matrix<f32>, Matrix<f32>) = qr_decomposition::<Matrix<f32>, f32, super::Vector<f32>>(&M);
-    let A: Matrix<f32> =  vec![14.0, 21.0, -14.0, 0.0, 175.0, -70.0, 0.0, 0.0, -35.0].into();
-    // let test = Q.cross(R);
-    
-    assert_eq!(A,R.cross(M));
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+    use assert_approx_eq::assert_approx_eq;
+
+    #[test]
+    fn test_decomp()
+    {
+        let M: Matrix<f64> = vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0].into();
+        let (Q,R): (Matrix<f64>, Matrix<f64>) = qr_decomposition::<Matrix<f64>, f64, super::super::Vector<f64>>(&M);
+        let Qt = Q.transpose();
+        let A: Matrix<f64> =  vec![14.0, 21.0, -14.0, 0.0, 175.0, -70.0, 0.0, 0.0, -35.0].into();
+        let r_dot_m = R.clone().cross(M);
+        for (t,e) in r_dot_m.permute_rows()
+            .zip(A.permute_rows())
+        {
+            assert_approx_eq!(t,e);
+        }
+
+    }
+
 }
