@@ -47,3 +47,10 @@ impl<T:QuantumUnit> Mul<Self> for Qubit<T>
         Self::from(self.state.tensor(rhs.state))
     }
 }
+
+pub struct Ket<T>
+where
+    Vector<T>: VectorAlgebra<T>
+{
+    inner: Vector<T>
+}

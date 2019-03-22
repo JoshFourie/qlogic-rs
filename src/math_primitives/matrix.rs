@@ -1,12 +1,15 @@
 // We only consider square matrices for quantum mechanics.
+// Conventinoally matrices are denoted with capitals: A,B,C...
+#![allow(non_snake_case)] 
 
 /***** Imports ********/
 
 use num_integer::Roots;
 use std::ops::{Div, Rem};
 use num::Complex;
-use super::{ QuantumUnit, QuantumScalar, ComplexMatrixAlgebra, VectorAlgebra, MatrixAlgebra };
-use super::error::MatrixError;
+use super::{ QuantumUnit, QuantumReal, ComplexMatrixAlgebra, VectorAlgebra, MatrixAlgebra };
+use super::error::{MatrixError};
+use std::result::Result;
 
 /***** Struct ********/
 
@@ -41,6 +44,8 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
     // dimension getter function.
     fn dim(&self) -> usize { self.dim }
 
+    fn update_dim(&mut self) { self.dim=self.inner.len().sqrt(); }
+
     // inner getter function. 
     fn into_inner(self) -> Vec<T> { self.inner } 
 
@@ -65,29 +70,29 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
     }
 
     // pull out a copy of a row at a given index.
-    fn extract_row(&self, r: usize) -> Self::Inner
+    fn extract_row(&self, r: usize) -> Result<Self::Inner,Self::Error>
     {
         let mut v: Vec<T> = Vec::new();
         for c in 0..self.dim() {
-            let val = self.get(r,c).unwrap();
+            let val = self.get(r,c)?;
             v.push(val)
         }
-        v
+        Ok(v)
     }
 
     // pull out a copy of a col at a given index.
-    fn extract_col(&self, c: usize) -> Self::Inner
+    fn extract_col(&self, c: usize) -> Result<Self::Inner,Self::Error>
     {
         let mut v: Vec<T> = Vec::new();
         for r in 0..self.dim() {
-            let val = self.get(r,c).unwrap();
+            let val = self.get(r,c)?;
             v.push(val)
         }
-        v
+        Ok(v)
     }
 
     // retrieve value at an index. May fail.
-    fn get(&self, row: usize, col: usize) -> Result<T, MatrixError>
+    fn get(&self, row: usize, col: usize) -> Result<T, Self::Error>
     {
         let index = row*self.dim +col;
         match index < self.inner.len()
@@ -98,7 +103,7 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
     }
 
     // set a value at an index. May fail.
-    fn set(&mut self, row: usize, col: usize, val: T) -> Result<(), MatrixError>
+    fn set(&mut self, row: usize, col: usize, val: T) -> Result<(), Self::Error>
     {
         match row+col<self.inner.len()
         {
@@ -117,7 +122,7 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
     // rust zero-indexes vecs but the above indexes at 1, we sub 1 after
     // casting to usize to circumvent the limitation.
     // we are also dealing with square matrices so p & q are identical. 
-    fn kronecker(self, rhs: Self) -> Self
+    fn kronecker(&self, rhs: &Self) -> Result<Self,Self::Error>
     {
         let mut new = Self::from(Vec::new());
         let dim = self.dim*rhs.dim;
@@ -129,16 +134,16 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
                 let a = self.get(
                     (f64::floor( (i-1.0).div(pq)+1.0 )) as usize -1,
                     (f64::floor( (j-1.0).div(pq)+1.0 )) as usize -1,
-                ).unwrap();
+                )?;
                 let b = rhs.get(
                     ((i-1.0).rem(pq)+1.0) as usize -1,
                     ((j-1.0).rem(pq)+1.0) as usize -1,
-                ).unwrap();
+                )?;
                 new.push(a*b);
             }
         }
         new.dim=dim;
-        new
+        Ok(new)
     }
 
     // transposes by col permutation set as rows of the new matrix.
@@ -158,7 +163,7 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
     }
 
     // standard matrix multiplication
-    fn cross(self, rhs: Self) -> Self
+    fn cross(&self, rhs: &Self) -> Result<Self,Self::Error>
     {
         assert_eq!(self.dim,rhs.dim);
         let len = self.dim;
@@ -168,54 +173,56 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
                 let mut sigma = T::zero();
                 for k in 0..len
                 {
-                    let aik = self.get(i,k).unwrap();
-                    let bkj = rhs.get(k,j).unwrap(); 
+                    let aik = self.get(i,k)?;
+                    let bkj = rhs.get(k,j)?; 
                     sigma += aik*bkj;
                 }
             new.push(sigma)
             } 
         }
         new.dim = len;
-        new
+        Ok(new)
     }
 
 
     // vector_product to allow us to skip a for loop.
-    fn vector_product<V: VectorAlgebra<T>>(self, rhs: V) -> V
+    fn vector_product<V: VectorAlgebra<T>>(self, rhs: V) -> Result<V,Self::Error>
+    where
+        Self::Error: From<V::Error>
     {
         let mut new = V::from(Vec::new());
         for i in 0..self.dim {
             let mut sigma = T::zero();
             for k in 0..self.dim {
-                let aik = self.get(i,k).unwrap();
-                let b = rhs.get(k).unwrap();
+                let aik = self.get(i,k)?;
+                let b = rhs.get(k)?;
                 sigma += aik*b;
             }
             new.push(sigma);
         }
-        new
+        Ok(new)
     } 
 
     // returns the diagonal of the Matrix.
-    fn diagonal(&self) -> Self::Inner
+    fn diagonal(&self) -> Result<Self::Inner,Self::Error>
     {
         let mut d = Vec::new();
         for j in 0..self.dim {
-            d.push(self.get(j, j).unwrap())
+            d.push(self.get(j, j)?)
         }
-        d
+        Ok(d)
     }
 
     // trace is the sum of the diagonals.
-    fn trace(self) -> T
+    fn trace(self) -> Result<T,Self::Error>
     {
         let mut sigma = T::zero();
-        for val in self.diagonal()
+        for val in self.diagonal()?
             .into_iter()
         {
             sigma += val;
         }
-        sigma
+        Ok(sigma)
     }
 
     // matrix addition.
@@ -239,11 +246,6 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
             .into()
     }
 
-    /* fn eigen_value(self) -> T
-    {
-        
-    } */
- 
     fn apply_to_each<F: Fn(T)->T>(self, action: F) -> Self
     {
         self.into_iter()
@@ -252,37 +254,49 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
             .into()
     }
 
-    fn minor(&mut self, m: &Self, d: usize)
-    {
-        for i in 0..d { self.set(i,i,T::one()).unwrap(); }
-        for i in d..m.dim() {
-            for j in d..m.dim() {
-                let x = m.get(i,j).unwrap();
-                self.set(i,j,x).unwrap(); 
-            }
-        }
-    }
-
-    fn identity(&self) -> Self
+    fn identity(&self) -> Result<Self,Self::Error>
     {
         let mut id: Self = vec![T::zero(); self.dim*self.dim].into();
         for j in 0..self.dim {
-            id.set(j,j,T::one()).unwrap()
+            id.set(j,j,T::one())?
         }
-        id
+        Ok(id)
     }    
 
-    // TODO
-    default fn decompose<W>(&self) -> Self 
+    default fn hessenberg<W>(&self) -> Result<(Self,Self),Self::Error> 
     where
         W: VectorAlgebra<T>
     {
-        vec![T::zero(); self.dim()].into()
+        MatrixError::specialisation("decomposing matrix: did not match function to appropriate primitive").as_result()
+    }
+
+    fn determinant<X>(&self) -> Result<T,Self::Error>
+    where 
+        X: VectorAlgebra<T>,
+        Self::Error: From<X::Error>
+    {
+        let (_,R) = self.hessenberg::<X>()?;
+        let det = R.cross(self)?
+            .diagonal()?
+            .into_iter()
+            .fold(T::one(), |acc,t| acc*t);
+        Ok(det)
+    }
+
+    fn eigen_values<Y>(&self) -> Result<Vec<T>, Self::Error>
+    where 
+        Y: VectorAlgebra<T>,
+        Self::Error: From<Y::Error>
+    {
+        let (_,R) = self.hessenberg::<Y>()?;
+        let eigen = R.cross(self)?
+            .diagonal()?;
+        Ok(eigen)
     }
 }
 
 // default impl picks up the complex case.
-impl<T: QuantumScalar> MatrixAlgebra<T> for Matrix<T>
+impl<T: QuantumReal> MatrixAlgebra<T> for Matrix<T>
 {
     /* 
     any matrix m x n can be decomposed into the product of Q: orthoganl matrix && and R: upper right triangle
@@ -299,51 +313,38 @@ impl<T: QuantumScalar> MatrixAlgebra<T> for Matrix<T>
         5. reapply H.
     */
 
-    fn decompose<W>(&self) -> Self
+    fn hessenberg<W>(&self) -> Result<(Self,Self),Self::Error> 
     where 
         W: VectorAlgebra<T>,
+        Self::Error: From<W::Error>
     {
-        // we will rip away apart when we delete cols and rows.
-        let mut A: Self = self.clone();
-
-        // B is our matrix that we are returning.
-        let mut B: Vec<T> = Vec::new();// vec![T::zero(); self.dim()*self.dim()];
-
-        // we are operating on every column.
-        // we need a new iteration each time because we are working with a different matrix.
-        for i in 0..self.dim() {
-            //  pulling out the a1, a and e1 values.
-            let alpha: W = self.extract_col(i).into();
-            let mut _e = vec![T::zero(); self.dim()];
-            _e[0] = T::one();
-            let e1: W = _e.into();
-            let a1 = alpha.get(0).unwrap();
-            // building u
-            let norm = alpha.eucl_norm();
-            let mu = alpha.addition(e1.scalar(norm * a1.signum()));
-            let mu1 = mu.eucl_norm();
-            // transforming u -> V.
-            let phi = mu.apply_to_each(|c| c.div(mu1)) ;
-            // pulling together to generate H. We don't need to transpose because it is meaningless for 
-            // the machine when we are calculating the outer product of a vector
-            let H: Self = A
-                .identity()
-                .subtraction( phi
-                    .clone()
-                    .kronecker::<Self>(phi)
-                    .scalar(T::one()+T::one())
-                );
-            // we need to apply H to A and permute through the rows of the minor.    
-            let mut b = vec![T::zero(); i];
-            B.append(&mut b);
-            B.append( &mut H.cross(A.clone()).into_inner() );
-        } 
-        // B.transpose()
-        Self::from(B).transpose()
+        Ok( real_qr_decomposition::<T,Self,W>(self)? )
     } 
 } 
 
-impl<T:QuantumUnit> ComplexMatrixAlgebra for ComplexMatrix<T>
+impl MatrixAlgebra<Complex<f64>> for Matrix<Complex<f64>>
+{
+    fn hessenberg<W>(&self) -> Result<(Self,Self),Self::Error> 
+    where 
+        W: VectorAlgebra<Complex<f64>>,
+        Self::Error: From<W::Error>
+    {
+       Ok(complex_qr_decomposition::<f64,Self,W>(self)?)
+    } 
+}
+
+impl MatrixAlgebra<Complex<f32>> for Matrix<Complex<f32>>
+{
+    fn hessenberg<W>(&self) -> Result<(Self,Self),Self::Error> 
+    where 
+        W: VectorAlgebra<Complex<f32>>,
+        Self::Error: From<W::Error>
+    {
+        Ok(complex_qr_decomposition::<f32,Self,W>(self)?)
+    } 
+}
+
+impl<T:QuantumUnit> ComplexMatrixAlgebra<T> for ComplexMatrix<T>
 where
     Self: MatrixAlgebra<Complex<T>>,
     Complex<T>: QuantumUnit
@@ -376,12 +377,12 @@ impl<T> From<Vec<T>> for Matrix<T>
     }
 }
 
-pub fn qr_decomposition<M,T,V>(A: &M) -> (M,M)
+fn real_qr_decomposition<T,M,V>(A: &M) -> Result<(M,M), M::Error>
 where
-    T: QuantumScalar + std::fmt::Debug,
-    M: MatrixAlgebra<T> + std::fmt::Debug,
-    V: VectorAlgebra<T> + std::fmt::Debug
-    + From<M::Inner>
+    T: QuantumReal,
+    M: MatrixAlgebra<T>,
+    V: VectorAlgebra<T> + From<M::Inner>,
+    M::Error: From<V::Error>
 {
     let mut M: M = A.clone();
     let mut _Q: Vec<M> = Vec::new();
@@ -389,8 +390,11 @@ where
 
     // for k in 0..M.dim() {
     for k in 0..M.dim()-1 {
-        let x: V = M.extract_col(k).into();
-        let alpha: T = x.get(k+1).unwrap().signum() * x.eucl_norm();
+        let x: V = M.extract_col(k)?.into();
+        let alpha: T = match x.get(k+1) {
+            Ok(a) => a.signum() * x.eucl_norm(),
+            Err(e) => return Err(e.into())
+        };
         let epsilon: V = {
             let mut _e = vec![T::zero(); M.dim()];
             _e[k]=T::one();
@@ -398,48 +402,76 @@ where
         };
         let mu: V = x.subtraction(epsilon.scalar(alpha));
         let mu_norm: T = mu.eucl_norm();
-        let I = M.identity();
+        let I = M.identity()?;
         let vvT: M = mu.clone().kronecker(mu);
         let Qk: M = I.subtraction(vvT.scalar( (T::one()+T::one()).div(mu_norm*mu_norm) ));
-        _R.push(Qk.clone());
-        _Q.push(Qk.clone().transpose());
-        
-        let mut Q = Qk.cross(M.clone());
+
+        let mut Q = Qk.cross(&M)?;
         for i in 0..Q.dim() {
-            Q.set(k,i,T::zero()).unwrap();
-            Q.set(i,k,T::zero()).unwrap();
+            Q.set(k,i,T::zero())?;
+            Q.set(i,k,T::zero())?;
         }
-        Q.set(k,k,T::one()).unwrap();
+
+        _R.push(Qk.clone());
+        _Q.push(Qk.transpose());
+        
+        Q.set(k,k,T::one())?;
         M = Q;
     }
     let R: M = _R.into_iter()
         .rev()
-        .fold(M.identity(), |acc,q| acc.cross(q));       
+        .fold(M.identity()?, |acc,q| acc.cross(&q).unwrap());       
     let Q: M = _Q.into_iter()
-        .fold(M.identity(), |acc,q| acc.cross(q));
-    (Q,R)
+        .fold(M.identity()?, |acc,q| acc.cross(&q).unwrap());
+    Ok((Q,R))
 }
 
-#[cfg(test)]
-mod tests {
+use num_traits::identities::{ One, Zero};
 
-    use super::*;
-    use assert_approx_eq::assert_approx_eq;
+fn complex_qr_decomposition<T,M,V>(A: &M) -> Result<(M,M),M::Error>
+where
+    T: num_traits::Float,
+    M: MatrixAlgebra<Complex<T>>,
+    M::Error: From<V::Error>,
+    V: VectorAlgebra<Complex<T>>
+    + From<M::Inner>,
+{
+    let mut M: M = A.clone();
+    let mut _Q: Vec<M> = Vec::new();
+    let mut _R: Vec<M> = Vec::new();
 
-    #[test]
-    fn test_decomp()
-    {
-        let M: Matrix<f64> = vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0].into();
-        let (Q,R): (Matrix<f64>, Matrix<f64>) = qr_decomposition::<Matrix<f64>, f64, super::super::Vector<f64>>(&M);
-        let Qt = Q.transpose();
-        let A: Matrix<f64> =  vec![14.0, 21.0, -14.0, 0.0, 175.0, -70.0, 0.0, 0.0, -35.0].into();
-        let r_dot_m = R.clone().cross(M);
-        for (t,e) in r_dot_m.permute_rows()
-            .zip(A.permute_rows())
-        {
-            assert_approx_eq!(t,e);
+    // for k in 0..M.dim() {
+    for k in 0..M.dim()-1 {
+        let x: V = M.extract_col(k)?.into();
+        let arg: T = x.get(k+1)?.arg();
+        let alpha: Complex<T> = -( Complex::<T>::i() * arg ).exp() * x.eucl_norm();
+        let epsilon: V = {
+            let mut _e = vec![Complex::zero(); M.dim()];
+            _e[k]=Complex::one();
+            _e.into()
+        };
+        let mu: V = x.subtraction(epsilon.scalar(alpha));
+        let mu_norm: Complex<T> = mu.eucl_norm();
+        let I = M.identity()?;
+        let vvT: M = mu.clone().kronecker(mu);
+        let Qk: M = I.subtraction(vvT.scalar( (Complex::<T>::one()+Complex::one()).div(mu_norm*mu_norm) ));
+
+        let mut Q = Qk.cross(&M)?;
+        for i in 0..Q.dim() {
+            Q.set(k,i,Complex::zero())?;
+            Q.set(i,k,Complex::zero())?;
         }
 
+        _R.push(Qk.clone());
+        _Q.push(Qk.transpose());
+        
+        Q.set(k,k,Complex::one())?;
+        M = Q;
     }
-
+    let R: M = _R.into_iter()
+        .rev()
+        .fold(M.identity()?, |acc,q| acc.cross(&q).unwrap());       
+    let Q: M = _Q.into_iter()
+        .fold(M.identity()?, |acc,q| acc.cross(&q).unwrap());
+    Ok((Q,R))
 }

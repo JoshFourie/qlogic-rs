@@ -12,7 +12,7 @@ pub struct Vector<T> { inner: Vec<T> }
 
 /***** Impls ********/
 
-impl<T:QuantumUnit> VectorAlgebra<T> for Vector<T>
+impl<T: QuantumUnit> VectorAlgebra<T> for Vector<T>
 {
     type Inner = Vec<T>;
     type Error = VectorError;
@@ -61,7 +61,7 @@ impl<T:QuantumUnit> VectorAlgebra<T> for Vector<T>
 
     // to construct a register we need a tensor that builds a vector,
     // but for general numops we require a tensor that also builds M.
-    fn kronecker<M: MatrixAlgebra<T>>(self, rhs: Self) -> M 
+    fn kronecker<W: MatrixAlgebra<T>>(self, rhs: Self) -> W
     {
         let mut m=Vec::new();
         for i in 0..self.len() {
@@ -72,19 +72,21 @@ impl<T:QuantumUnit> VectorAlgebra<T> for Vector<T>
         m.into()
     }
 
-    fn matrix_product<M: MatrixAlgebra<T>>(self, rhs: M) -> Self
+    fn matrix_product<M: MatrixAlgebra<T>>(self, rhs: M) -> Result<Self,M::Error>
+    where
+        M::Error: From<Self::Error>
     {
         let mut new = Self::from(Vec::new());
         for i in 0..rhs.dim() {
             let mut sigma = T::zero();
             for k in 0..rhs.dim() {
-                let aik = rhs.get(i,k).unwrap();
-                let b = self.get(k).unwrap();
+                let aik = rhs.get(i,k)?;
+                let b = self.get(k)?;
                 sigma += aik*b;
             }
             new.push(sigma);
         }
-        new
+        Ok(new)
     }
 
     fn eucl_norm(&self) -> T  
@@ -110,9 +112,7 @@ impl<T:QuantumUnit> VectorAlgebra<T> for Vector<T>
             .into()
     }
 
-
     fn scalar(self, rhs: T) -> Self { self.apply_to_each(|x| x*rhs) }
-
 }
 
 impl VectorAlgebra<Complex<f32>> for Vector<Complex<f32>>
@@ -133,14 +133,14 @@ impl VectorAlgebra<Complex<f64>> for Vector<Complex<f64>>
     }
 }
 
-impl ComplexVectorAlgebra for Vector<Complex<f32>>
+impl ComplexVectorAlgebra<Complex<f32>> for Vector<Complex<f32>>
 {    
-    fn conjugate_transpose(self) -> Self { self.apply_to_each(|x| x.conj()) }
+    fn hermitian_conjugate(self) -> Self { self.apply_to_each(|x| x.conj()) }
 }
 
-impl ComplexVectorAlgebra for Vector<Complex<f64>>
+impl ComplexVectorAlgebra<Complex<f64>> for Vector<Complex<f64>>
 {    
-    fn conjugate_transpose(self) -> Self { self.apply_to_each(|x| x.conj()) }
+    fn hermitian_conjugate(self) -> Self { self.apply_to_each(|x| x.conj()) }
 }
 
 impl<T> From<Vec<T>> for Vector<T> 

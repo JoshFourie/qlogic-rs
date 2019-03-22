@@ -1,9 +1,9 @@
 #![feature(specialization)]
 
 pub mod math_primitives;
-pub mod qubit;
-pub mod ops;
+pub mod quantum_primitives;
 
-use math_primitives as math;
+pub use math_primitives as math;
+pub use quantum_primitives as qu_prim;
 
 #[cfg(test)] mod test;

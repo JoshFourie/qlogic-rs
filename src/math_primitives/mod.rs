@@ -3,7 +3,6 @@
 pub mod matrix;
 pub mod vector;
 pub mod error;
-pub mod eigen;
 
 pub use matrix::{ Matrix, ComplexMatrix };
 pub use vector::{ Vector };
@@ -14,23 +13,27 @@ pub trait QuantumUnit: num::Num
     + std::ops::AddAssign
     + Copy
 {
+    // these are not implemented as a trait in Rust.
     fn pow64(self, rhs: f64) -> Self;
     fn sqroot(self) -> Self;
 }
 
 // trait for scalar units that have traits like PartialOrd<Self> & Signum
-pub trait QuantumScalar: QuantumUnit + num_traits::real::Real { }
+// the QuantumUnit is only useful for allowing specialisation.
+pub trait QuantumReal: QuantumUnit + num_traits::real::Real { }
 
 pub trait MatrixAlgebra<T>
 where
     Self: From<Vec<T>>
     + IntoIterator<Item=T>
-    + Clone
+    + Clone,
 {
     type Inner;
     type Error: std::fmt::Debug;
 
     fn dim(&self) -> usize;
+
+    fn update_dim(&mut self);
 
     fn into_inner(self) -> Self::Inner;
 
@@ -42,9 +45,9 @@ where
 
     fn apply_to_each<F: Fn(T)->T>(self, action: F) -> Self;
 
-    fn extract_row(&self, r: usize) -> Self::Inner;
+    fn extract_row(&self, r: usize) -> Result<Self::Inner,Self::Error>;
 
-    fn extract_col(&self, c: usize) -> Self::Inner;
+    fn extract_col(&self, c: usize) -> Result<Self::Inner,Self::Error>;
 
     fn get(&self, row:usize, col:usize) -> Result<T,Self::Error>;
 
@@ -52,36 +55,46 @@ where
 
     fn transpose(self) -> Self;
 
-    fn kronecker(self, rhs:Self) -> Self;
+    fn kronecker(&self, rhs: &Self) -> Result<Self,Self::Error>;
 
     fn scalar(self, rhs: T) -> Self;
 
-    fn cross(self, rhs: Self) -> Self;
+    fn cross(&self, rhs: &Self) -> Result<Self,Self::Error>;
 
-    fn vector_product<V: VectorAlgebra<T>>(self, rhs: V) -> V;
+    fn vector_product<V: VectorAlgebra<T>>(self, rhs: V) -> Result<V,Self::Error>
+    where
+        Self::Error: From<V::Error>;
 
-    // fn eigen_value(self) -> T;
+    fn eigen_values<Y>(&self) -> Result<Vec<T>, Self::Error>
+    where 
+        Y: VectorAlgebra<T>,
+        Self::Error: From<Y::Error>;
 
-    fn identity(&self) -> Self;
+    fn identity(&self) -> Result<Self,Self::Error>;
 
-    fn minor(&mut self, m: &Self, d: usize);
+    fn trace(self) -> Result<T,Self::Error>;
 
-    fn trace(self) -> T;
-
-    fn diagonal(&self) -> Self::Inner;
+    fn diagonal(&self) -> Result<Self::Inner,Self::Error>;
 
     fn addition(self, rhs: Self) -> Self;
 
     fn subtraction(self, rhs: Self) -> Self;
 
-    fn decompose<W: VectorAlgebra<T>>(&self) -> Self;
+    fn hessenberg<W>(&self) -> Result<(Self,Self),Self::Error>
+    where 
+        W: VectorAlgebra<T>,
+        Self::Error: From<W::Error>;
     
+    fn determinant<X>(&self) -> Result<T,Self::Error>
+    where 
+        X: VectorAlgebra<T>,
+        Self::Error: From<X::Error>;
+
     // fn destructor(self);
 }
 
-pub trait ComplexMatrixAlgebra
-{
-    
+pub trait ComplexMatrixAlgebra<T>: MatrixAlgebra<num::Complex<T>>
+{   
     fn complex_conjugate(self) -> Self;
 
     fn hermitian_conjugate(self) -> Self;
@@ -91,7 +104,7 @@ pub trait VectorAlgebra<T>
 where
     Self: From<Vec<T>>
     + IntoIterator<Item=T>
-    + Clone
+    + Clone,
 {
     type Inner;
     type Error: std::fmt::Debug;
@@ -118,14 +131,16 @@ where
     
     fn scalar(self, rhs: T) -> Self;
 
-    fn matrix_product<M: MatrixAlgebra<T>>(self, rhs: M) -> Self;
+    fn matrix_product<M: MatrixAlgebra<T>>(self, rhs: M) -> Result<Self,M::Error>
+    where
+        M::Error: From<Self::Error>;
 
     fn eucl_norm(&self) -> T;
 }
 
-pub trait ComplexVectorAlgebra
+pub trait ComplexVectorAlgebra<T>: VectorAlgebra<T>
 {
-    fn conjugate_transpose(self) -> Self;
+    fn hermitian_conjugate(self) -> Self;
 }
 
 /***** Impls ********/
@@ -142,8 +157,8 @@ impl QuantumUnit for f64 {
     fn sqroot(self) -> Self { self.sqrt() }
 }
 
-impl QuantumScalar for f32 { }
-impl QuantumScalar for f64 { }
+impl QuantumReal for f32 { }
+impl QuantumReal for f64 { }
 
 impl QuantumUnit for num::Complex<f32> {
     fn pow64(self, rhs: f64) -> Self { self.powf(rhs as f32) }     
