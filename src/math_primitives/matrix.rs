@@ -5,7 +5,7 @@
 /***** Imports ********/
 
 use num_integer::Roots;
-use std::ops::{Div, Rem};
+use std::ops::{Div, Rem, Sub, Add, Mul};
 use num::Complex;
 use super::{ QuantumUnit, QuantumReal, ComplexMatrixAlgebra, VectorAlgebra, MatrixAlgebra };
 use super::error::{MatrixError};
@@ -391,10 +391,9 @@ where
     // for k in 0..M.dim() {
     for k in 0..M.dim()-1 {
         let x: V = M.extract_col(k)?.into();
-        let alpha: T = match x.get(k+1) {
-            Ok(a) => a.signum() * x.eucl_norm(),
-            Err(e) => return Err(e.into())
-        };
+        let alpha: T = x.get(k+1)?
+            .signum()
+            .mul(x.eucl_norm());
         let epsilon: V = {
             let mut _e = vec![T::zero(); M.dim()];
             _e[k]=T::one();
@@ -463,7 +462,7 @@ where
         }
 
         _R.push(Qk.clone());
-        _Q.push(Qk.transpose());
+        _Q.push(Qk);
         
         Q.set(k,k,Complex::one())?;
         M = Q;
@@ -472,6 +471,110 @@ where
         .rev()
         .fold(M.identity()?, |acc,q| acc.cross(&q).unwrap());       
     let Q: M = _Q.into_iter()
-        .fold(M.identity()?, |acc,q| acc.cross(&q).unwrap());
+        .fold(M.identity()?, |acc,q| acc.cross(&q.transpose()).unwrap());
     Ok((Q,R))
+}
+
+fn francis_double_step<T,M,V>(A: &M) -> Result<M,M::Error>
+where
+    T: QuantumReal + std::fmt::Debug,
+    M: MatrixAlgebra<T>,
+    M::Error: From<V::Error>,
+    V: VectorAlgebra<T>
+    + From<M::Inner>,
+{
+    use std::ops::RangeInclusive;
+
+    let (Q,R) = real_qr_decomposition::<T,M,V>(A)?;
+    let mut H = R.cross(A)?.cross(&Q)?;
+    let p = A.dim();
+    let n = A.dim();
+
+    let reflect = |P: V, alpha: RangeInclusive<usize>, beta: RangeInclusive<usize>| -> Result<(),M::Error> 
+    {
+        let phi = Vec::new();
+        for i in alpha {
+            for j in beta {
+                phi.push(
+                    H.get(i,j)?
+                )
+            }
+        }
+        let rho = P.matrix_product(phi.into())?
+            .into_iter()
+            .collect::<Vec<_>>();
+        let mut l = 0;
+        for i in alpha {
+            for j in beta {
+                let delta = rho[l];
+                H.set(i,j,delta)?;
+            }
+        }
+        Ok(())
+    };
+
+    // reduce all indexing by 1. !!!!!!!!!!!!!!!!!!!!
+    while p > 1 
+    {
+        let q: usize = p.sub(1);
+        let s: T = H.get(q,q)?
+            .add(H.get(p,p)?);
+        let t: T = H.get(q,q)?
+            .mul(H.get(p,p)?)
+            .sub( H.get(q,p)?.mul(H.get(p,q)?) );
+        let mut x: T = H.get(0,0)?
+            .pow64(2.0)
+            .add( H.get(0,1)?.mul( H.get(1,0)? ) )
+            .sub(s.mul(H.get(0,0)?))
+            .add(t);
+        let mut y: T = H.get(1,0)?
+            .mul( H.get(0,0)?.add(H.get(1,1)?).sub(s) );
+        let mut z: T = H.get(1,0)?
+            .mul(H.get(2,1)?);
+        let mut hh_reflector: V = vec![x,y,z].into();
+        let mut givens_reflector: V = vec![x,y].into();
+        for k in 0..p.sub(4)
+        {
+            if k > 1 { 
+                reflect(hh_reflector, k.add(1)..=k.add(3), k..=n )? 
+            } else {
+                reflect(hh_reflector, 2..=4, 1..=n)?
+            };
+
+            if k.add(4) < p { 
+                reflect(hh_reflector, 1..=k, k.add(1)..=k.add(3) )?
+            } else {
+                reflect(hh_reflector, 1..=p, p.add(1)..=p.add(3) )?
+            };
+
+            x = H.get(k.add(2),k.add(1))?;
+            y = H.get(k.add(3), k.add(1))?;
+            if k < p.sub(3) { 
+                z = H.get(k.add(4), k.add(1))?; 
+            }
+        }
+        reflect(givens_reflector, q..=p, p.sub(2)..=n)?;
+
+        // if the enclosure accepts a function this can be cleaner.
+        let phi = Vec::new();
+        for i in 1..=p {
+            for j in p.sub(1)..p {
+                phi.push(
+                    H.get(i,j)?
+                )
+            }
+        }
+        let rho = H.vector_product(givens_reflector)?
+            .into_iter()
+            .collect::<Vec<_>>();
+        let mut l = 0;
+        for i in 1..=p {
+            for j in p.sub(1)..p {
+                let delta = rho[l];
+                H.set(i,j,delta)?;
+            }
+        }
+        // There's some convergence checking here.
+    };
+    Ok(H)
 }
