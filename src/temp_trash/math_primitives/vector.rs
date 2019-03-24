@@ -2,19 +2,16 @@
 use std::ops::Mul;
 use std::result::Result;
 use num::{ Complex, Zero };
-use super::{QuantumUnit, ComplexVectorAlgebra, MatrixAlgebra, VectorAlgebra};
+use super::{QuantumUnit, Matrix, MatrixAlgebra, VectorAlgebra};
 use super::error::VectorError;
 
 /***** Structs ********/
-
-#[derive(Debug, PartialEq, Clone)]
 pub struct Vector<T> { inner: Vec<T> }
 
 /***** Impls ********/
-
 impl<T: QuantumUnit> VectorAlgebra<T> for Vector<T>
 {
-    type Inner = Vec<T>;
+    /* type Inner = Vec<T>;
     type Error = VectorError;
 
     fn apply_to_each<F: Fn(T)->T>(self, action: F) -> Self
@@ -39,7 +36,7 @@ impl<T: QuantumUnit> VectorAlgebra<T> for Vector<T>
             true => Ok(self.inner[index]), 
             false => VectorError::invalid_index(index, self.inner.len()).as_result(),
         }  
-    }
+    } */
 
     default fn dot(self,rhs:Self) -> T
     {
@@ -72,7 +69,7 @@ impl<T: QuantumUnit> VectorAlgebra<T> for Vector<T>
         m.into()
     }
 
-    fn matrix_product<M: MatrixAlgebra<T>>(self, rhs: M) -> Result<Self,M::Error>
+    /* fn matrix_product<M: MatrixAlgebra<T>>(self, rhs: M) -> Result<Self,M::Error>
     where
         M::Error: From<Self::Error>
     {
@@ -112,7 +109,7 @@ impl<T: QuantumUnit> VectorAlgebra<T> for Vector<T>
             .into()
     }
 
-    fn scalar(self, rhs: T) -> Self { self.apply_to_each(|x| x*rhs) }
+    fn scalar(self, rhs: T) -> Self { self.apply_to_each(|x| x*rhs) } */
 }
 
 impl VectorAlgebra<Complex<f32>> for Vector<Complex<f32>>
@@ -133,15 +130,6 @@ impl VectorAlgebra<Complex<f64>> for Vector<Complex<f64>>
     }
 }
 
-impl ComplexVectorAlgebra<Complex<f32>> for Vector<Complex<f32>>
-{    
-    fn hermitian_conjugate(self) -> Self { self.apply_to_each(|x| x.conj()) }
-}
-
-impl ComplexVectorAlgebra<Complex<f64>> for Vector<Complex<f64>>
-{    
-    fn hermitian_conjugate(self) -> Self { self.apply_to_each(|x| x.conj()) }
-}
 
 impl<T> From<Vec<T>> for Vector<T> 
 {

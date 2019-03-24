@@ -1,4 +1,4 @@
-mod vector_test
+/* mod vector_test
 {
     use crate::math::{ Vector, VectorAlgebra, Matrix };
 
@@ -16,119 +16,201 @@ mod vector_test
         let exp = Matrix::from(vec![2,6,10,14,4,12,20,28,6,18,30,42,8,24,40,56]);
         assert_eq!(test,exp);
     }
-}
+} */
 
 mod matrix_test
 {
     use num::Complex;
-    use crate::math::{ Matrix, MatrixAlgebra, Vector, ComplexMatrixAlgebra };
+    use crate::math::{ matrix::Matrix, MatrixAlgebra };
     use assert_approx_eq::assert_approx_eq;
 
     #[test]
     fn test_dim() {
-        let test = Matrix::<isize>::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
-        assert_eq!(test.dim(), 3);
+        let test: usize = Matrix::from(vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0])
+            .update(3, 3)
+            .unwrap()
+            .dim()
+            .unwrap();
+        assert_eq!(test, 9);
     }
 
     #[test]
     fn test_into_inner() {
-        let test: Matrix<isize> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8].into();
-        let exp = vec![0,1,2,3,4,5,6,7,8];
+        let test: Matrix<f64> = Matrix::from(vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0])
+            .update(3, 3)
+            .unwrap();
+        let exp = vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0];
         assert_eq!(test.into_inner(), exp);
     }
 
     #[test]
     fn test_push() {
-        let mut test: Matrix<isize> = vec![0, 1, 2, 3].into();
-        let exp: Matrix<isize> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8].into();
-        test.push(4);
-        test.push(5);
-        test.push(6);
-        test.push(7);
-        test.push(8);
-        test.update_dim();
-        assert_eq!(test,exp);
+        let mut test: Matrix<f64> = Matrix::from(vec![0.0,1.0,2.0,3.0])
+            .update(2, 2)
+            .unwrap();
+        let exp: Matrix<f64> = Matrix::from(vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0])
+            .update(3, 3)
+            .unwrap();
+        test.push(4.0);
+        test.push(5.0);
+        test.push(6.0);
+        test.push(7.0);
+        test.push(8.0);
+        assert_eq!(test.update(3,3).unwrap(),exp);
     }
 
     #[test]
     fn test_row_permutation() {
-        let exp = vec![0,1,2,3,4,5,6,7,8];
-        let test = Matrix::<isize>::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8])
+        let exp = vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0];
+        let test = Matrix::from(vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0])
+            .update(3, 3)
+            .unwrap()
             .permute_rows()
-            .collect::<Vec<_>>();
+            .unwrap()
+            .collect::<Vec<f64>>();
         assert_eq!(exp, test);
         
     }
 
     #[test]
     fn test_row_extraction() {
-        let test: Matrix<isize> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8].into();
-        let row = test.extract_row(0).unwrap();
-        let exp = vec![0,1,2];
-        assert_eq!(row,exp);
+        let test = Matrix::from(vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0])
+            .update(3, 3)
+            .unwrap()
+            .extract_row(0)
+            .unwrap();
+        let exp = vec![0.0,1.0,2.0];
+        assert_eq!(test,exp);
     }
 
     #[test]
     fn test_col_extraction() {
-        let test: Matrix<isize> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8].into();
-        let col = test.extract_col(0).unwrap();
-        let exp = vec![0,3,6];
-        assert_eq!(col,exp);
+        let test = Matrix::from(vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0])
+            .update(3, 3)
+            .unwrap()
+            .extract_col(0)
+            .unwrap();
+        let exp = vec![0.0,3.0,6.0];
+        assert_eq!(test,exp);
     }
 
     #[test]
     fn test_column_permutation()
     {
-        let exp = vec![0, 3, 6, 1, 4, 7, 2, 5, 8].into_iter();
-        let test = Matrix::<isize>::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]).permute_cols();
-        for (exp, test) in exp.into_iter()
-            .zip( test )
-        {
-            assert_eq!(exp, test);
-        }
+
+        let exp = vec![0.0,3.0,6.0,9.0,1.0,4.0,7.0,10.0,2.0,5.0,8.0,11.0];
+        let test = Matrix::from(vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0])
+            .update(3, 4)
+            .unwrap()
+            .permute_cols()
+            .unwrap()
+            .collect::<Vec<f64>>();
+        assert_eq!(exp, test);
     }
 
     #[test]
     fn test_matrix_get()
     {   
-        let test = Matrix::<isize>::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
-        assert_eq!(test.get(1,1).unwrap(), 4);
-        assert_eq!(test.get(1,2).unwrap(), 5);
-        assert_eq!(test.get(2,1).unwrap(), 7);
-        match test.get(2,8) {
-            Err(_) => { },
-            _ => panic!("MatrixError was not returned as expected")
-        }
+        let test = Matrix::from(
+            vec![
+                0.0, 1.0, 2.0,
+                3.0, 4.0, 5.0,
+                6.0, 7.0, 8.0
+            ]).update(3, 3)
+            .unwrap();
+        assert_eq!(test.get(1,1).unwrap(), 4.0);
+        assert_eq!(test.get(1,2).unwrap(), 5.0);
+        assert_eq!(test.get(2,1).unwrap(), 7.0);
     }
 
     #[test]
     fn test_scalar_mul()
     {
-        let test = Matrix::<isize>::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]).scalar(3);
-        let exp = Matrix::<isize>::from(vec![0, 3, 6, 9, 12, 15, 18, 21, 24]);
+        let test = Matrix::from(vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0])
+            .update(3, 3)
+            .unwrap()
+            .scalar(3.0)
+            .unwrap();
+        let exp: Matrix<f64> = Matrix::from(vec![0.0, 3.0, 6.0, 9.0, 12.0, 15.0, 18.0, 21.0, 24.0])
+            .update(3, 3)
+            .unwrap();
         assert_eq!(test, exp);
     }
+
 
     #[test]
     fn test_matrix_cross_product()
     {
-        let test = Matrix::<isize>::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8])
-            .cross(&vec![0, 1, 2, 3, 4, 5, 6, 7, 8].into())
-            .unwrap();
-        let exp = Matrix::<isize>::from(vec![15, 18, 21, 42, 54, 66, 69, 90, 111]);
+        let test = Matrix::from(vec![1.0,2.0,1.0,0.0,1.0,0.0,2.0,3.0,4.0])
+            .update(3, 3).unwrap()
+            .cross(
+                &Matrix::from(vec![2.0,5.0,6.0,7.0,1.0,8.0])
+                    .update(3,2).unwrap()
+            ).unwrap();
+        let exp = Matrix::from(vec![15.0, 27.0, 6.0, 7.0, 26.0, 63.0])
+            .update(3,2).unwrap();
         assert_eq!(test, exp);
     }
 
     #[test]
     fn test_kronecker()
     {
-        let test = Matrix::<isize>::from(vec![1,2,3,4])
-            .kronecker(&vec![0,5,6,7].into())
-            .unwrap();
-        let exp = Matrix::<isize>::from(vec![0,5,0,10,6,7,12,14,0,15,0,20,18,21,24,28]);
-        assert_eq!(test,exp);
+        let test1 = Matrix::from(vec![2.0,4.0,6.0,8.0])
+            .update(2,2).unwrap()
+            .kronecker(
+                &Matrix::from(vec![1.0,3.0,5.0,7.0,9.0,11.0])
+                    .update(3,2).unwrap()
+            ).unwrap();
+        
+        let test2 = Matrix::from(vec![2.0,4.0,6.0,8.0])
+            .update(2,2).unwrap()
+            .kronecker(
+                &Matrix::from(vec![1.0,3.0,5.0,7.0,9.0,11.0])
+                    .update(2,3).unwrap()
+            ).unwrap();
+           
+        let exp1 = Matrix::from(vec![
+            2.0,    6.0,    4.0,    12.0,
+            10.0,   14.0,   20.0,   28.0,
+            18.0,   22.0,   36.0,   44.0,
+            6.0,    18.0,   8.0,    24.0,
+            30.0,   42.0,   40.0,   56.0,
+            54.0,   66.0,   72.0,   88.0
+        ]).update(6,4).unwrap();
+        
+        let exp2 = Matrix::from(vec![   
+            2.0,    6.0,    10.0,   4.0,    12.0,   20.0,
+            14.0,   18.0,   22.0,   28.0,   36.0,   44.0,
+            6.0,    18.0,   30.0,   8.0,    24.0,   40.0,
+            42.0,   54.0,   66.0,   56.0,   72.0,   88.0
+        ]).update(4,6).unwrap();
+        
+        assert_eq!(test1,exp1);
+        
+        assert_eq!(test2,exp2);
     }
 
+    #[test]
+    fn test_set()
+    {
+        let mut test = Matrix::from(vec![
+            2.0,    6.0,    4.0,    12.0,
+            10.0,   14.0,   20.0,   28.0,
+            18.0,   22.0,   36.0,   44.0,
+            6.0,    18.0,   8.0,    24.0,
+            30.0,   42.0,   40.0,   56.0,
+            54.0,   66.0,   72.0,   88.0
+        ]).update(6,4).unwrap();
+        assert_eq!(test.get(2, 3).unwrap(), 44.0);
+        test.set(2, 3, 1111.0).unwrap();
+        assert_eq!(test.get(2, 3).unwrap(), 1111.0);  
+
+        assert_eq!(test.get(4, 3).unwrap(), 56.0);
+        test.set(4, 3, 1111.0).unwrap();
+        assert_eq!(test.get(4, 3).unwrap(), 1111.0);  
+    }
+
+/* 
     #[test]
     fn test_matrix_vector_product()
     {
@@ -234,4 +316,6 @@ mod matrix_test
         let exp = -85750.0;
         assert_approx_eq!(det,exp);
     }
+*/
 }
+

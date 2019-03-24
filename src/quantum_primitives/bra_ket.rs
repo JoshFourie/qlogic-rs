@@ -1,5 +1,5 @@
 use crate::math::{ 
-    QuantumUnit, Vector, ComplexVectorAlgebra, 
+    QuantumUnit, Vector
     VectorAlgebra, error::MatrixError
 };
 use std::ops::Mul;

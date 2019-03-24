@@ -1,4 +1,4 @@
-#![feature(specialization)]
+#![feature(specialization, try_trait)]
 
 pub mod math_primitives;
 pub mod quantum_primitives;

@@ -1,11 +1,8 @@
-/***** Exports ********/
+#![allow(non_snake_case)]
+
+use std::ops::{ Add, Mul, Sub, Div, Rem };
 
 pub mod matrix;
-pub mod vector;
-pub mod error;
-
-pub use matrix::{ Matrix, ComplexMatrix };
-pub use vector::{ Vector };
 
 /***** Interfaces ********/
 pub trait QuantumUnit: num::Num
@@ -22,125 +19,200 @@ pub trait QuantumUnit: num::Num
 // the QuantumUnit is only useful for allowing specialisation.
 pub trait QuantumReal: QuantumUnit + num_traits::real::Real { }
 
-pub trait MatrixAlgebra<T>
+pub trait MatrixAlgebra<T: QuantumUnit>
 where
-    Self: From<Vec<T>>
-    + IntoIterator<Item=T>
-    + Clone,
+    Self: IntoIterator<Item=T> 
+    + From<Vec<T>>
+    + Clone
 {
-    type Inner;
-    type Error: std::fmt::Debug;
+    type Error: std::fmt::Debug
+    + From<std::option::NoneError>;
 
-    fn dim(&self) -> usize;
+    fn dim(&self) -> Option<usize>;
 
-    fn update_dim(&mut self);
+    fn col_dim(&self) -> Option<usize>;
 
-    fn into_inner(self) -> Self::Inner;
+    fn row_dim(&self) -> Option<usize>;
+    
+    fn update(self, row: usize, col: usize) -> Result<Self,Self::Error>;
+
+    fn into_inner(self) -> Vec<T>;
 
     fn push(&mut self, val: T);
 
-    fn permute_rows(self) -> std::vec::IntoIter<T>;
+    fn permute_rows(&self) -> Result<std::vec::IntoIter<T>,Self::Error>;
 
-    fn permute_cols(self) -> std::vec::IntoIter<T>;
+    fn permute_cols(&self) -> Result<std::vec::IntoIter<T>,Self::Error>;
 
-    fn apply_to_each<F: Fn(T)->T>(self, action: F) -> Self;
+    fn apply_to_each<F: Fn(T)->T>(self, action: F) -> Self
+    {
+        self.into_iter()
+            .map(|x| action(x))
+            .collect::<Vec<T>>()
+            .into()
+    }
 
-    fn extract_row(&self, r: usize) -> Result<Self::Inner,Self::Error>;
+    fn extract_row(&self, r: usize) -> Result<Vec<T>,Self::Error>
+    {
+        let mut v: Vec<T> = Vec::new();
+        for c in 0..self.col_dim()? {
+            let val = self.get(r,c)?;
+            v.push(val)
+        }
+        Ok(v)
+    }
 
-    fn extract_col(&self, c: usize) -> Result<Self::Inner,Self::Error>;
+    fn extract_col(&self, c: usize) -> Result<Vec<T>,Self::Error>
+    {
+        let mut v: Vec<T> = Vec::new();
+        for r in 0..self.row_dim()? {
+            let val = self.get(r,c)?;
+            v.push(val)
+        }
+        Ok(v)
+    }
 
     fn get(&self, row:usize, col:usize) -> Result<T,Self::Error>;
-
+    
     fn set(&mut self, row:usize, col:usize, val:T) -> Result<(),Self::Error>;
 
-    fn transpose(self) -> Self;
+    fn transpose(&self) -> Result<Self, Self::Error> {
+        let M = Self::from( self
+            .permute_cols()?
+            .collect::<Vec<_>>()
+        ).update(self.row_dim()?,self.col_dim()?)?;
+        Ok(M)
+    }
 
-    fn kronecker(&self, rhs: &Self) -> Result<Self,Self::Error>;
+    fn eucl_norm(&self) -> T;    
 
-    fn scalar(self, rhs: T) -> Self;
+    // index error stopped when we switch i,j in N and then transpose?
+    fn kronecker(&self, rhs: &Self) -> Result<Self,Self::Error>
+    {   
+        let n = self.col_dim()?; 
+        let q = rhs.col_dim()?; 
+        let m = self.row_dim()?;
+        let p = rhs.row_dim()?; 
+        
+        let mut N: Self = Self::from(vec![T::zero(); m.mul(n).mul(p).mul(q)])
+            .update(
+                m.mul(p),
+                n.mul(q)
+            )?;
+        for i in 1..=m.mul(p) as usize { 
+            for j in 1..=n.mul(q) as usize 
+            {
+                let i = i as f64;
+                let j = j as f64;
+                
+                let a1 = i.sub(1.0).div(p as f64).floor().add(1.0) as usize - 1;
+                let a2 = j.sub(1.0).div(q as f64).floor().add(1.0) as usize - 1;
+                let b1 = i.sub(1.0).rem(p as f64).add(1.0) as usize - 1;
+                let b2 = j.sub(1.0).rem(q as f64).add(1.0) as usize - 1;
+                
+                let alpha = self.get(a1,a2)?;
+                let beta = rhs.get(b1,b2)?;
+                let delta = alpha.mul(beta);
+                
+                N.set(i as usize - 1, j as usize - 1, delta)?;
+            }
+        }
+        Ok( N )  
+    }
 
-    fn cross(&self, rhs: &Self) -> Result<Self,Self::Error>;
+    fn scalar(&self, rhs: T) -> Result<Self, Self::Error>;
 
-    fn vector_product<V: VectorAlgebra<T>>(self, rhs: V) -> Result<V,Self::Error>
-    where
-        Self::Error: From<V::Error>;
+    fn cross(&self, rhs: &Self) -> Result<Self,Self::Error>
+    {
+        let m = self.row_dim()?;
+        let n = rhs.col_dim()?;
 
-    fn eigen_values<Y>(&self) -> Result<Vec<T>, Self::Error>
-    where 
-        Y: VectorAlgebra<T>,
-        Self::Error: From<Y::Error>;
+        let mut M: Vec<T> = Vec::new();
+        for i in 0..m {
+            for j in 0..n {
+                let mut sigma = T::zero();
+                for k in 0..rhs.row_dim()? 
+                {
+                    println!("{},{} : {}", i,j,k);
+                    sigma += self.get(i,k)?.mul(rhs.get(k,j)?);
+                }
 
-    fn identity(&self) -> Result<Self,Self::Error>;
+                M.push(sigma);
+            }
+        }
+        Ok( Self::from(M).update(m, n)? )
+    }
 
-    fn trace(self) -> Result<T,Self::Error>;
+    // fn eigen_values(self) -> Result<Vec<T>, Self::Error>;
 
-    fn diagonal(&self) -> Result<Self::Inner,Self::Error>;
+    fn identity(&self) -> Result<Self,Self::Error>
+    {
+        let dim = self.col_dim()?;
+        let mut id: Self = Self::from( vec![T::zero(); dim] )
+            .update(dim, dim)?;
+        for i in 0..dim {
+            id.set(i,i,T::one())?
+        }
+        Ok(id)
+    }
 
-    fn addition(self, rhs: Self) -> Self;
+    fn trace(&self) -> Result<T,Self::Error>
+    {
+        let mut sigma = T::zero();
+        for n in self.diagonal()?
+            .into_iter()
+        {
+            sigma += n;
+        }
+        Ok(sigma)
+    }
 
-    fn subtraction(self, rhs: Self) -> Self;
+    fn diagonal(&self) -> Result<Vec<T>,Self::Error>
+    {
+        let mut diag: Vec<T> = Vec::new();
+        for i in 0..self.col_dim()? {
+            diag.push(self.get(i,i)?);
+        }
+        Ok(diag)
+    }
 
-    fn hessenberg<W>(&self) -> Result<(Self,Self),Self::Error>
-    where 
-        W: VectorAlgebra<T>,
-        Self::Error: From<W::Error>;
+    fn addition(&self, rhs: &Self) -> Result<Self, Self::Error>
+    {
+        let row_dim = self.row_dim()?;
+        let col_dim = self.col_dim()?;
+        let M: Self = Self::from(self
+            .permute_rows()?
+            .zip(rhs.permute_rows()?)
+            .map(|(l,r)| l+r)
+            .collect::<Vec<T>>()
+        ).update(row_dim, col_dim)?;
+        Ok(M)
+    }
+
+    fn subtraction(&self, rhs: &Self) ->  Result<Self, Self::Error> 
+    {
+        let row_dim = self.row_dim()?;
+        let col_dim = self.col_dim()?;
+        let M: Self = Self::from(self
+            .permute_rows()?
+            .zip(rhs.permute_rows()?)
+            .map(|(l,r)| l-r)
+            .collect::<Vec<T>>()
+        ).update(row_dim, col_dim)?;
+        Ok(M)
+    }
+
+    fn hessenberg(&self) -> Result<(Self,Self),Self::Error>;
     
-    fn determinant<X>(&self) -> Result<T,Self::Error>
-    where 
-        X: VectorAlgebra<T>,
-        Self::Error: From<X::Error>;
-
-    // fn destructor(self);
-}
-
-pub trait ComplexMatrixAlgebra<T>: MatrixAlgebra<num::Complex<T>>
-{   
-    fn complex_conjugate(self) -> Self;
-
-    fn hermitian_conjugate(self) -> Self;
-}
-
-pub trait VectorAlgebra<T>
-where
-    Self: From<Vec<T>>
-    + IntoIterator<Item=T>
-    + Clone,
-{
-    type Inner;
-    type Error: std::fmt::Debug;
-
-    fn into_inner(self) -> Self::Inner;
-
-    fn apply_to_each<F: Fn(T)->T>(self, action: F) -> Self;
-
-    fn push(&mut self, val:T);
-
-    fn len(&self) -> usize;
-
-    fn get(&self, index:usize) -> Result<T,Self::Error>;
-
-    fn dot(self, rhs:Self) -> T;
-
-    fn tensor(self,rhs:Self) -> Self;
-
-    fn kronecker<M: MatrixAlgebra<T>>(self, rhs: Self) -> M;
-
-    fn addition(self, rhs: Self) -> Self;
-
-    fn subtraction(self, rhs: Self) -> Self;
-    
-    fn scalar(self, rhs: T) -> Self;
-
-    fn matrix_product<M: MatrixAlgebra<T>>(self, rhs: M) -> Result<Self,M::Error>
-    where
-        M::Error: From<Self::Error>;
-
-    fn eucl_norm(&self) -> T;
-}
-
-pub trait ComplexVectorAlgebra<T>: VectorAlgebra<T>
-{
-    fn hermitian_conjugate(self) -> Self;
+    fn determinant(&self) -> Result<T,Self::Error>
+    {
+        let (_,R) = self.hessenberg()?;
+        let det = R.cross(self)?
+            .diagonal()?
+            .into_iter()
+            .fold(T::one(), |acc,t| acc.mul(t));
+        Ok(det)
+    }
 }
 
 /***** Impls ********/
@@ -157,9 +229,6 @@ impl QuantumUnit for f64 {
     fn sqroot(self) -> Self { self.sqrt() }
 }
 
-impl QuantumReal for f32 { }
-impl QuantumReal for f64 { }
-
 impl QuantumUnit for num::Complex<f32> {
     fn pow64(self, rhs: f64) -> Self { self.powf(rhs as f32) }     
     fn sqroot(self) -> Self { self.sqrt() }
@@ -168,3 +237,7 @@ impl QuantumUnit for num::Complex<f64> {
     fn pow64(self, rhs: f64) -> Self { self.powf(rhs) }     
     fn sqroot(self) -> Self { self.sqrt() }
 }
+
+impl QuantumReal for f32 { }
+
+impl QuantumReal for f64 { }
