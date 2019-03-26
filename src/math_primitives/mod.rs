@@ -1,8 +1,12 @@
 #![allow(non_snake_case)]
 
 use std::ops::{ Add, Mul, Sub, Div, Rem };
+use std::iter::Iterator;
 
 pub mod matrix;
+mod matrix_iter;
+mod matrix_wrap;
+mod matrix_err;
 
 /***** Interfaces ********/
 pub trait QuantumUnit: num::Num
@@ -19,9 +23,21 @@ pub trait QuantumUnit: num::Num
 // the QuantumUnit is only useful for allowing specialisation.
 pub trait QuantumReal: QuantumUnit + num_traits::real::Real { }
 
+/*
+Required methods:
+    - dim()
+    - col_dim()
+    - row_dim()
+    - update()
+    - into_inner()
+    - push()
+    - hessenberg()
+The rest are provided with the trait.
+*/
 pub trait MatrixAlgebra<T: QuantumUnit>
 where
-    Self: IntoIterator<Item=T> 
+    for <'a> &'a Self: IntoIterator<Item=T>, 
+    Self: IntoIterator<Item=T>
     + From<Vec<T>>
     + Clone
 {
@@ -34,29 +50,53 @@ where
 
     fn row_dim(&self) -> Option<usize>;
     
-    fn update(self, row: usize, col: usize) -> Result<Self,Self::Error>;
+    fn update(self, row: Option<usize>, col: Option<usize>) -> Result<Self,Self::Error>;
 
-    fn into_inner(self) -> Vec<T>;
+    fn into_inner(&self) -> Vec<T>;
 
     fn push(&mut self, val: T);
 
-    fn permute_rows(&self) -> Result<std::vec::IntoIter<T>,Self::Error>;
-
-    fn permute_cols(&self) -> Result<std::vec::IntoIter<T>,Self::Error>;
-
-    fn apply_to_each<F: Fn(T)->T>(self, action: F) -> Self
+    fn permute_rows<'a>(&self) -> Result<std::vec::IntoIter<T>,Self::Error>
     {
-        self.into_iter()
+        let mut scratch: Vec<T> = Vec::new();
+        let row = self.row_dim()?;
+        let col = self.col_dim()?;
+        let inner = self.into_inner();
+        for i in 0..col{
+            for j in 0..row {
+                scratch.push( inner[ i.mul(row).add(j) ]);
+            }
+        }
+        Ok(scratch.into_iter())
+    }
+
+    fn permute_cols<'a>(&self) -> Result<std::vec::IntoIter<T>,Self::Error>
+    {
+        let mut scratch: Vec<T> = Vec::new();
+        let row = self.row_dim()?;
+        let inner = self.into_inner();
+        for i in 0..row {
+            for j in 0..self.col_dim()? {
+                scratch.push( inner[ j.mul(row).add(i) ]);
+            }
+        }
+        Ok(scratch.into_iter())
+    }
+
+    fn apply_to_each<F: Fn(T)->T>(&self, action: F) -> Result<Self, Self::Error>
+    {
+        Ok( Self::from(
+            self.into_iter()
             .map(|x| action(x))
             .collect::<Vec<T>>()
-            .into()
+        ).update(self.row_dim(), self.col_dim())?)
     }
 
     fn extract_row(&self, r: usize) -> Result<Vec<T>,Self::Error>
     {
         let mut v: Vec<T> = Vec::new();
         for c in 0..self.col_dim()? {
-            let val = self.get(r,c)?;
+            let val = self.get(Some(r), Some(c))?;
             v.push(val)
         }
         Ok(v)
@@ -66,25 +106,30 @@ where
     {
         let mut v: Vec<T> = Vec::new();
         for r in 0..self.row_dim()? {
-            let val = self.get(r,c)?;
+            let val = self.get(Some(r), Some(c))?;
             v.push(val)
         }
         Ok(v)
     }
 
-    fn get(&self, row:usize, col:usize) -> Result<T,Self::Error>;
+    fn get(&self, row: Option<usize>, col: Option<usize>) -> Result<T,Self::Error>;
     
-    fn set(&mut self, row:usize, col:usize, val:T) -> Result<(),Self::Error>;
+    fn set(&mut self, row: Option<usize>, col: Option<usize>, val:T) -> Result<(),Self::Error>;
 
     fn transpose(&self) -> Result<Self, Self::Error> {
         let M = Self::from( self
             .permute_cols()?
-            .collect::<Vec<_>>()
-        ).update(self.row_dim()?,self.col_dim()?)?;
+            .collect::<Vec<T>>()
+        ).update(self.row_dim(),self.col_dim())?;
         Ok(M)
     }
 
-    fn eucl_norm(&self) -> T;    
+    fn eucl_norm(&self) -> T  
+    { 
+        self.into_iter()
+            .fold(T::zero(), |acc,x| acc + x.pow64(2.0))
+            .sqroot()
+    }
 
     // index error stopped when we switch i,j in N and then transpose?
     fn kronecker(&self, rhs: &Self) -> Result<Self,Self::Error>
@@ -96,8 +141,8 @@ where
         
         let mut N: Self = Self::from(vec![T::zero(); m.mul(n).mul(p).mul(q)])
             .update(
-                m.mul(p),
-                n.mul(q)
+                Some(m.mul(p)),
+                Some(n.mul(q))
             )?;
         for i in 1..=m.mul(p) as usize { 
             for j in 1..=n.mul(q) as usize 
@@ -110,30 +155,38 @@ where
                 let b1 = i.sub(1.0).rem(p as f64).add(1.0) as usize - 1;
                 let b2 = j.sub(1.0).rem(q as f64).add(1.0) as usize - 1;
                 
-                let alpha = self.get(a1,a2)?;
-                let beta = rhs.get(b1,b2)?;
+                let alpha = self.get(Some(a1), Some(a2))?;
+                let beta = rhs.get(Some(b1), Some(b2))?;
                 let delta = alpha.mul(beta);
                 
-                N.set(i as usize - 1, j as usize - 1, delta)?;
+                N.set( Some(i as usize - 1), Some(j as usize - 1), delta)?;
             }
         }
         Ok( N )  
     }
 
-    fn scalar(&self, rhs: T) -> Result<Self, Self::Error>;
+    fn scalar(&self, rhs: T) -> Result<Self, Self::Error>
+    {
+        let M = Self::from(self
+            .into_iter()
+            .map(|n| n.mul(rhs))
+            .collect::<Vec<T>>()
+        ).update(self.row_dim(), self.col_dim())?;
+        Ok(M)
+    }
 
     fn cross(&self, rhs: &Self) -> Result<Self,Self::Error>
     {
-        let m = self.row_dim()?;
-        let n = rhs.col_dim()?;
+        let m = self.row_dim();
+        let n = rhs.col_dim();
 
         let mut M: Vec<T> = Vec::new();
-        for i in 0..m {
-            for j in 0..n {
+        for i in 0..m? {
+            for j in 0..n? {
                 let mut sigma = T::zero();
                 for k in 0..rhs.row_dim()? 
                 {
-                    sigma += self.get(i,k)?.mul(rhs.get(k,j)?);
+                    sigma += self.get(Some(i), Some(k))?.mul( rhs.get(Some(k), Some(j))?);
                 }
 
                 M.push(sigma);
@@ -146,11 +199,11 @@ where
 
     fn identity(&self) -> Result<Self,Self::Error>
     {
-        let col_dim = self.col_dim()?;
+        let col_dim = self.col_dim();
         let mut id: Self = Self::from( vec![T::zero(); self.dim()?] )
             .update(col_dim, col_dim)?;
-        for i in 0..col_dim {
-            id.set(i,i,T::one())?
+        for i in 0..col_dim? {
+            id.set(Some(i), Some(i), T::one())?
         }
         Ok(id)
     }
@@ -170,34 +223,30 @@ where
     {
         let mut diag: Vec<T> = Vec::new();
         for i in 0..self.col_dim()? {
-            diag.push(self.get(i,i)?);
+            diag.push(self.get(Some(i), Some(i))?);
         }
         Ok(diag)
     }
 
     fn addition(&self, rhs: &Self) -> Result<Self, Self::Error>
     {
-        let row_dim = self.row_dim()?;
-        let col_dim = self.col_dim()?;
         let M: Self = Self::from(self
             .permute_rows()?
             .zip(rhs.permute_rows()?)
             .map(|(l,r)| l+r)
             .collect::<Vec<T>>()
-        ).update(row_dim, col_dim)?;
+        ).update(self.row_dim(), self.col_dim())?;
         Ok(M)
     }
 
     fn subtraction(&self, rhs: &Self) ->  Result<Self, Self::Error> 
     {
-        let row_dim = self.row_dim()?;
-        let col_dim = self.col_dim()?;
         let M: Self = Self::from(self
             .permute_rows()?
             .zip(rhs.permute_rows()?)
             .map(|(l,r)| l-r)
             .collect::<Vec<T>>()
-        ).update(row_dim, col_dim)?;
+        ).update(self.row_dim(), self.col_dim())?;
         Ok(M)
     }
 
