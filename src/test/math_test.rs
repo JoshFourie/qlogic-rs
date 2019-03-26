@@ -210,17 +210,17 @@ mod matrix_test
         assert_eq!(test.get(4, 3).unwrap(), 1111.0);  
     }
 
-/* 
     #[test]
     fn test_matrix_vector_product()
     {
-        let test = Matrix::<isize>::from(vec![1,2,1,0,1,0,2,3,4])
-            .vector_product(Vector::from(vec![2,6,1]))
+        let test: Matrix<f64> = Matrix::from(vec![1.0,2.0,1.0,0.0,1.0,0.0,2.0,3.0,4.0])
+            .update(3,3).unwrap()
+            .cross( &Matrix::from(vec![2.0,6.0,1.0]).update(3, 1).unwrap() )
             .unwrap();
-        let exp = Vector::<isize>::from(vec![15,6,26]);
+        let exp = Matrix::from(vec![15.0,6.0,26.0]).update(3, 1).unwrap();
         assert_eq!(test, exp);
     }
-
+    /*
     #[test]
     fn test_complex_conjugate()
     {
@@ -250,59 +250,82 @@ mod matrix_test
         ]);
         assert_eq!(test,exp);
     }
-
+    */ 
     #[test]
     fn test_identity_matrix()
     {
-        let exp = Matrix::<isize>::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
-        let test = Matrix::<isize>::from(vec![0, 1, 2, 3, 4, 5, 6, 7, 8]);
+        let exp = Matrix::from(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .update(3,3)
+            .unwrap();
+        let test = Matrix::from(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).update(3, 3).unwrap();
         let identity = test.identity().unwrap();
         assert_eq!(test.cross(&identity).unwrap(),exp);
     }
 
     #[test]
     fn test_diagonal() {
-        let test: Matrix<isize> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8].into();
+        let test: Matrix<f32> = Matrix::from(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .update(3,3)
+            .unwrap();
         let diag = test.diagonal().unwrap();
-        let exp = vec![0,4,8];
+        let exp = vec![0.0,4.0,8.0];
         assert_eq!(diag,exp);
     }
 
     #[test]
     fn test_trace() {
-        let test: Matrix<isize> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8].into();
+        let test = Matrix::from(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .update(3,3)
+            .unwrap();
         let trace = test.trace().unwrap();
-        let exp = 12;
+        let exp = 12.0;
         assert_eq!(trace,exp);
     }
 
     #[test]
     fn test_addition() {
-        let test1: Matrix<isize> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8].into();
-        let test2: Matrix<isize> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8].into();
-        let exp: Matrix<isize> = vec![0, 2, 4, 6, 8, 10, 12, 14, 16].into();
-        let test: Matrix<isize> = test1.addition(test2);
+        let test1: Matrix<f64> = Matrix::from(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .update(3,3)
+            .unwrap();
+        let test2: Matrix<f64> = Matrix::from(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .update(3,3)
+            .unwrap();
+        let exp: Matrix<f64> = Matrix::from(vec![0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0])
+            .update(3,3)
+            .unwrap();
+        let test: Matrix<f64> = test1.addition(&test2).unwrap();
         assert_eq!(test,exp);
     }
 
     #[test]
     fn test_subtraction() {
-        let test1: Matrix<isize> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8].into();
-        let test2: Matrix<isize> = vec![0, 1, 2, 3, 4, 5, 6, 7, 8].into();
-        let exp: Matrix<isize> = vec![0,0,0,0,0,0,0,0,0].into();
-        let test: Matrix<isize> = test1.subtraction(test2);
+        let test1: Matrix<f64> = Matrix::from(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .update(3,3)
+            .unwrap();
+        let test2: Matrix<f64> = Matrix::from(vec![0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .update(3,3)
+            .unwrap();
+        let exp: Matrix<f64> = Matrix::from(vec![0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+            .update(3,3)
+            .unwrap();
+        let test: Matrix<f64> = test1.subtraction(&test2).unwrap();
         assert_eq!(test,exp);
     }
 
     #[test]
     fn test_decomp()
     {
-        let M: Matrix<f64> = vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0].into();
-        let (Q,R): (Matrix<f64>,_) = M.hessenberg::<Vector<_>>().unwrap();
-        let A: Matrix<f64> =  vec![14.0, 21.0, -14.0, 0.0, 175.0, -70.0, 0.0, 0.0, -35.0].into();
+        let M: Matrix<f64> = Matrix::from(vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0])
+            .update(3,3)
+            .unwrap();
+        let (Q,R): (Matrix<f64>,_) = M.hessenberg().unwrap();
+        let A: Matrix<f64> =  Matrix::from(vec![14.0, 21.0, -14.0, 0.0, 175.0, -70.0, 0.0, 0.0, -35.0])
+            .update(3,3)
+            .unwrap();
         let r_dot_m = R.cross(&M).unwrap();
         for (t,e) in r_dot_m.permute_rows()
-            .zip(A.permute_rows())
+            .unwrap()
+            .zip(A.permute_rows().unwrap())
         {
             assert_approx_eq!(t,e);
         }
@@ -311,11 +334,12 @@ mod matrix_test
     #[test]
     fn test_determinant()
     {
-        let M: Matrix<f64> = vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0].into();
-        let det = M.determinant::<Vector<_>>().unwrap(); 
+        let M: Matrix<f64> = Matrix::from(vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0])
+            .update(3,3)
+            .unwrap();
+        let det = M.determinant().unwrap(); 
         let exp = -85750.0;
         assert_approx_eq!(det,exp);
     }
-*/
 }
 

@@ -133,7 +133,6 @@ where
                 let mut sigma = T::zero();
                 for k in 0..rhs.row_dim()? 
                 {
-                    println!("{},{} : {}", i,j,k);
                     sigma += self.get(i,k)?.mul(rhs.get(k,j)?);
                 }
 
@@ -147,10 +146,10 @@ where
 
     fn identity(&self) -> Result<Self,Self::Error>
     {
-        let dim = self.col_dim()?;
-        let mut id: Self = Self::from( vec![T::zero(); dim] )
-            .update(dim, dim)?;
-        for i in 0..dim {
+        let col_dim = self.col_dim()?;
+        let mut id: Self = Self::from( vec![T::zero(); self.dim()?] )
+            .update(col_dim, col_dim)?;
+        for i in 0..col_dim {
             id.set(i,i,T::one())?
         }
         Ok(id)

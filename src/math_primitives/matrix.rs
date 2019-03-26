@@ -144,7 +144,7 @@ where
         let col_dim = M.col_dim()?;
         let row_dim = M.row_dim()?;
 
-        for k in 0..col_dim {
+        for k in 0..col_dim.sub(1) {
             let x: Self = Self::from(M.extract_col(k)?)
                 .update(row_dim, 1)?;
             let alpha: T = x.get(k.add(1),0)?
@@ -185,7 +185,7 @@ where
 
 impl MathError 
 {
-    fn invalid_index(c: usize, r: usize, max_r: usize, max_c: usize) -> Self {
+    pub fn invalid_index(c: usize, r: usize, max_r: usize, max_c: usize) -> Self {
         MathError::BadIndex(format!("Invalid Index: indexed at {},{}, but the maximum input is {},{}",r,c,max_r,max_c))
     }  
 }

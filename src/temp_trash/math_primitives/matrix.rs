@@ -135,7 +135,7 @@ impl<T:QuantumUnit> MatrixAlgebra<T> for Matrix<T>
             for j in 1..=self.col {
                 let j = j as f64;              
                 let a = self.get(
-                    (f64::floor( (i-1.0).div(p)+1.0 )) as usize -1,
+                    (f64::floor (i-1.0).div(p)+1.0 )) as usize -1,
                     (f64::floor( (j-1.0).div(q)+1.0 )) as usize -1,
                 )?;
                 let b = rhs.get(
