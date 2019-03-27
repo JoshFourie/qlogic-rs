@@ -2,11 +2,13 @@
 
 use std::ops::{ Add, Mul, Sub, Div, Rem };
 use std::iter::Iterator;
+use num::Complex;
 
 pub mod matrix;
 mod matrix_iter;
 mod matrix_wrap;
 mod matrix_err;
+mod eigen;
 
 /***** Interfaces ********/
 pub trait QuantumUnit: num::Num
@@ -37,8 +39,7 @@ The rest are provided with the trait.
 pub trait MatrixAlgebra<T: QuantumUnit>
 where
     for <'a> &'a Self: IntoIterator<Item=T>, 
-    Self: IntoIterator<Item=T>
-    + From<Vec<T>>
+    Self: From<Vec<T>>
     + Clone
 {
     type Error: std::fmt::Debug
@@ -261,6 +262,15 @@ where
             .fold(T::one(), |acc,t| acc.mul(t));
         Ok(det)
     }
+}
+
+pub trait ComplexMatrixAlgebra<T>: Sized
+{
+    type Error;
+    
+    fn complex_conjugate(&self) -> Result<Self, Self::Error>;
+
+    fn hermitian_conjugate(&self) -> Result<Self, Self::Error>;
 }
 
 /***** Impls ********/

@@ -20,7 +20,8 @@
 
 mod matrix_test
 {
-    use crate::math::{ matrix::Matrix, MatrixAlgebra };
+    use num::Complex;
+    use crate::math::{ matrix::Matrix, MatrixAlgebra, ComplexMatrixAlgebra };
     use assert_approx_eq::assert_approx_eq;
 
     #[test]
@@ -219,21 +220,21 @@ mod matrix_test
         let exp = Matrix::from(vec![15.0,6.0,26.0]).update(Some(3),Some(1)).unwrap();
         assert_eq!(test, exp);
     }
-    /*
+    
     #[test]
     fn test_complex_conjugate()
     {
-        let test: Matrix<Complex<f32>> = vec![
+        let test: Matrix<Complex<f32>> = Matrix::from( vec![
             Complex::<f32>::new(1.0,2.0), Complex::<f32>::new(2.0,3.0), Complex::<f32>::new(3.0,4.0), 
             Complex::<f32>::new(4.0,-5.0), Complex::<f32>::new(5.0,-6.0), Complex::<f32>::new(6.0,-7.0), 
             Complex::<f32>::new(7.0,8.0), Complex::<f32>::new(8.0,-9.0), Complex::<f32>::new(9.0,10.0)
-        ].into();
+        ]).update(Some(3),Some(3)).unwrap();
         let exp = Matrix::<Complex<f32>>::from(vec![
             Complex::new(1.0,-2.0), Complex::new(2.0,-3.0), Complex::new(3.0,-4.0), 
             Complex::new(4.0,5.0), Complex::new(5.0,6.0), Complex::new(6.0,7.0), 
             Complex::new(7.0,-8.0), Complex::new(8.0,9.0), Complex::new(9.0,-10.0)
-        ]);
-        assert_eq!(test.complex_conjugate() ,exp);
+        ]).update(Some(3),Some(3)).unwrap();
+        assert_eq!(test.complex_conjugate().unwrap() ,exp);
     }
 
     #[test]
@@ -242,14 +243,18 @@ mod matrix_test
         let test: Matrix<Complex<f32>> = Matrix::<Complex<f32>>::from(vec![
             Complex::new(1.0,3.0), Complex::new(0.0,2.0), 
             Complex::new(1.0,1.0), Complex::new(1.0,-4.0)
-        ]).hermitian_conjugate();
+        ]).update(Some(2),Some(2))
+            .unwrap()
+            .hermitian_conjugate()
+            .unwrap();
         let exp = Matrix::<Complex<f32>>::from(vec![
             Complex::new(1.0,-3.0), Complex::new(1.0,-1.0), 
             Complex::new(0.0,-2.0), Complex::new(1.0,4.0)  
-        ]);
+        ]).update(Some(2),Some(2))
+            .unwrap();;
         assert_eq!(test,exp);
     }
-    */ 
+    
     #[test]
     fn test_identity_matrix()
     {

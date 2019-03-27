@@ -3,7 +3,8 @@ pub enum MathError
 {
     NoneVal(std::option::NoneError),
     BadIndex(String),
-    BadOp(String)
+    BadOp(String),
+    BadSpec(String),
 }
 
 impl MathError 
@@ -13,6 +14,8 @@ impl MathError
     }  
     
     pub fn bad_op(e: &'static str) -> Self { MathError::BadOp(format!("{}", e)) }
+
+    pub fn bad_spec(e: &'static str) -> Self { MathError::BadSpec(format!("{}", e)) }
 
     pub fn as_result<T>(self) -> Result<T, Self> { Err(self) }
 }
