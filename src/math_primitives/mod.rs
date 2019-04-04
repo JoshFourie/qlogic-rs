@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use std::ops::{ Add, Mul, Sub, Div, Rem };
+use std::ops::{ Add, Mul, Sub, Div, Rem, Range };
 use std::iter::Iterator;
 use num::Complex;
 
@@ -14,6 +14,7 @@ mod eigen;
 pub trait QuantumUnit: num::Num
     + std::ops::Neg<Output=Self>
     + std::ops::AddAssign
+    + std::fmt::Debug
     + Copy
 {
     // these are not implemented as a trait in Rust.
@@ -23,7 +24,11 @@ pub trait QuantumUnit: num::Num
 
 // trait for scalar units that have traits like PartialOrd<Self> & Signum
 // the QuantumUnit is only useful for allowing specialisation.
-pub trait QuantumReal: QuantumUnit + num_traits::real::Real { }
+pub trait QuantumReal: QuantumUnit 
+    + num_traits::real::Real
+{
+
+}
 
 /*
 Required methods:
@@ -40,6 +45,7 @@ pub trait MatrixAlgebra<T: QuantumUnit>
 where
     for <'a> &'a Self: IntoIterator<Item=T>, 
     Self: From<Vec<T>>
+    + std::fmt::Debug
     + Clone
 {
     type Error: std::fmt::Debug
@@ -57,18 +63,9 @@ where
 
     fn push(&mut self, val: T);
 
-    fn permute_rows<'a>(&self) -> Result<std::vec::IntoIter<T>,Self::Error>
+    fn permute_rows<'a>(&self) -> std::vec::IntoIter<T>
     {
-        let mut scratch: Vec<T> = Vec::new();
-        let row = self.row_dim()?;
-        let col = self.col_dim()?;
-        let inner = self.into_inner();
-        for i in 0..col{
-            for j in 0..row {
-                scratch.push( inner[ i.mul(row).add(j) ]);
-            }
-        }
-        Ok(scratch.into_iter())
+        self.into_inner().into_iter()
     }
 
     fn permute_cols<'a>(&self) -> Result<std::vec::IntoIter<T>,Self::Error>
@@ -91,6 +88,38 @@ where
             .map(|x| action(x))
             .collect::<Vec<T>>()
         ).update(self.row_dim(), self.col_dim())?)
+    }
+
+    fn get_sub_matrix(
+        &self, 
+        alpha: Option<Range<usize>>, 
+        beta: Option<Range<usize>>
+    ) -> Result<Self, Self::Error>
+    {
+        let mut A: Self = Vec::new().into();
+        for i in alpha? {
+            for j in beta.clone()? {
+                A.push(self.get(Some(i), Some(j))?);
+            }
+        }
+        Ok(A)
+    }
+
+    fn set_sub_matrix(
+        &mut self,
+        alpha: Option<Range<usize>>, 
+        beta: Option<Range<usize>>,
+        delta: Vec<T>
+    ) -> Result<(), Self::Error>
+    {
+        let mut l: usize = 0;
+        for i in alpha? {
+            for j in beta.clone()? {
+                self.set(Some(i), Some(j), delta[l])?;
+                l += 1;
+            }
+        }
+        Ok(())
     }
 
     fn extract_row(&self, r: usize) -> Result<Vec<T>,Self::Error>
@@ -135,6 +164,7 @@ where
     // index error stopped when we switch i,j in N and then transpose?
     fn kronecker(&self, rhs: &Self) -> Result<Self,Self::Error>
     {   
+
         let n = self.col_dim()?; 
         let q = rhs.col_dim()?; 
         let m = self.row_dim()?;
@@ -180,7 +210,6 @@ where
     {
         let m = self.row_dim();
         let n = rhs.col_dim();
-
         let mut M: Vec<T> = Vec::new();
         for i in 0..m? {
             for j in 0..n? {
@@ -195,8 +224,6 @@ where
         }
         Ok( Self::from(M).update(m, n)? )
     }
-
-    // fn eigen_values(self) -> Result<Vec<T>, Self::Error>;
 
     fn identity(&self) -> Result<Self,Self::Error>
     {
@@ -232,8 +259,8 @@ where
     fn addition(&self, rhs: &Self) -> Result<Self, Self::Error>
     {
         let M: Self = Self::from(self
-            .permute_rows()?
-            .zip(rhs.permute_rows()?)
+            .permute_rows()
+            .zip(rhs.permute_rows())
             .map(|(l,r)| l+r)
             .collect::<Vec<T>>()
         ).update(self.row_dim(), self.col_dim())?;
@@ -243,8 +270,8 @@ where
     fn subtraction(&self, rhs: &Self) ->  Result<Self, Self::Error> 
     {
         let M: Self = Self::from(self
-            .permute_rows()?
-            .zip(rhs.permute_rows()?)
+            .permute_rows()
+            .zip(rhs.permute_rows())
             .map(|(l,r)| l-r)
             .collect::<Vec<T>>()
         ).update(self.row_dim(), self.col_dim())?;
@@ -256,18 +283,32 @@ where
     fn determinant(&self) -> Result<T,Self::Error>
     {
         let (_,R) = self.hessenberg()?;
-        let det = R.cross(self)?
-            .diagonal()?
+        let det = R.diagonal()?
             .into_iter()
             .fold(T::one(), |acc,t| acc.mul(t));
         Ok(det)
     }
+
+    fn eigen_values(&self) -> Result<Vec<T>, Self::Error>
+    {
+        let (Q,R) = self.hessenberg()?;
+        let mut X = R.cross(&Q)?
+            .hessenberg()?;
+        for _ in 0..R.dim()?
+        {
+            let (Y,Z) = X;
+            X = Z.cross(&Y)?
+                .hessenberg()?;
+        }
+        let (_,A) = X;
+        Ok( A.diagonal()? )
+    }
 }
 
-pub trait ComplexMatrixAlgebra<T>: Sized
-{
-    type Error;
-    
+pub trait ComplexMatrixAlgebra<T: QuantumUnit>: MatrixAlgebra<T>
+where
+    for <'a> &'a Self: IntoIterator<Item=T>
+{    
     fn complex_conjugate(&self) -> Result<Self, Self::Error>;
 
     fn hermitian_conjugate(&self) -> Result<Self, Self::Error>;

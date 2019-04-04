@@ -31,7 +31,7 @@ impl<'a, T> From<Vec<T>> for Matrix<T>
 
 /***** Trait Impl ********/
 // every call to dim should incorporate the zero-indexing
-impl<'a, T: QuantumReal> MatrixAlgebra<T> for Matrix<T>
+impl<T: QuantumUnit> MatrixAlgebra<T> for Matrix<T>
 {
     type Error = MathError;
 
@@ -43,11 +43,16 @@ impl<'a, T: QuantumReal> MatrixAlgebra<T> for Matrix<T>
 
     fn update(self, row: Option<usize>, col: Option<usize>) -> Result<Self,Self::Error>
     { 
-        let mut N: Self = self.inner.into();
-        N.row = row;
-        N.col = col;
-        N.dim = Some(row?.mul(col?));
-        Ok(N)
+        match (row,col) {
+            (Some(r),Some(c)) => {
+                let mut N: Self = self.inner.into();
+                N.row = row;
+                N.col = col;
+                N.dim = Some(r.mul(c));
+                return Ok(N)
+            },
+            (_,_) => MathError::bad_input("MatrixAlgebra::update() requires (Some(),Some()) input.").as_result()
+        }
     }
 
     fn into_inner(&self) -> Vec<T> { self.inner.clone() }
@@ -56,69 +61,49 @@ impl<'a, T: QuantumReal> MatrixAlgebra<T> for Matrix<T>
 
     fn get(&self, row: Option<usize>, col: Option<usize>) -> Result<T,Self::Error>
     {
-        let index = row?
-            .mul(self.col?)
-            .add(col?);
-        Ok(self.inner[index])
+        if self.row? > row? && self.col? > col? 
+        {
+            let i = row?
+                .mul(self.col_dim()?)
+                .add(col?);
+            return Ok(self.inner[i])
+        } else { MathError::invalid_index(row?, col?, self.row?, self.col?).as_result() }
     }
 
     fn set(&mut self, row: Option<usize> , col: Option<usize>, val:T) -> Result<(),Self::Error>
     {
-        let index = row?
-            .mul(self.col?)
+        let i = row?
+            .mul(self.col_dim()?)
             .add(col?);
-        self.inner[index] = val;
+                self.inner[i] = val;
         Ok(())
     }
 
+    default fn hessenberg(&self) -> Result<(Self,Self),Self::Error> 
+    {
+        MathError::bad_spec("temp").as_result()
+    }
+}
+
+impl<T: QuantumReal> MatrixAlgebra<T> for Matrix<T>
+{
+    // numerically unstable, error is unacceptable. 
     fn hessenberg(&self) -> Result<(Self,Self),Self::Error> 
     {
         super::eigen::real_hessenberg(self)
     }
 }
 
-impl<T: num::Float> MatrixAlgebra<Complex<T>> for Matrix<Complex<T>>
-where
-    Complex<T>: QuantumUnit
+impl MatrixAlgebra<Complex<f32>> for Matrix<Complex<f32>>
 {
-    type Error = MathError;
-
-    fn dim(&self) -> Option<usize> { self.dim }
-
-    fn col_dim(&self) -> Option<usize> { self.col }
-
-    fn row_dim(&self) -> Option<usize> { self.row }
-
-    fn update(self, row: Option<usize>, col: Option<usize>) -> Result<Self,Self::Error>
-    { 
-        let mut N: Self = self.inner.into();
-        N.row = row;
-        N.col = col;
-        N.dim = Some(row?.mul(col?));
-        Ok(N)
-    }
-
-    fn into_inner(&self) -> Vec<Complex<T>> { self.inner.clone() }
-
-    fn push(&mut self, val: Complex<T>) { self.inner.push(val); }
-
-    fn get(&self, row: Option<usize>, col: Option<usize>) -> Result<Complex<T>,Self::Error>
+    fn hessenberg(&self) -> Result<(Self,Self),Self::Error> 
     {
-        let index = row?
-            .mul(self.col?)
-            .add(col?);
-        Ok(self.inner[index])
+        super::eigen::complex_hessenberg(self)
     }
+}
 
-    fn set(&mut self, row: Option<usize> , col: Option<usize>, val: Complex<T>) -> Result<(),Self::Error>
-    {
-        let index = row?
-            .mul(self.col?)
-            .add(col?);
-        self.inner[index] = val;
-        Ok(())
-    }
-
+impl MatrixAlgebra<Complex<f64>> for Matrix<Complex<f64>>
+{
     fn hessenberg(&self) -> Result<(Self,Self),Self::Error> 
     {
         super::eigen::complex_hessenberg(self)
@@ -130,8 +115,6 @@ where
     Self: MatrixAlgebra<Complex<T>>,
     Complex<T>: QuantumUnit,
 {
-    type Error = <Self as MatrixAlgebra<Complex<T>>>::Error;
-
     fn complex_conjugate(&self) -> Result<Self, Self::Error> 
     {
         self.apply_to_each(|c| c.conj() )

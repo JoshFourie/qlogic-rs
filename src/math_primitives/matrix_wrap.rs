@@ -2,7 +2,7 @@ use super::matrix::Matrix;
 use super::matrix_err::MathError;
 use super::{ MatrixAlgebra, QuantumReal, QuantumUnit };
 use num::integer::Roots;
-use std::ops::{ Mul, Add };
+use std::ops::{ Mul, Add, Range };
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Vector<T>
@@ -138,6 +138,47 @@ impl<T: QuantumUnit> MatrixAlgebra<T> for Vector<T>
                 Ok(())
             },
             _ => Err(MathError::invalid_index(row?, col?, self.len?, 1)), 
+        }
+    }
+
+    fn get_sub_matrix(
+        &self, 
+        alpha: Option<Range<usize>>, 
+        beta: Option<Range<usize>>
+    ) -> Result<Self, Self::Error>
+    {
+        match beta {
+            None => {
+                let mut A: Self = Vec::new().into();
+                for i in alpha? {
+                    A.push(self.get(Some(i), None)?);
+                }
+                return Ok(A)
+            },
+            Some(_) => MathError::bad_input("Col. index of a Vector should be a None, you have called Some({usize}).").as_result(),
+        }
+        
+    }
+
+    fn set_sub_matrix(        
+        &mut self,
+        alpha: Option<Range<usize>>, 
+        beta: Option<Range<usize>>,
+        delta: Vec<T>
+    ) -> Result<(), Self::Error>
+    {
+        match beta {
+            None => {
+                let mut l: usize = 0;
+                for i in alpha? {
+                    for j in beta.clone()? {
+                        self.set(Some(i), Some(j), delta[l])?;
+                        l += 1;
+                    }
+                }
+                Ok(())
+            },
+            Some(_) => MathError::bad_input("Col. index of a Vector should be a None, you have called Some({usize}).").as_result(),
         }
     }
 
