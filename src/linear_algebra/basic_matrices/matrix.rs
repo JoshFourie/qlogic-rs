@@ -1,9 +1,8 @@
 #![allow(non_snake_case)]
 
 /***** Imports ********/
-use std::ops::{ Add, Mul};
-use super::{ QuantumReal, QuantumUnit, MatrixAlgebra, ComplexMatrixAlgebra, Complex };
 use super::matrix_err::MathError;
+use super::*;
 
 /***** Struct ********/
 
@@ -31,7 +30,9 @@ impl<'a, T> From<Vec<T>> for Matrix<T>
 
 /***** Trait Impl ********/
 // every call to dim should incorporate the zero-indexing
-impl<T: QuantumUnit> MatrixAlgebra<T> for Matrix<T>
+impl<T: Copy + Debug> CoreMatrix<T> for Matrix<T>
+where
+    T: Num
 {
     type Error = MathError;
 
@@ -78,42 +79,37 @@ impl<T: QuantumUnit> MatrixAlgebra<T> for Matrix<T>
                 self.inner[i] = val;
         Ok(())
     }
-
-    default fn hessenberg(&self) -> Result<(Self,Self),Self::Error> 
-    {
-        MathError::bad_spec("temp").as_result()
-    }
 }
 
-impl<T: QuantumReal> MatrixAlgebra<T> for Matrix<T>
+impl<T: Num + Copy + Debug> BasicTransform<T> for Matrix<T> { }
+
+impl<T: Copy + Debug> EigenValueDecomposition<T> for Matrix<T>
+where
+    T: Float + Signed
 {
     // numerically unstable, error is unacceptable. 
-    fn hessenberg(&self) -> Result<(Self,Self),Self::Error> 
+    fn decomposition(&self) -> Result<(Self,Self),Self::Error> 
     {
         super::eigen::real_hessenberg(self)
     }
 }
 
-impl MatrixAlgebra<Complex<f32>> for Matrix<Complex<f32>>
-{
-    fn hessenberg(&self) -> Result<(Self,Self),Self::Error> 
-    {
-        super::eigen::complex_hessenberg(self)
-    }
-}
-
-impl MatrixAlgebra<Complex<f64>> for Matrix<Complex<f64>>
-{
-    fn hessenberg(&self) -> Result<(Self,Self),Self::Error> 
-    {
-        super::eigen::complex_hessenberg(self)
-    }
-}
-
-impl<T: QuantumUnit> ComplexMatrixAlgebra<Complex<T>> for Matrix<Complex<T>> 
+// It's intuitively strange to have the default impl pick up the complex specialisation but
+// without a complex trait this is the better solution.
+impl<T: Copy + Debug> EigenValueDecomposition<T> for Matrix<T>
 where
-    Self: MatrixAlgebra<Complex<T>>,
-    Complex<T>: QuantumUnit,
+    T: Num
+{
+    default fn decomposition(&self) -> Result<(Self,Self),Self::Error> 
+    {
+        MathError::bad_spec("temp : no complex impl").as_result()
+    }   
+}
+
+impl<T: Copy> ComplexTransform<Complex<T>> for Matrix<Complex<T>> 
+where
+    Complex<T>: Num,
+    T: Num + Signed + Debug
 {
     fn complex_conjugate(&self) -> Result<Self, Self::Error> 
     {

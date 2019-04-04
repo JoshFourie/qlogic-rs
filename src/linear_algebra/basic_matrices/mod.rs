@@ -1,52 +1,22 @@
-#![allow(non_snake_case)]
+/****** Imports *******/
+pub(crate) use std::ops::{Range, Rem, Mul, Add, Sub, Div};
+pub(crate) use std::fmt::Debug;
+pub(crate) use num::{Num, Complex, Signed, Float};
+pub(crate) use super::ancillary_algorithms::{eigenvalue_decomposition as eigen};
 
-use std::ops::{ Add, Mul, Sub, Div, Rem, Range };
-use std::iter::Iterator;
-use num::Complex;
-
+/****** Exports *******/
 pub mod matrix;
-mod matrix_iter;
-mod matrix_wrap;
-mod matrix_err;
-mod eigen;
+pub mod matrix_err;
+pub mod matrix_iter;
+
+pub use matrix::*;
 
 /***** Interfaces ********/
-pub trait QuantumUnit: num::Num
-    + std::ops::Neg<Output=Self>
-    + std::ops::AddAssign
-    + std::fmt::Debug
-    + Copy
-{
-    // these are not implemented as a trait in Rust.
-    fn pow64(self, rhs: f64) -> Self;
-    fn sqroot(self) -> Self;
-}
-
-// trait for scalar units that have traits like PartialOrd<Self> & Signum
-// the QuantumUnit is only useful for allowing specialisation.
-pub trait QuantumReal: QuantumUnit 
-    + num_traits::real::Real
-{
-
-}
-
-/*
-Required methods:
-    - dim()
-    - col_dim()
-    - row_dim()
-    - update()
-    - into_inner()
-    - push()
-    - hessenberg()
-The rest are provided with the trait.
-*/
-pub trait MatrixAlgebra<T: QuantumUnit>
+pub trait CoreMatrix<T: Copy>
 where
     for <'a> &'a Self: IntoIterator<Item=T>, 
-    Self: From<Vec<T>>
-    + std::fmt::Debug
-    + Clone
+    Self: From<Vec<T>> + std::fmt::Debug,
+    T: Num
 {
     type Error: std::fmt::Debug
     + From<std::option::NoneError>;
@@ -90,6 +60,37 @@ where
         ).update(self.row_dim(), self.col_dim())?)
     }
 
+    fn extract_row(&self, r: usize) -> Result<Vec<T>,Self::Error>
+    {
+        let mut v: Vec<T> = Vec::new();
+        for c in 0..self.col_dim()? {
+            let val = self.get(Some(r), Some(c))?;
+            v.push(val)
+        }
+        Ok(v)
+    }
+
+    fn extract_col(&self, c: usize) -> Result<Vec<T>,Self::Error>
+    {
+        let mut v: Vec<T> = Vec::new();
+        for r in 0..self.row_dim()? {
+            let val = self.get(Some(r), Some(c))?;
+            v.push(val)
+        }
+        Ok(v)
+    }
+
+    fn get(&self, row: Option<usize>, col: Option<usize>) -> Result<T,Self::Error>;
+    
+    fn set(&mut self, row: Option<usize>, col: Option<usize>, val:T) -> Result<(),Self::Error>;
+}
+
+pub trait BasicTransform<T: Copy>
+where
+    for <'a> &'a Self: IntoIterator<Item=T>, 
+    Self: CoreMatrix<T>,
+    T: Num
+{
     fn get_sub_matrix(
         &self, 
         alpha: Option<Range<usize>>, 
@@ -122,30 +123,6 @@ where
         Ok(())
     }
 
-    fn extract_row(&self, r: usize) -> Result<Vec<T>,Self::Error>
-    {
-        let mut v: Vec<T> = Vec::new();
-        for c in 0..self.col_dim()? {
-            let val = self.get(Some(r), Some(c))?;
-            v.push(val)
-        }
-        Ok(v)
-    }
-
-    fn extract_col(&self, c: usize) -> Result<Vec<T>,Self::Error>
-    {
-        let mut v: Vec<T> = Vec::new();
-        for r in 0..self.row_dim()? {
-            let val = self.get(Some(r), Some(c))?;
-            v.push(val)
-        }
-        Ok(v)
-    }
-
-    fn get(&self, row: Option<usize>, col: Option<usize>) -> Result<T,Self::Error>;
-    
-    fn set(&mut self, row: Option<usize>, col: Option<usize>, val:T) -> Result<(),Self::Error>;
-
     fn transpose(&self) -> Result<Self, Self::Error> {
         let M = Self::from( self
             .permute_cols()?
@@ -156,9 +133,9 @@ where
 
     fn eucl_norm(&self) -> T  
     { 
-        self.into_iter()
-            .fold(T::zero(), |acc,x| acc + x.pow64(2.0))
-            .sqroot()
+        let y = self.into_iter()
+            .fold(T::zero(), |acc,x| acc + num::pow(x, 2) );
+        num::pow(y, 1.div(2) as usize)       
     }
 
     // index error stopped when we switch i,j in N and then transpose?
@@ -216,7 +193,7 @@ where
                 let mut sigma = T::zero();
                 for k in 0..rhs.row_dim()? 
                 {
-                    sigma += self.get(Some(i), Some(k))?.mul( rhs.get(Some(k), Some(j))?);
+                    sigma = sigma + self.get(Some(i), Some(k))?.mul( rhs.get(Some(k), Some(j))?);
                 }
 
                 M.push(sigma);
@@ -242,7 +219,7 @@ where
         for n in self.diagonal()?
             .into_iter()
         {
-            sigma += n;
+            sigma = sigma + n;
         }
         Ok(sigma)
     }
@@ -277,12 +254,33 @@ where
         ).update(self.row_dim(), self.col_dim())?;
         Ok(M)
     }
+}
 
-    fn hessenberg(&self) -> Result<(Self,Self),Self::Error>;
-    
+pub trait ComplexTransform<T: Copy>
+where
+    for <'a> &'a Self: IntoIterator<Item=T>,
+    Self: BasicTransform<T>,
+    Complex<T>: Num,
+    T: Num
+{    
+    fn complex_conjugate(&self) -> Result<Self, Self::Error>;
+
+    fn hermitian_conjugate(&self) -> Result<Self, Self::Error>;
+}
+
+pub trait EigenValueDecomposition<T: Copy>
+where
+    for <'a> &'a Self: IntoIterator<Item=T>, 
+    Self: BasicTransform<T>,
+    T: Num
+{
+    fn decomposition(&self) -> Result<(Self,Self),Self::Error>;
+
+    // CONFIRM THIS AS NEEDING DECOMPOSITION?
+    // Error on test.
     fn determinant(&self) -> Result<T,Self::Error>
     {
-        let (_,R) = self.hessenberg()?;
+        let (_,R) = self.decomposition()?;
         let det = R.diagonal()?
             .into_iter()
             .fold(T::one(), |acc,t| acc.mul(t));
@@ -291,52 +289,16 @@ where
 
     fn eigen_values(&self) -> Result<Vec<T>, Self::Error>
     {
-        let (Q,R) = self.hessenberg()?;
+        let (Q,R) = self.decomposition()?;
         let mut X = R.cross(&Q)?
-            .hessenberg()?;
+            .decomposition()?;
         for _ in 0..R.dim()?
         {
             let (Y,Z) = X;
             X = Z.cross(&Y)?
-                .hessenberg()?;
+                .decomposition()?;
         }
         let (_,A) = X;
         Ok( A.diagonal()? )
     }
 }
-
-pub trait ComplexMatrixAlgebra<T: QuantumUnit>: MatrixAlgebra<T>
-where
-    for <'a> &'a Self: IntoIterator<Item=T>
-{    
-    fn complex_conjugate(&self) -> Result<Self, Self::Error>;
-
-    fn hermitian_conjugate(&self) -> Result<Self, Self::Error>;
-}
-
-/***** Impls ********/
-impl QuantumUnit for isize { 
-    fn pow64(self, rhs: f64) -> Self { self.pow(rhs as u32) }
-    fn sqroot(self) -> Self { (self as f64).sqrt() as isize }
-}
-impl QuantumUnit for f32 {
-    fn pow64(self, rhs: f64) -> Self { self.powf(rhs as  f32) }     
-    fn sqroot(self) -> Self { self.sqrt() }
-}
-impl QuantumUnit for f64 {     
-    fn pow64(self, rhs: f64) -> Self { self.powf(rhs) }     
-    fn sqroot(self) -> Self { self.sqrt() }
-}
-
-impl QuantumUnit for num::Complex<f32> {
-    fn pow64(self, rhs: f64) -> Self { self.powf(rhs as f32) }     
-    fn sqroot(self) -> Self { self.sqrt() }
-}
-impl QuantumUnit for num::Complex<f64> {
-    fn pow64(self, rhs: f64) -> Self { self.powf(rhs) }     
-    fn sqroot(self) -> Self { self.sqrt() }
-}
-
-impl QuantumReal for f32 { }
-
-impl QuantumReal for f64 { }

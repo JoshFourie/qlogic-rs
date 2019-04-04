@@ -21,7 +21,7 @@
 mod matrix_test
 {
     use num::Complex;
-    use crate::math::{ matrix::Matrix, MatrixAlgebra, ComplexMatrixAlgebra };
+    use super::super::*;
     use assert_approx_eq::assert_approx_eq;
 
     #[test]
@@ -322,7 +322,7 @@ mod matrix_test
         let M: Matrix<f32> = Matrix::from(vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0])
             .update(Some(3),Some(3))
             .unwrap();
-        let (Q,R): (Matrix<f32>,_) = M.hessenberg().unwrap();
+        let (Q,R): (Matrix<f32>,_) = M.decomposition().unwrap();
         let exp_Q: Matrix<f32> = Matrix::from(vec![0.8571, -0.3943, 0.3314, 0.4286, 0.9020, -0.0343, -0.2857, 0.1714, 0.9429])
             .update(Some(3), Some(3))
             .unwrap();

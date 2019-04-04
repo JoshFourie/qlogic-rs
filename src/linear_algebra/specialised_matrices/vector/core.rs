@@ -1,21 +1,8 @@
-use super::matrix::Matrix;
-use super::matrix_err::MathError;
-use super::{ MatrixAlgebra, QuantumReal, QuantumUnit };
-use num::integer::Roots;
-use std::ops::{ Mul, Add, Range };
-
 #[derive(Debug, PartialEq, Clone)]
 pub struct Vector<T>
 {
     pub(crate) inner: Vec<T>,
     pub(crate) len: Option<usize>,
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub struct SquareMatrix<T>
-{
-    pub(crate) inner: Vec<T>,
-    pub(crate) dim: Option<usize>,
 }
 
 impl<T> From<Vector<T>> for Matrix<T>
@@ -44,54 +31,28 @@ impl<'a, T: Clone> From<&'a Vector<T>> for Matrix<T>
     }
 }
 
-// TEMP UNWRAP()
-impl<T> From<SquareMatrix<T>> for Matrix<T>
+impl<T: Copy> IntoIterator for Vector<T>
 {
-    fn from(sq: SquareMatrix<T>) -> Self 
+    type Item = T;
+    type IntoIter = MatrixIter<Matrix<T>>;
+    fn into_iter(self) -> Self::IntoIter
     {
-        Self {
-            col: sq.dim,
-            row: sq.dim,
-            dim: Some( sq.dim.unwrap().mul(sq.dim.unwrap()) ),
-            inner: sq.inner,   
-        }
+        Matrix::from(self).into_iter()
     }
 }
 
-impl<'a, T: Clone> From<&'a SquareMatrix<T>> for Matrix<T>
+impl <'a, T: Copy> IntoIterator for &'a Vector<T>
 {
-    fn from(sq: &'a SquareMatrix<T>) -> Self 
+    type Item = T;
+    type IntoIter = MatrixIter<Matrix<T>>;
+    fn into_iter(self) -> Self::IntoIter
     {
-        Self {
-            col: sq.dim,
-            row: sq.dim,
-            dim: Some( sq.dim.unwrap().mul(sq.dim.unwrap()) ),
-            inner: sq.inner.clone(),   
-        }
-    }
-} 
-
-impl<T> From<Vec<T>> for Vector<T>
-{
-    fn from(v: Vec<T>) -> Self {
-        Self {
-            len: Some( v.len() ),
-            inner: v
-        }
+        Matrix::from(self).into_iter()
     }
 }
 
-impl<T> From<Vec<T>> for SquareMatrix<T>
-{
-    fn from(v: Vec<T>) -> Self {
-        Self {
-            dim: Some( v.len().sqrt() ),
-            inner: v
-        }
-    }
-}
 
-impl<T: QuantumUnit> MatrixAlgebra<T> for Vector<T>
+impl<T: QuantumUnit> CoreMatrix<T> for Vector<T>
 {
     type Error = MathError;
 
@@ -140,7 +101,10 @@ impl<T: QuantumUnit> MatrixAlgebra<T> for Vector<T>
             _ => Err(MathError::invalid_index(row?, col?, self.len?, 1)), 
         }
     }
+}
 
+impl<T: QuantumUnit> BasicTransform<T> for Vector<T>
+{
     fn get_sub_matrix(
         &self, 
         alpha: Option<Range<usize>>, 
@@ -180,64 +144,5 @@ impl<T: QuantumUnit> MatrixAlgebra<T> for Vector<T>
             },
             Some(_) => MathError::bad_input("Col. index of a Vector should be a None, you have called Some({usize}).").as_result(),
         }
-    }
-
-    fn hessenberg(&self) -> Result<(Self,Self),Self::Error> {
-        MathError::bad_op("Invalid decomposition: cannot decompose a Vector with this operation.").as_result()
-    }
-}
-
-impl<T: QuantumReal> MatrixAlgebra<T> for SquareMatrix<T>
-{
-    type Error = MathError;
-
-    fn dim(&self) -> Option<usize> { self.dim }
-
-    fn col_dim(&self) -> Option<usize> { self.dim }
-
-    fn row_dim(&self) -> Option<usize> { self.dim }
-
-    fn update(self, row: Option<usize>, col: Option<usize>) -> Result<Self,Self::Error>
-    { 
-        let mut N: Self = self.into_inner().into();
-        match (row,col) {
-            (Some(_), None) => { N.dim = row; },
-            (None, Some(_)) => { N.dim = col; },
-            (None, None) => { N.dim = Some(self.into_inner().len().sqrt()) }
-            (Some(r), Some(c)) => {
-                if r==c { 
-                    N.dim = row 
-                } else { 
-                    return MathError::bad_op("Invalid Dimensions: rows must be equivalent to cols when force-updating a square matrix.").as_result() 
-                }
-            }
-        }
-        Ok(N)
-    }
-
-    fn into_inner(&self) -> Vec<T> { self.inner.clone() }
-
-    fn push(&mut self, val: T) { self.inner.push(val); }
-
-    fn get(&self, row: Option<usize>, col: Option<usize>) -> Result<T,Self::Error>
-    {
-        let index = row?
-            .mul(self.dim?)
-            .add(col?);
-        Ok(self.inner[index])
-    }
-
-    fn set(&mut self, row: Option<usize> , col: Option<usize>, val:T) -> Result<(),Self::Error>
-    {
-        let index = row?
-            .mul(self.dim?)
-            .add(col?);
-        self.inner[index] = val;
-        Ok(())
-    }
-
-    fn hessenberg(&self) -> Result<(Self,Self),Self::Error> 
-    {
-        super::eigen::real_hessenberg(self)
     }
 }

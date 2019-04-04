@@ -1,13 +1,21 @@
-use super::{ MatrixAlgebra, QuantumReal, QuantumUnit, Complex };
-use std::ops::{ Add, Sub, Div, Mul };
+/********* Imports **************/
 
-pub(crate) fn real_hessenberg<T, M>(A: &M) -> Result<(M,M),M::Error>
+use super::{ BasicTransform, Float};
+use super::{Mul, Add, Sub, Div};
+
+/********* Functions **********/
+
+pub(crate) fn real_hessenberg<T: Copy, M>(A: &M) -> Result<(M,M),M::Error>
 where
-    T: QuantumReal,
-    M: MatrixAlgebra<T>,
+    T: Float + num::Signed,
+    M: BasicTransform<T>,
     for<'a> &'a M: IntoIterator<Item=T>
 {
-    let mut H: M = A.clone();
+    let mut H: M = M::from(Vec::new())
+        .update(A.row_dim(), A.col_dim())?;
+    for a in A.into_iter() {
+        H.push(a)
+    }    
     let mut Q_store: Vec<M> = Vec::new();
     let mut R_store: Vec<M> = Vec::new();
     let col_dim = H.col_dim();
@@ -51,15 +59,13 @@ where
     Ok((Q,R))
 }
 
-use num_traits::identities::{ One, Zero};
-
+/*
 // TODO: adjust for changes to function as above.
-pub fn complex_hessenberg<T,M>(A: &M) -> Result<(M,M),M::Error>
+pub fn complex_hessenberg<T: Copy,M>(A: &M) -> Result<(M,M),M::Error>
 where
-    T: num::Float,
-    Complex<T>: QuantumUnit
-    + Mul<T,Output=Complex<T>>,
-    M: MatrixAlgebra<Complex<T>>,
+    T: Float,
+    Complex<T>: Num + Copy,
+    M: BasicTransform<Complex<T>>,
     for<'a> &'a M: IntoIterator<Item=Complex<T>>
 {
 
@@ -106,6 +112,7 @@ where
         })?;
     Ok((Q,R))
 }
+*/
 
 /* 
 /* P.cross(

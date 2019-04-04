@@ -1,5 +1,4 @@
 use super::matrix::Matrix;
-use super::matrix_wrap::{ SquareMatrix, Vector };
 use std::ops::{ AddAssign };
 
 pub struct MatrixIter<M>
@@ -30,46 +29,6 @@ impl<'a, T: Copy> IntoIterator for &'a Matrix<T>
             matrix: self,
             _iter: 0,
         }
-    }
-}
-
-impl<T: Copy> IntoIterator for SquareMatrix<T>
-{
-    type Item = T;
-    type IntoIter = MatrixIter<Matrix<T>>;
-    fn into_iter(self) -> Self::IntoIter
-    {
-        Matrix::from(self).into_iter()
-    }
-}
-
-impl <'a, T: Copy> IntoIterator for &'a SquareMatrix<T>
-{
-    type Item = T;
-    type IntoIter = MatrixIter<Matrix<T>>;
-    fn into_iter(self) -> Self::IntoIter
-    {
-        Matrix::from(self).into_iter()
-    }
-}
-
-impl<T: Copy> IntoIterator for Vector<T>
-{
-    type Item = T;
-    type IntoIter = MatrixIter<Matrix<T>>;
-    fn into_iter(self) -> Self::IntoIter
-    {
-        Matrix::from(self).into_iter()
-    }
-}
-
-impl <'a, T: Copy> IntoIterator for &'a Vector<T>
-{
-    type Item = T;
-    type IntoIter = MatrixIter<Matrix<T>>;
-    fn into_iter(self) -> Self::IntoIter
-    {
-        Matrix::from(self).into_iter()
     }
 }
 
