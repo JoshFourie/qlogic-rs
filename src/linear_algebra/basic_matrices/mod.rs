@@ -2,7 +2,7 @@
 pub(crate) use std::ops::{Range, Rem, Mul, Add, Sub, Div};
 pub(crate) use std::fmt::Debug;
 pub(crate) use num::{Num, Complex, Signed, Float};
-pub(crate) use super::ancillary_algorithms::{eigenvalue_decomposition as eigen};
+pub(crate) use super::ancillary_algorithms::{eigenvalues as eigen};
 
 /****** Exports *******/
 pub mod matrix;
@@ -83,6 +83,9 @@ where
     fn get(&self, row: Option<usize>, col: Option<usize>) -> Result<T,Self::Error>;
     
     fn set(&mut self, row: Option<usize>, col: Option<usize>, val:T) -> Result<(),Self::Error>;
+
+    // fn destruct(self) {  } // the lib. requires a destructor because there are a lot of references to ensure looping.
+
 }
 
 pub trait BasicTransform<T: Copy>
@@ -206,9 +209,9 @@ where
     {
         let col_dim = self.col_dim();
         let mut id: Self = Self::from( vec![T::zero(); self.dim()?] )
-            .update(col_dim, col_dim)?;
+            .update(col_dim, col_dim)?; 
         for i in 0..col_dim? {
-            id.set(Some(i), Some(i), T::one())?
+            id.set(Some(i), Some(i), T::one())?;
         }
         Ok(id)
     }

@@ -5,7 +5,8 @@ pub enum MathError
     BadIndex(String),
     BadOp(String),
     BadSpec(String),
-    BadInput(String)
+    BadInput(String),
+    Square(String)
 }
 
 impl MathError 
@@ -23,7 +24,8 @@ impl MathError
     pub fn as_result<T>(self) -> Result<T, Self> { Err(self) }
 }
 
-impl From<std::option::NoneError> for MathError
+
+impl From<std::option::NoneError> for MathError 
 {
     fn from(e: std::option::NoneError) -> Self { MathError::NoneVal(e) }
 }

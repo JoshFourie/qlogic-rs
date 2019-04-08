@@ -1,8 +1,20 @@
+use super::*;
+
 #[derive(Debug, PartialEq, Clone)]
 pub struct Vector<T>
 {
     pub(crate) inner: Vec<T>,
     pub(crate) len: Option<usize>,
+}
+
+impl<T> From<Vec<T>> for Vector<T>
+{
+    fn from(x: Vec<T>) -> Self {
+        Self {
+            len: Some(x.len()),
+            inner: x
+        }
+    }
 }
 
 impl<T> From<Vector<T>> for Matrix<T>
@@ -52,7 +64,9 @@ impl <'a, T: Copy> IntoIterator for &'a Vector<T>
 }
 
 
-impl<T: QuantumUnit> CoreMatrix<T> for Vector<T>
+impl<T: Copy + Debug> CoreMatrix<T> for Vector<T>
+where
+    T: Num
 {
     type Error = MathError;
 
@@ -103,7 +117,9 @@ impl<T: QuantumUnit> CoreMatrix<T> for Vector<T>
     }
 }
 
-impl<T: QuantumUnit> BasicTransform<T> for Vector<T>
+impl<T: Copy + Debug> BasicTransform<T> for Vector<T>
+where
+    T: Num
 {
     fn get_sub_matrix(
         &self, 

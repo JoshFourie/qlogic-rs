@@ -365,6 +365,7 @@ mod matrix_test
         }
     }
 
+    #[ignore]
     #[test]
     fn test_determinant()
     {

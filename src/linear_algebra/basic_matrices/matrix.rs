@@ -76,7 +76,7 @@ where
         let i = row?
             .mul(self.col_dim()?)
             .add(col?);
-                self.inner[i] = val;
+        self.inner[i] = val;
         Ok(())
     }
 }
