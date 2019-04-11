@@ -69,19 +69,14 @@ where
 
     let mut D = A.identity()?;
     let mut done=0;
-    while done == 0 {
-        done=1;
-        let mut c = T::zero();
-        let mut r = T::zero();
-        for j in 0..A.row_dim()? {            
+    while done == 0 {     
+        for j in 0..A.row_dim()? {        
+            let mut c = T::zero();
+            let mut r = T::zero();        
             for i in 0..A.row_dim()? {
-                if i==j { 
-                    c = c.add( A.get(Some(i), Some(j))?.abs() ) 
-                }
-            }
-            for k in 0..A.row_dim()? {
-                if k==j {
-                    r = r.add( A.get(Some(j), Some(k))?.abs() )
+                if i!=j { 
+                    c = c.add( A.get(Some(i), Some(j))?.abs() ); 
+                    r = r.add( A.get(Some(j), Some(i))?.abs() );
                 }
             }
             let s = c.add(r);
@@ -96,23 +91,22 @@ where
                 r = b.div(r);
                 f = f.div(b);
             }
-            println!("{:?} {:?} {:?} ", c, b, f);
+            println!("c: {:?} b: {:?} f: {:?} ", c, b, f);
             if c.add(r) < T::from(0.95)?.mul(s) {
-                done=0;
                 let sigma = f.mul(D.get(Some(j),Some(j))?);
                 D.set(Some(j),Some(j),sigma)?;
-
-                for n in 0..A.dim()? {
+// swapping omega/theta set().
+                for n in 0..A.row_dim()? {
                     let omega = f.mul(A.get(Some(n), Some(j))?);
                     A.set(Some(n), Some(j), omega)?;
 
                     let theta = T::one().div(f).mul(A.get(Some(j), Some(n))?);
                     A.set(Some(j), Some(n), theta)?;
-                }
-            }
+                }                
+            } else { done=1 }
         }
     }
-    Ok(A)
+    Ok(A.scalar(T::one().add(T::one()))?)
 }
 
 #[test]
@@ -135,7 +129,12 @@ fn test_balance() {
         -1.1986.mul(10_f64.powf(13.0)),
         -6.2002.mul(10_f64.powf(-1.0))
     ].into();
-
-    println!("{:?}", &A);
-    println!("{:?}", parlett_reinsch_balance(&A).unwrap());
+    let E: SquareMatrix<_> = vec![
+        -0.5585, -0.3587, -1.0950, 0.1036,
+        -0.4813, -2.1248, -0.4313, 2.7719,
+        -0.2337, -1.8158, 0.1623, -0.6713,
+        0.2793, 1.2029, -1.3627, -0.6200 
+    ].into();
+    let T: _ = parlett_reinsch_balance(&A).unwrap();
+    assert_eq!(E,T);
 }

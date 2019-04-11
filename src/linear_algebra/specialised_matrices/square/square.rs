@@ -50,7 +50,6 @@ where
         let index = row?
             .mul(self.col_dim()?)
             .add(col?);
-        println!("r: {}, c: {}, dim: {}", row?, col?, self.col_dim()?);
         self.inner[index] = val;
         Ok(())
     }
