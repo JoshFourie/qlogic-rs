@@ -13,7 +13,7 @@ where
     let mut H: M = M::from(Vec::new())
         .update(A.row_dim(), A.col_dim())?;
     for a in A.into_iter() {
-        H.push(a)
+        H.push(a);
     }    
     let mut Q_store: Vec<M> = Vec::new();
     let mut R_store: Vec<M> = Vec::new();
@@ -64,10 +64,10 @@ where
     M: Square<T>,
     for<'a> &'a M: IntoIterator<Item=T>
 {
-    let b = T::one().add(T::one());
-    let mut A: M = H.into_inner().into(); 
 
-    let mut D = A.identity()?;
+    let mut A: M = H.into_inner().into(); 
+    let base = T::one().add(T::one());
+    let mut I = A.identity()?;
     let mut done=0;
     while done == 0 {     
         for j in 0..A.row_dim()? {        
@@ -81,21 +81,20 @@ where
             }
             let s = c.add(r);
             let mut f = T::one();
-            while b.mul(c) < r {
-                c = b.mul(c);
-                r = r.div(b);
-                f = b.mul(f);
+            while base.mul(c) < r {
+                c = base.mul(c);
+                r = r.div(base);
+                f = base.mul(f);
             }
-            while b.mul(r) < c {
-                c = c.div(b);
-                r = b.div(r);
-                f = f.div(b);
+            while base.mul(r) < c {
+                c = c.div(base);
+                r = base.div(r);
+                f = f.div(base);
             }
-            println!("c: {:?} b: {:?} f: {:?} ", c, b, f);
+            println!("c: {:?} b: {:?} f: {:?} ", c, base, f);
             if c.add(r) < T::from(0.95)?.mul(s) {
-                let sigma = f.mul(D.get(Some(j),Some(j))?);
-                D.set(Some(j),Some(j),sigma)?;
-// swapping omega/theta set().
+                let sigma = f.mul(I.get(Some(j),Some(j))?);
+                I.set(Some(j),Some(j),sigma)?;
                 for n in 0..A.row_dim()? {
                     let omega = f.mul(A.get(Some(n), Some(j))?);
                     A.set(Some(n), Some(j), omega)?;
@@ -106,7 +105,7 @@ where
             } else { done=1 }
         }
     }
-    Ok(A.scalar(T::one().add(T::one()))?)
+    Ok(A)
 }
 
 #[test]

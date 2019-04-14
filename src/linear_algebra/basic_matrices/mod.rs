@@ -31,7 +31,7 @@ where
 
     fn into_inner(&self) -> Vec<T>;
 
-    fn push(&mut self, val: T);
+    fn push(self, val: T) -> Result<Self, Self::Error>;
 
     fn permute_rows<'a>(&self) -> std::vec::IntoIter<T>
     {
@@ -305,3 +305,87 @@ where
         Ok( A.diagonal()? )
     }
 }
+
+pub trait ElementaryRowOperations<T: Copy + Debug>
+where
+    for <'a> &'a Self: IntoIterator<Item=T>, 
+    Self: CoreMatrix<T>,
+    T: Num
+{
+    fn row_swap(&self, r1: Option<usize>, r2: Option<usize>) -> Result<Self, Self::Error>
+    {
+        let mut M: Self = self.into_inner().into();
+        for c in 0..M.dim()?
+        {
+            let sigma = M.get(r1, Some(c))?;
+            let omega = M.get(r2, Some(c))?;
+            M.set(r1, Some(c), omega)?;
+            M.set(r2, Some(c), sigma)?;
+        }
+        Ok(M)
+    }
+
+//    fn row_scalar(&self, scalar: T) -> Result<Self, Self::Error> { }
+}
+
+/* 
+pub trait GuassianElimination<T: Copy> 
+where 
+    for <'a> &'a Self: IntoIterator<Item=T>, 
+    Self: BasicTransform<T>,
+    T: Float
+{
+    fn gaussian_elimination(&self) // -> Result<Self, Self::Error>
+    {
+        match self.forward_elimination() {
+            Some(k) => {
+
+            }
+        }
+    }
+
+    fn forward_elimination(&self) -> Result<Option<usize>, Self::Error>
+    {
+        assert_eq!(self.row_dim()?.add(1), self.col_dim()?);
+        let N: usize = self.row_dim()?;
+        let mut M: Self = self.into_inner().into();
+        for k in 0..N {
+            let max_index = k;
+            let max_val = M.get(Some(max_index), Some(k))?;
+            
+            for i in k.add(1)..N {
+                let xi = M.get(Some(i), Some(k))?; 
+                if xi.abs() > max_val {
+                    max_val = xi;
+                    max_index = i;
+                }
+            }
+            if M.get(Some(k), Some(max_index))? == T::zero() { return Ok(Some(k)) } 
+            if max_index != k { M.row_swap(Some(k), Some(max_index))?; }
+
+            for i in k.add(1)..N {
+                let f: T = M.get(Some(i), Some(k))?
+                    .div(M.get(Some(k), Some(k))?); 
+                for j in k.add(1)..=N {
+                    let sigma = M.get(Some(k), Some(j))?
+                        .mul(f);
+                    let omega = M.get(Some(i), Some(j))?;
+                    M.set(Some(i), Some(j), omega.sub(sigma))?;
+                }
+                M.set(Some(i), Some(k), T::zero())?;
+            }
+        }
+        Ok(None)
+    }
+
+    fn backwards_substitution(&self) -> Result<Self, Self::Error>
+    {
+        let mut M: Self = vec![T::zero(); self.row_dim()?].into();
+        
+        for i in self.row_dim()?.sub(1)..0 {
+            M.set(Some)
+        }
+        Ok(M)
+    }
+}
+*/
