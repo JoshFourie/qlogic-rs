@@ -76,7 +76,7 @@ mod matrix_test
         let test = Matrix::from(vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0])
             .update(Some(3),Some( 3))
             .unwrap()
-            .extract_row(0)
+            .extract_row(Some(0))
             .unwrap();
         let exp = vec![0.0,1.0,2.0];
         assert_eq!(test,exp);
@@ -87,7 +87,7 @@ mod matrix_test
         let test = Matrix::from(vec![0.0,1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0])
             .update(Some(3),Some( 3))
             .unwrap()
-            .extract_col(0)
+            .extract_col(Some(0))
             .unwrap();
         let exp = vec![0.0,3.0,6.0];
         assert_eq!(test,exp);
@@ -313,38 +313,6 @@ mod matrix_test
             .unwrap();
         let test: Matrix<f64> = test1.subtraction(&test2).unwrap();
         assert_eq!(test,exp);
-    }
-
-    // BAD TEST!!!
-    #[test]
-    fn test_decomp()
-    {
-        let M: Matrix<f32> = Matrix::from(vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0])
-            .update(Some(3),Some(3))
-            .unwrap();
-        let (Q,R): (Matrix<f32>,_) = M.decomposition().unwrap();
-        let exp_Q: Matrix<f32> = Matrix::from(vec![0.8571, -0.3943, 0.3314, 0.4286, 0.9020, -0.0343, -0.2857, 0.1714, 0.9429])
-            .update(Some(3), Some(3))
-            .unwrap();
-        let exp_R: Matrix<f32> =  Matrix::from(vec![14.0, 21.0, -14.0, 0.0, 175.0, -70.0, 0.0, 0.0, -35.0])
-            .update(Some(3),Some(3))
-            .unwrap();
-        // source doesn't provide enough sig. fig.
-        // run with cargo test test_decomp -- --nocapture
-        for (t,e) in Q.permute_rows()
-            .zip(exp_Q.permute_rows())
-        {
-            println!("{} : {}", t,e);
-        }
-        for (t,e) in R.permute_rows()
-            .zip(exp_R.permute_rows())
-        {
-            println!("{} : {}", t,e);
-            
-        }
-        println!("Q: {:?}", Q);
-        println!("R: {:?}", R);
-        println!("QR: {:?}", Q.cross(&R).unwrap());
     }
 
     // Rounding Errors.

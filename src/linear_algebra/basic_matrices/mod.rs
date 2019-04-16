@@ -31,7 +31,7 @@ where
 
     fn into_inner(&self) -> Vec<T>;
 
-    fn push(self, val: T) -> Result<Self, Self::Error>;
+    fn push(&mut self, val: T) -> Result<&Self, Self::Error>;
 
     fn permute_rows<'a>(&self) -> std::vec::IntoIter<T>
     {
@@ -60,21 +60,21 @@ where
         ).update(self.row_dim(), self.col_dim())?)
     }
 
-    fn extract_row(&self, r: usize) -> Result<Vec<T>,Self::Error>
+    fn extract_row(&self, r: Option<usize>) -> Result<Vec<T>,Self::Error>
     {
         let mut v: Vec<T> = Vec::new();
         for c in 0..self.col_dim()? {
-            let val = self.get(Some(r), Some(c))?;
+            let val = self.get(r, Some(c))?;
             v.push(val)
         }
         Ok(v)
     }
 
-    fn extract_col(&self, c: usize) -> Result<Vec<T>,Self::Error>
+    fn extract_col(&self, c: Option<usize>) -> Result<Vec<T>,Self::Error>
     {
         let mut v: Vec<T> = Vec::new();
         for r in 0..self.row_dim()? {
-            let val = self.get(Some(r), Some(c))?;
+            let val = self.get(Some(r), c)?;
             v.push(val)
         }
         Ok(v)
@@ -103,7 +103,7 @@ where
         let mut A: Self = Vec::new().into();
         for i in alpha? {
             for j in beta.clone()? {
-                A.push(self.get(Some(i), Some(j))?);
+                A.push(self.get(Some(i), Some(j))?)?;
             }
         }
         Ok(A)
@@ -134,11 +134,13 @@ where
         Ok(M)
     }
 
-    fn eucl_norm(&self) -> T  
+    fn eucl_norm(&self) -> T
+    where
+        T: Float 
     { 
-        let y = self.into_iter()
-            .fold(T::zero(), |acc,x| acc + num::pow(x, 2) );
-        num::pow(y, 1.div(2) as usize)       
+        self.into_iter()
+            .fold(T::zero(), |acc,x| acc + num::pow(x, 2) )
+            .sqrt()  
     }
 
     // index error stopped when we switch i,j in N and then transpose?
@@ -315,8 +317,7 @@ where
     fn row_swap(&self, r1: Option<usize>, r2: Option<usize>) -> Result<Self, Self::Error>
     {
         let mut M: Self = self.into_inner().into();
-        for c in 0..M.dim()?
-        {
+        for c in 0..M.col_dim()? {
             let sigma = M.get(r1, Some(c))?;
             let omega = M.get(r2, Some(c))?;
             M.set(r1, Some(c), omega)?;
@@ -325,23 +326,41 @@ where
         Ok(M)
     }
 
-//    fn row_scalar(&self, scalar: T) -> Result<Self, Self::Error> { }
+    fn row_mul(&self, scalar: T, row: Option<usize>) -> Result<Self, Self::Error> 
+    { 
+        let mut M: Self = self.into_inner().into();
+        for col in 0..M.col_dim()? {
+            let sigma = M.get(row, Some(col))?
+                .mul(scalar);
+            M.set(row, Some(col), sigma)?;
+        }
+        Ok(M)
+    }
+
+    fn row_add(&self, r1: Option<usize>, r2: Option<usize>) -> Result<Self, Self::Error>
+    {
+        let mut M: Self = self.into_inner().into();
+        for c in 0..M.col_dim()?
+        {
+            let omega = M.get(r1, Some(c))?
+                .add(M.get(r2, Some(c))?);
+            M.set(r1, Some(c), omega)?;
+        }
+        Ok(M)
+    }
 }
 
-/* 
-pub trait GuassianElimination<T: Copy> 
+/*
+pub trait GuassianElimination<T: Copy + Debug> 
 where 
     for <'a> &'a Self: IntoIterator<Item=T>, 
-    Self: BasicTransform<T>,
+    Self: BasicTransform<T> + ElementaryRowOperations<T>,
     T: Float
 {
     fn gaussian_elimination(&self) // -> Result<Self, Self::Error>
     {
-        match self.forward_elimination() {
-            Some(k) => {
+        let mut U = self.clone(); 
 
-            }
-        }
     }
 
     fn forward_elimination(&self) -> Result<Option<usize>, Self::Error>

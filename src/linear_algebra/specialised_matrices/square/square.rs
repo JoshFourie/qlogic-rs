@@ -35,7 +35,7 @@ where
 
     fn into_inner(&self) -> Vec<T> { self.inner.clone() }
     
-    fn push(self, val: T) -> Result<Self, Self::Error> { 
+    fn push(&mut self, val: T) -> Result<&Self, Self::Error> { 
         self.inner.push(val); 
         Ok(self)
     }
@@ -66,7 +66,7 @@ where
 {
     fn decomposition(&self) -> Result<(Self,Self),Self::Error> 
     {
-        super::eigen::real_hessenberg(self)
+        super::eigen::qr_transform(self)
     }
 }
 

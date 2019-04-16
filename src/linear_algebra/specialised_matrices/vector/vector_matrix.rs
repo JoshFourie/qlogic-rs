@@ -87,7 +87,11 @@ where
 
     fn into_inner(&self) -> Vec<T> { self.inner.clone() }
 
-    fn push(&mut self, val: T) { self.inner.push(val); }
+    
+    fn push(&mut self, val: T) -> Result<&Self, Self::Error> { 
+        self.inner.push(val); 
+        Ok(self)
+    }
 
     fn get(&self, row: Option<usize>, col: Option<usize>) -> Result<T,Self::Error>
     {
@@ -131,7 +135,7 @@ where
             None => {
                 let mut A: Self = Vec::new().into();
                 for i in alpha? {
-                    A.push(self.get(Some(i), None)?);
+                    A.push(self.get(Some(i), None)?)?;
                 }
                 return Ok(A)
             },

@@ -18,5 +18,7 @@ pub use ancillary_algorithms::*;
  * The Matrix struct is capable of every function call.
  * I've commented out Tridiagonal for the moment until the hermitian is implemented.
  * Currently working on the Hessenberg form.
+ * Not sure that the memory management is efficient with the &self implementation, but a struct could easily
+ * specialise and do a swap in place instead.
  * IMPORTANT: requires a method for interfacing between structs: mystruct.cast_into::<TYPE>()
 ****************************/ 

@@ -40,7 +40,7 @@ where
         }
     }   
     
-    fn push(self, val: T) -> Result<Self, Self::Error> { 
+    fn push(&mut self, val: T) -> Result<&Self, Self::Error> { 
         self.inner.push(val); 
         Ok(self)
     }
