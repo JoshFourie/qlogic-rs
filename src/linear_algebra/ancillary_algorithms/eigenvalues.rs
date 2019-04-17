@@ -101,8 +101,8 @@ where
 
         for k in 0..p.sub(3)
         {            
-            let P: M = vec![x,y,z].into();
-            
+            let P: Vec<T> = vec![x,y,z];
+
             // potential problem at this >= stage.
             let mut r: usize;
 
@@ -112,7 +112,7 @@ where
             for i in k.add(1)..k.add(3) {
                 for j in r..n {
                     let hij: T = H.get(Some(i),Some(j))?;
-                    let pi: T = P.get(Some(i),Some(0))?;
+                    let pi: T = P[i];
                     let val: T = hij.mul(pi);
                     H.set(Some(i),Some(j),val)?;
                 }
@@ -124,7 +124,7 @@ where
             for i in 0..r {
                 for j in k.add(1)..k.add(3) {
                     let hij: T = H.get(Some(i),Some(j))?;
-                    let pi: T = P.get(Some(i),Some(0))?;
+                    let pi: T = P[i];
                     let val: T = hij.mul(pi);
                     H.set(Some(i),Some(j),val)?;
                 }
@@ -138,14 +138,14 @@ where
         }
 
         // assumption.
-        let P: M = vec![x,y].into();
+        let P: Vec<T> = vec![x,y];
 
         for i in q..p {
             // double check 1..n;
             for mut j in 1..n {
                 j = p.sub(j);
                 let hij: T = H.get(Some(i),Some(j))?;
-                let pi: T = P.get(Some(i),Some(0))?;
+                let pi: T = P[i];
                 let val: T = hij.mul(pi);
                 H.set(Some(i),Some(j),val)?;
             }
@@ -156,7 +156,7 @@ where
             for mut j in 0..p {
                 j = p.sub(j);
                 let h: T = H.get(Some(i),Some(j))?;
-                let p: T = P.get(Some(i),Some(0))?;
+                let p: T = P[i];
                 let val: T = h.mul(p);
                 H.set(Some(i),Some(j),val)?;
             }
