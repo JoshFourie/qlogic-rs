@@ -315,24 +315,6 @@ mod matrix_test
         assert_eq!(test,exp);
     }
 
-    // Rounding Errors.
-    #[ignore]
-    #[test]
-    fn test_eigen() {
-        let M: Matrix<f64> = Matrix::from(vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0])
-            .update(Some(3),Some(3))
-            .unwrap();
-        let exp = vec![16.05999, 34.19668, 156.13668];
-        for (t, e) in M.eigen_values()
-            .unwrap()
-            .into_iter()
-            .rev()
-            .zip(exp.into_iter())
-        {
-            assert_approx_eq!(t,e);
-        }
-    }
-
     #[ignore]
     #[test]
     fn test_determinant()

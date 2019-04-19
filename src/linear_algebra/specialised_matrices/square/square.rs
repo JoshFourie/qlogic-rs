@@ -15,19 +15,23 @@ where
     fn row_dim(&self) -> Option<usize> { self.dim }
 
     // BAD FUNCTION
+    // The update check means that we can't work with vectors without an interface...
     fn update(self, row: Option<usize>, col: Option<usize>) -> Result<Self,Self::Error>
     { 
         let mut N: Self = self.into_inner().into();
         match (row,col) {
             (Some(_), None) => { N.dim = row },
             (None, Some(_)) => { N.dim = col },
-            (None, None) => { N.dim = Some(self.into_inner().len().pow(1/2)) }
-            (Some(r), Some(c)) => {
+            (None, None) => { N.dim = Some(self.into_inner().len().pow(1/2)) },
+            /* (Some(r), Some(c)) => {
                 if r==c { 
                     N.dim = Some(r);
                 } else { 
                     return MathError::bad_op("Invalid Dimensions: rows must be equivalent to cols when force-updating a square matrix.").as_result() 
                 }
+            } */
+            (Some(_), Some(_)) => {
+                N.dim = row;
             }
         }
         Ok(N)

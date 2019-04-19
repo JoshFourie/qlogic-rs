@@ -9,9 +9,11 @@ where
     M: BasicTransform<T>,
     for<'a> &'a M: IntoIterator<Item=T>
 {
+    // cannot reallocate a size on the struct, might be better to
+    // offload vector handling to a new struct that's entirely internal...
     let xi: M = M::from(
-                A.extract_col(Some(k))?
-            ).update(A.row_dim(),Some(1))?;  
+            A.extract_col(Some(k))?
+        ).update(A.row_dim(),Some(1))?;    
     let alpha: T = xi.get(Some(k.add(1)), Some(0))?
         .signum()
         .mul(xi.eucl_norm());  
@@ -52,11 +54,13 @@ where
         Q.set(Some(k), Some(k), T::one())?;
         H = Q;
     }
+    
     // we have to unwrap here because acc. doesn't work well with results.
     let R: M = R_store.into_iter()
         .rev()
         .fold(H.identity()?, |acc,q| acc.cross(&q).unwrap())
         .cross(A)?;
+        
     let Q: M = Q_store.into_iter()
         .fold(H.identity()?, |acc,q| acc.cross(&q).unwrap());
     Ok((Q,R))
@@ -71,7 +75,8 @@ where
     M: BasicTransform<T>,
     for<'a> &'a M: IntoIterator<Item=T>
 {
-    let mut H: M = A.into_inner().into();
+    let mut H: M = M::from(A.into_inner())
+        .update(A.row_dim(),A.col_dim())?;
     let n: usize = A.row_dim()?;
     let mut p: usize = A.row_dim()?.sub(1);
 
@@ -99,7 +104,7 @@ where
         let mut y: T = h21.mul(h11.add(h22).sub(s));
         let mut z: T = h21.mul(h32);
 
-        for k in 0..p.sub(3)
+        for k in 0..=p.sub(3)
         {            
             let P: Vec<T> = vec![x,y,z];
 
@@ -135,6 +140,8 @@ where
             if k < p.sub(3) {
                 z = H.get(Some(k.add(4)),Some(k.add(1)))?;
             }
+
+            println!("{:?}",H);
         }
 
         // assumption.
@@ -178,10 +185,11 @@ where
     Ok(H)
 }
 
+// should be a square at some point.
 pub fn james_langou_balance<T: Copy + Debug, M>(H: &M) -> Result<M,M::Error>
 where
     T: Float,
-    M: BasicTransform<T>,
+    M: Square<T>,
     for<'a> &'a M: IntoIterator<Item=T>
 {
     let mut A: M = H.into_inner().into();
@@ -204,6 +212,7 @@ where
                 .sqrt();
             let s = num::pow(c,2).add(num::pow(r,2));
             */
+            
             let mut c = T::zero();
             let mut r = T::zero();        
             for j in 0..A.row_dim()? {
@@ -226,13 +235,12 @@ where
                 r = r.mul(beta);
                 f = f.div(beta);
             }
-            
             // if num::pow(c,2).add(num::pow(r,2)) < T::from(0.95)?.mul(s)
-             if c.add(r) < T::from(0.95)?.mul(s)
+            if c.add(r) < T::from(0.95)?.mul(s)
             {
                 let omega = f.mul(I.get(Some(i),Some(i))?);
                 I.set(Some(i),Some(i), omega)?;
-
+                
                 for j in 0..A.col_dim()? {
                     
                     let theta = f.mul(A.get(Some(j), Some(i))?);
@@ -343,28 +351,24 @@ fn test_francis()
     }   */
 }
 
+
+// Rounding Errors.
 #[test]
 fn test_eigen() {
-    let T: Vec<f64> = francis_double_step_qr(&Matrix::from(
-        vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0])
-            .update(Some(3),Some(3))
-            .unwrap()
-        ).unwrap()
-            .update(Some(3),Some(3))
-            .unwrap()
-            .diagonal()
-            .unwrap();
+    let M: SquareMatrix<f64> = vec![12.0, -51.0, 4.0, 6.0, 167.0, -68.0, -4.0, 24.0, -41.0].into();
+    let M: _ = james_langou_balance(&M).unwrap();
+    let exp = vec![16.05999, 34.19668, 156.13668];
 
-    let E: Vec<f64> = vec![16.05999, 34.19668, 156.13668];
-    
-    println!("{:?} {:?}", E,T);
-
-    for (exp,test) in E.into_iter()
-        .zip(T.into_iter())
+    for (t, e) in M.eigen_values()
+        .unwrap()
+        .into_iter()
+        .rev()
+        .zip(exp.into_iter())
     {
-        match exp.sub(test) < 0.0001 {
-            true => { },
-            false => { assert_eq!(exp,test) }
+        match t.sub(e) < 0.0001 || e.sub(t) < 0.0001
+        {   
+            true => assert_eq!(t,e),
+            false => { }
         }
-    }   
+    }
 }

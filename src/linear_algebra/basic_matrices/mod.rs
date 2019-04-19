@@ -293,7 +293,7 @@ where
     }
 
     fn eigen_values(&self) -> Result<Vec<T>, Self::Error>
-    {
+    {        
         let (Q,R) = self.decomposition()?;
         let mut X = R.cross(&Q)?
             .decomposition()?;
