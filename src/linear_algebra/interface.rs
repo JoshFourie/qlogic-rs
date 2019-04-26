@@ -1,29 +1,23 @@
-/**** Imports *******/
-use num::Num;
-use super::matrix::*;
 
 /***** Impl *******/
-/******************
- * Matrix impl: Multiplicative identity, IndexMut
-******************/
 
-pub trait StdOps<T> {
+pub trait Transpose<T> {
     
     fn transpose(self) -> Self;
+    
+}
 
-    /* fn eucl_norm(self) -> T;
+pub trait Norm<T> {
 
-    fn scalar(self, rhs: T) -> Self;
+    fn eucl_norm(self) -> T;
 
-    fn cross(self, rhs: Self) -> Self;
+}
 
-    fn addition(self, rhs: Self) -> Self;
+pub trait Diagonal<T> {
 
-    fn subtraction(self, rhs: Self) -> Self;
+    fn diagonal(self) -> Vec<T>;
 
     fn trace(self) -> T;
-
-    fn diagonal(self) -> Vec<T>; */
 
 }
 
@@ -35,7 +29,7 @@ pub trait Kronecker {
 
 }
 
-pub trait EVD<T> {
+pub trait EigenvalueDecomposition<T> {
     
     type Output;
     
@@ -47,7 +41,7 @@ pub trait EVD<T> {
 
 }   
 
-pub trait ElementaryRowOps<T> {
+pub trait ElementaryRowOperations<T> {
     
     fn row_swap(self) -> Self;
 

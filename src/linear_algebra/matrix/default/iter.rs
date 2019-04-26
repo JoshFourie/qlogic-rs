@@ -1,5 +1,7 @@
 /***** Imports ******/
+
 use super::Matrix;
+
 /**** Struct ******/
 pub struct MatrixIter<T> {
     mat: Vec<T>,
@@ -62,6 +64,6 @@ impl<'a, T:Copy> IntoIterator for &'a Matrix<T> {
         {
             assert_eq!(t,e);
         }
-        let A = M;        
+        let _A = M;        
     }
 }
