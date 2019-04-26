@@ -94,3 +94,52 @@
     }
 
 }
+
+
+#[test] fn test_checked_add_for_matrix() {
+
+    use super::{CheckedAdd, ErrorKind};
+    
+    let M: super::Matrix<_> = super::Matrix {
+        inner: vec![1,2,3,4,5],
+        row: 2,
+        col: 3
+    };
+    
+    let N: super::Matrix<_> = super::Matrix {
+        inner: vec![1,2,3,4,5,6,7,8,9],
+        row: 3,
+        col: 3
+    };   
+    match M.checked_add(N) {
+        Err(e) => match e.kind() {
+            ErrorKind::MatrixStructure => { },
+            _ => panic!()
+        },
+        Ok(_) => {}
+    }
+}
+
+#[test] fn test_checked_sub_for_matrix() {
+
+    use super::{CheckedSub, ErrorKind};
+
+    let M: super::Matrix<_> = super::Matrix {
+        inner: vec![1,2,3,4,5,6],
+        row: 2,
+        col: 3
+    };
+    
+    let N: super::Matrix<_> = super::Matrix {
+        inner: vec![1,2,3,4,5,6,7,8,9],
+        row: 3,
+        col: 3
+    };   
+    match M.checked_sub(N) {
+        Err(e) => match e.kind() {
+            ErrorKind::MatrixStructure => { },
+            _ => panic!()
+        },
+        Ok(_) => {}
+    }
+} 

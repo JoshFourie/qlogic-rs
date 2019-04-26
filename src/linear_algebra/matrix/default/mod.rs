@@ -14,7 +14,7 @@ use num::{One, Zero};
 /**** Exports *****/
 
 mod iter;
-// mod algebra;
+mod algebra;
 #[cfg(test)] mod tests;
 
 /**** Structs ******/

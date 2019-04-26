@@ -1,9 +1,11 @@
 
 /***** Impl *******/
 
-pub trait Transpose<T> {
+pub trait Transpose {
+
+    type Output;
     
-    fn transpose(self) -> Self;
+    fn transpose(self) -> Self::Output;
     
 }
 
