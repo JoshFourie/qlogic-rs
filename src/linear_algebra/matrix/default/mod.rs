@@ -50,12 +50,20 @@ impl<T> Into<Vec<T>> for Matrix<T>
     } 
 }
 
-impl<'a, T:Copy> Into<Vec<T>> for &'a Matrix<T> 
-{ 
-    fn into(self) -> Vec<T> { 
-        self.inner.clone() 
-    } 
+macro_rules! impl_into_vec_for_matrix_borrow 
+{
+    ($id:ty) => {
+        impl<'a, T:Copy> Into<Vec<T>> for $id 
+        { 
+            fn into(self) -> Vec<T> { 
+                self.inner.clone() 
+            } 
+        }
+    }
 }
+
+impl_into_vec_for_matrix_borrow!(&'a Matrix<T>);
+impl_into_vec_for_matrix_borrow!(&'a mut Matrix<T>);
 
 /******* PartialEq ********/
 
@@ -191,10 +199,14 @@ macro_rules! impl_matrix_mul {
 
 impl_matrix_mul!(Matrix<T>);
 impl_matrix_mul!(&'a Matrix<T>);
+impl_matrix_mul!(&'a mut Matrix<T>);
 impl_matrix_mul!(Matrix<T>, Matrix<T>);
 impl_matrix_mul!(Matrix<T>, &'a Matrix<T>);
 impl_matrix_mul!(&'a Matrix<T>, Matrix<T>);
-impl_matrix_mul!(&'a Matrix<T>, &'a Matrix<T>); 
+impl_matrix_mul!(&'a Matrix<T>, &'a Matrix<T>);
+impl_matrix_mul!(Matrix<T>, &'a mut Matrix<T>);
+impl_matrix_mul!(&'a mut Matrix<T>, Matrix<T>);
+impl_matrix_mul!(&'a mut Matrix<T>, &'a mut Matrix<T>); 
 
 pub trait CheckedAdd<RHS> {
 
@@ -261,6 +273,13 @@ impl_matrix_add_or_sub!(&'a Matrix<T>, Matrix<T>, Sub, sub, CheckedSub, checked_
 impl_matrix_add_or_sub!(Matrix<T>, &'a Matrix<T>, Sub, sub, CheckedSub, checked_sub);
 impl_matrix_add_or_sub!(&'a Matrix<T>, &'a Matrix<T>, Sub, sub, CheckedSub, checked_sub);
 
+impl_matrix_add_or_sub!(&'a mut Matrix<T>, Matrix<T>, Add, add, CheckedAdd, checked_add);
+impl_matrix_add_or_sub!(Matrix<T>, &'a mut Matrix<T>, Add, add, CheckedAdd, checked_add);
+impl_matrix_add_or_sub!(&'a mut Matrix<T>, &'a mut Matrix<T>, Add, add, CheckedAdd, checked_add);
+
+impl_matrix_add_or_sub!(&'a mut Matrix<T>, Matrix<T>, Sub, sub, CheckedSub, checked_sub);
+impl_matrix_add_or_sub!(Matrix<T>, &'a mut Matrix<T>, Sub, sub, CheckedSub, checked_sub);
+impl_matrix_add_or_sub!(&'a mut Matrix<T>, &'a mut Matrix<T>, Sub, sub, CheckedSub, checked_sub);
 
 
 /******* MULTIPLICATIVE IDENTITY ********/
@@ -294,3 +313,4 @@ macro_rules! impl_matrix_identity {
 
 impl_matrix_identity!(Matrix<T>);
 impl_matrix_identity!(&'a Matrix<T>);
+impl_matrix_identity!(&'a mut Matrix<T>);

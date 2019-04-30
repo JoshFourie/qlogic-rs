@@ -17,7 +17,9 @@ pub trait Norm<T> {
 
 pub trait Diagonal<T> {
 
-    fn diagonal(self) -> Vec<T>;
+    type Output;
+
+    fn diagonal(self) -> Self::Output;
 
     fn trace(self) -> T;
 

@@ -20,29 +20,28 @@ impl<T:Copy> Iterator for MatrixIter<T> {
     }
 }
 
-impl<T:Copy> IntoIterator for Matrix<T> {
-    type Item = T;
-    type IntoIter = MatrixIter<T>;
+macro_rules! imlp_into_iter_for_matrix {
 
-    fn into_iter(self) -> Self::IntoIter {
-        MatrixIter {
-            mat: self.into(),
-            count: 0,
+    ($id:ty) => {
+        impl<'a, T:Copy> IntoIterator for $id {
+            type Item = T;
+            type IntoIter = MatrixIter<T>;
+            
+            fn into_iter(self) -> Self::IntoIter 
+            {
+                MatrixIter {
+                    mat: self.into(),
+                    count: 0,
+                }
+            }
         }
     }
+
 }
 
-impl<'a, T:Copy> IntoIterator for &'a Matrix<T> {
-    type Item = T;
-    type IntoIter = MatrixIter<T>;
-    
-    fn into_iter(self) -> Self::IntoIter {
-        MatrixIter {
-            mat: self.into(),
-            count: 0,
-        }
-    }
-}
+imlp_into_iter_for_matrix!(Matrix<T>);
+imlp_into_iter_for_matrix!(&'a Matrix<T>);
+imlp_into_iter_for_matrix!(&'a mut Matrix<T>);
 
 #[cfg(test)] mod iter_test_for_matrix {
 
