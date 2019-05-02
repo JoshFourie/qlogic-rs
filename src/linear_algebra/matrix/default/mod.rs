@@ -19,7 +19,7 @@ mod algebra;
 
 /**** Structs ******/
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, PartialEq, Clone)]
 pub struct Matrix<T>
 {
     inner: Vec<T>,
@@ -50,8 +50,7 @@ impl<T> Into<Vec<T>> for Matrix<T>
     } 
 }
 
-macro_rules! impl_into_vec_for_matrix_borrow 
-{
+macro_rules! impl_into_vec_for_matrix {
     ($id:ty) => {
         impl<'a, T:Copy> Into<Vec<T>> for $id 
         { 
@@ -62,20 +61,8 @@ macro_rules! impl_into_vec_for_matrix_borrow
     }
 }
 
-impl_into_vec_for_matrix_borrow!(&'a Matrix<T>);
-impl_into_vec_for_matrix_borrow!(&'a mut Matrix<T>);
-
-/******* PartialEq ********/
-
-impl<T> PartialEq<Self> for Matrix<T>
-where
-    T: PartialEq<T>
-{
-    fn eq(&self, rhs: &Self) -> bool 
-    {
-        self.inner == rhs.inner
-    }
-}
+impl_into_vec_for_matrix!(&'a Matrix<T>);
+impl_into_vec_for_matrix!(&'a mut Matrix<T>);
 
 /******* Index & IndexMut ********/
 
@@ -206,7 +193,7 @@ impl_matrix_mul!(&'a Matrix<T>, Matrix<T>);
 impl_matrix_mul!(&'a Matrix<T>, &'a Matrix<T>);
 impl_matrix_mul!(Matrix<T>, &'a mut Matrix<T>);
 impl_matrix_mul!(&'a mut Matrix<T>, Matrix<T>);
-impl_matrix_mul!(&'a mut Matrix<T>, &'a mut Matrix<T>); 
+impl_matrix_mul!(&'a mut Matrix<T>, &'a mut Matrix<T>);
 
 pub trait CheckedAdd<RHS> {
 

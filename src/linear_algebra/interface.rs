@@ -25,11 +25,11 @@ pub trait Diagonal<T> {
 
 }
 
-pub trait Kronecker {
+pub trait Kronecker<RHS> {
 
     type Output;
 
-    fn kronecker<A>(self, rhs: A) -> Self::Output;
+    fn kronecker(self, rhs: RHS) -> Self::Output;
 
 }
 
@@ -46,11 +46,13 @@ pub trait EigenvalueDecomposition<T> {
 }   
 
 pub trait ElementaryRowOperations<T> {
+
+    type Output;
     
-    fn row_swap(self) -> Self;
+    fn row_swap(self, r1: usize, r2: usize) -> Self::Output;
 
-    fn row_add(self) -> Self;
+    fn row_add(self, lhs: usize, rhs: usize) -> Self::Output;
 
-    fn row_mul(self) -> Self;
+    fn row_mul(self, scal: T, r: usize) -> Self::Output;
 
 }

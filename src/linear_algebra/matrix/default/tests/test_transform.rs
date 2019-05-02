@@ -1,7 +1,9 @@
 use crate::linear_algebra::interface::{
     Transpose,
     Norm,
-    Diagonal
+    Diagonal,
+    Kronecker,
+    ElementaryRowOperations
 };
 
 use super::Matrix;
@@ -43,4 +45,58 @@ fn default() -> Matrix<usize>
     let T2: usize = default().trace();
     let E2: usize = 12;
     assert_eq!(T2,E2);
+}
+
+#[test] fn test_kronecker_trait_for_marix()
+{
+    let T1A: Matrix<_> = Matrix {
+        inner: vec![2.0, 4.0, 6.0, 8.0],
+        row: 2,
+        col: 2
+    };
+    let T1B: Matrix<_> = Matrix {
+        inner: vec![1.0,3.0,5.0,7.0,9.0,11.0],
+        row: 3,
+        col: 2
+    };
+    let T1: Matrix<_> = T1A.kronecker(T1B);
+
+    let E1: Matrix<_> = Matrix {
+        inner: vec![
+            2.0,    6.0,    4.0,    12.0,
+            10.0,   14.0,   20.0,   28.0,
+            18.0,   22.0,   36.0,   44.0,
+            6.0,    18.0,   8.0,    24.0,
+            30.0,   42.0,   40.0,   56.0,
+            54.0,   66.0,   72.0,   88.0
+        ],
+        row: 6,
+        col: 4
+    };
+
+    assert_eq!(E1, T1);
+}
+
+#[test] fn test_elementary_row_ops_for_matrix()
+{
+    let T: Matrix<_> = Matrix {
+        inner: vec![
+            1.0,3.0,
+            5.0,7.0,
+            9.0,11.0
+        ],
+        row: 3,
+        col: 2
+    };
+    let T1: _ = T.row_swap(0,1);
+    let E1: Matrix<_> = Matrix {
+        inner: vec![
+            5.0,7.0,
+            1.0,3.0,
+            9.0,11.0
+        ],
+        row: 3,
+        col: 2
+    };
+    assert_eq!(T1,E1);
 }

@@ -12,13 +12,14 @@
     };
     let T: _ = M * N;
 
+    // we don't run structural checks.
     let E: _ = super::Matrix {
         inner: vec![15,27,6,7,26,63],
         row: 3,
         col: 2
     };
 
-    assert_eq!(T,E);
+    assert_eq!(T.inner,E.inner);
 }
 
 #[test] fn test_unchecked_add_for_matrix() {
