@@ -35,26 +35,6 @@ impl_transpose_for_matrix!(Matrix<T>);
 impl_transpose_for_matrix!(&'a Matrix<T>);
 impl_transpose_for_matrix!(&'a mut Matrix<T>);
 
-macro_rules! impl_eucl_norm_for_matrix 
-{
-    ($id:ty) => {
-        impl<'a, T: Copy> Norm<T> for $id 
-        where
-            T: Zero + One + Add<Output=T> 
-        {
-            fn eucl_norm(self) -> T
-            { 
-                self.into_iter()
-                    .fold(T::zero(), |acc, x| acc + num::pow(x, 2))
-            }
-        }
-    }
-}
-
-impl_eucl_norm_for_matrix!(Matrix<T>);
-impl_eucl_norm_for_matrix!(&'a Matrix<T>);
-impl_eucl_norm_for_matrix!(&'a mut Matrix<T>);
-
 macro_rules! impl_diagonal_for_matrix 
 {
     ($id:ty) => {
@@ -142,27 +122,29 @@ macro_rules! impl_elem_row_operations
     {
         impl<'a, T: Copy> ElementaryRowOperations<T> for $id
         where
-            T: Add<Output=T> + Mul<Output=T>
+            T: Add<Output=T> + Mul<Output=T> + One
         {
             type Output = Matrix<T>;
     
             fn row_swap(self, r1: usize, r2: usize) -> Self::Output
             {
                 let mut mat: Matrix<T> = self.clone();
-                for c in 0..self.col
-                {
+                for c in 0..self.col {
                     mat[r1][c] = self[r2][c];
                     mat[r2][c] = self[r1][c];
                 }
                 mat
             }
 
-            fn row_add(self, lhs: usize, rhs: usize) -> Self::Output
+            fn row_add(self, scalar: Option<T>, lhs: usize, rhs: usize) -> Self::Output
             {
                 let mut mat: Matrix<T> = self.clone();
-                for c in 0..self.col
-                {
-                    mat[lhs][c] = self[lhs][c] + self[rhs][c];
+                let scal: T = match scalar {
+                    Some(s) => s,
+                    None => T::one()
+                };
+                for c in 0..self.col {
+                    mat[lhs][c] = scal * self[lhs][c] + self[rhs][c];
                 }
                 mat
             }
@@ -170,8 +152,7 @@ macro_rules! impl_elem_row_operations
             fn row_mul(self, scal: T, r: usize) -> Self::Output
             {
                 let mut mat: Matrix<T> = self.clone();
-                for c in 0..self.col
-                {
+                for c in 0..self.col {
                     mat[r][c] = scal * mat[r][c];   
                 }
                 mat

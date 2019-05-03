@@ -9,8 +9,8 @@ pub trait Transpose {
     
 }
 
-pub trait Norm<T> {
-
+pub trait Norm<T> { // eigenvalues required.
+    
     fn eucl_norm(self) -> T;
 
 }
@@ -51,7 +51,7 @@ pub trait ElementaryRowOperations<T> {
     
     fn row_swap(self, r1: usize, r2: usize) -> Self::Output;
 
-    fn row_add(self, lhs: usize, rhs: usize) -> Self::Output;
+    fn row_add(self, scal: Option<T>, lhs: usize, rhs: usize) -> Self::Output;
 
     fn row_mul(self, scal: T, r: usize) -> Self::Output;
 
