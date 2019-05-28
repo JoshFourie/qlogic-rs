@@ -120,7 +120,7 @@ macro_rules! impl_elem_row_operations
 {
     ($id:ty) => 
     {
-        impl<'a, T: Copy> ElementaryRowOperations<T> for $id
+        impl<'a, T: Copy> ElementaryRowOperations<T,usize> for $id
         where
             T: Add<Output=T> + Mul<Output=T> + One
         {
@@ -164,3 +164,32 @@ macro_rules! impl_elem_row_operations
 impl_elem_row_operations!(Matrix<T>);
 impl_elem_row_operations!(&'a Matrix<T>);
 impl_elem_row_operations!(&'a mut Matrix<T>);
+
+/* impl_inverse_for_matrix!(Matrix<T>); */
+
+#[test] fn test_inversion() 
+{
+    let T: Matrix<f32> = 
+    {
+        let mut a: Vec<f32> = vec![
+            1.0, 0.5, 0.3333333, 0.25, 0.2, 
+            0.5, 0.33333, 0.25, 0.2, 0.16666667, 
+            0.333333, 0.25, 0.2, 0.1666667, 0.14285714286,
+            0.25, 0.2, 0.166667, 0.14285714286, 0.125,
+            0.25, 0.166667, 0.14285714286, 0.125, 0.11111111111
+        ];
+        /* let mut b: Vec<f32> = vec![0.0;25];
+        a.append(&mut b);
+        Matrix {
+            inner: a,
+            row: 10,
+            col: 5
+        } */
+        a.into()
+    };
+
+    let (P,L,U): _ = T.plu_decomposition();
+    println!(" {:?} \n\n {:?} \n\n {:?} \n\n", &P,&L,&U);
+    println!(" {:?} \n\n", L*U);
+    panic!()        
+}

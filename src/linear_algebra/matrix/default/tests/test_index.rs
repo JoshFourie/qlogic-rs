@@ -1,33 +1,3 @@
-#[test] 
-fn index_tuple_test() {
-    let M: _ = super::Matrix {
-        inner: vec![0,1,2,3,4,5,6,7,8],
-        col: 3,
-        row: 3
-    };
-    assert_eq!(M[(1,1)], 4);
-    assert_eq!(M[(2,2)],8);
-}
-
-#[test] 
-
-fn index_mut_tuple_test() {
-    let mut M: _ = super::Matrix {
-        inner: vec![0,0,0,0,0,0,0,0,0],
-        col: 3,
-        row: 3
-    };
-    let E: _ = super::Matrix {
-        inner: vec![1,0,0,0,1,0,0,0,1],
-        col: 3,
-        row: 3
-    };
-    for i in 0..3 {
-        M[(i,i)] = 1;
-    }
-    assert_eq!(M,E);            
-}
-
 #[test] fn index_usize_test() {
     let M: _ = super::Matrix {
         inner: vec![0,1,2,3,4,5,6,7,8],

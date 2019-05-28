@@ -6,8 +6,9 @@
 
 /**** Imports *****/
 
-use std::ops::{Mul, Add, Sub, Index, IndexMut, Range};
+use std::ops::{Mul, Add, Sub, Index, IndexMut, Range, Deref, DerefMut};
 use super::{LinearAlgebraError, ErrorKind};
+use crate::linear_algebra::interface::{Dimension, Row, Column, CheckedAdd, CheckedMul, CheckedSub, Identity};
 use num_integer::Roots;
 use num::{One, Zero};
 
@@ -15,6 +16,7 @@ use num::{One, Zero};
 
 mod iter;
 mod algebra;
+mod algorithms;
 #[cfg(test)] mod tests;
 
 /**** Structs ******/
@@ -23,8 +25,8 @@ mod algebra;
 pub struct Matrix<T>
 {
     inner: Vec<T>,
-    row: usize,
-    col: usize
+    pub row: usize,
+    pub col: usize
 }
 
 /********** From **********/
@@ -65,33 +67,42 @@ impl_into_vec_for_matrix!(&'a Matrix<T>);
 impl_into_vec_for_matrix!(&'a mut Matrix<T>);
 
 /******* Index & IndexMut ********/
-
-impl<T> Index<(usize,usize)> for Matrix<T>
+macro_rules! impl_index_for_matrix
 {
-    type Output = T;
+    ($id:ty) => {
+        impl<'a, T> Index<usize> for $id
+        {
+            type Output = [T];
 
-    fn index<'a>(&'a self, idx: (usize,usize)) -> &'a T {
-        let (r,c): (usize,usize) = idx;
-        let i = r.mul(self.col).add(c);
-        &self.inner[i]
+            fn index<'b>(&'b self,idx:usize) -> &'b Self::Output {
+                let i0: usize = idx.mul(self.col);
+                let ter: usize = i0.add(self.col);
+                let i: Range<usize> = i0..ter;
+                &self.inner[i]
+            }
+        }
+
+        impl<'a, T> IndexMut<usize> for $id
+        {
+            fn index_mut<'b>(&'b mut self, idx:usize) -> &'b mut Self::Output {
+                let i0: usize = idx.mul(self.col);
+                let ter: usize = i0.add(self.col);
+                let i: Range<usize> = i0..ter;
+                &mut self.inner[i]
+            }
+        }
+
     }
 }
 
-impl<T> IndexMut<(usize,usize)> for Matrix<T>
-{
-    fn index_mut<'a>(&'a mut self, idx:(usize,usize)) -> &'a mut T {
-        let (r,c): (usize,usize) = idx;
-        let i = r.mul(self.col).add(c);
-        &mut self.inner[i]   
-    }    
-}
+impl_index_for_matrix!(Matrix<T>);
+impl_index_for_matrix!(&'a mut Matrix<T>);
 
-// row extraction by indexing.
-impl<T> Index<usize> for Matrix<T>
+impl<'a, T> Index<usize> for &'a Matrix<T>
 {
     type Output = [T];
 
-    fn index<'a>(&'a self,idx:usize) -> &'a Self::Output {
+    fn index<'b>(&'b self,idx:usize) -> &'b Self::Output {
         let i0: usize = idx.mul(self.col);
         let ter: usize = i0.add(self.col);
         let i: Range<usize> = i0..ter;
@@ -99,25 +110,60 @@ impl<T> Index<usize> for Matrix<T>
     }
 }
 
-impl<T> IndexMut<usize> for Matrix<T>
+/******** Getters ***********/
+macro_rules! impl_getter_for_matrix 
 {
-    fn index_mut<'a>(&'a mut self, idx:usize) -> &'a mut Self::Output {
-        let i0: usize = idx.mul(self.col);
-        let ter: usize = i0.add(self.col);
-        let i: Range<usize> = i0..ter;
-        &mut self.inner[i]
+    ($id:ty) => 
+    {
+        impl<'a,T>  Dimension<usize> for $id {
+            fn dim(self) -> (usize,usize)
+            {
+                (self.row, self.col)
+            }
+        }
     }
 }
 
-/******** Unchecked Standard Operations ***********/
-pub trait CheckedMul<RHS> {
+impl_getter_for_matrix!(Matrix<T>);
+impl_getter_for_matrix!(&'a Matrix<T>);
+impl_getter_for_matrix!(&'a mut Matrix<T>);
 
-    type Output;
+macro_rules! impl_row_col_traits_for_matrix 
+{
+    ($id:ty) =>
+    {
+        impl<'a,T: Copy> Column<usize> for $id 
+        {            
+            type Output = Vec<T>;
 
-    fn checked_mul(self, rhs: RHS) -> Self::Output;
+            fn get_col(self, idx: usize) -> Self::Output
+            {
+                let mut temp: Vec<T> = Vec::new();
+                for i in 0..self.row { temp.push(self[i][idx]) }
+                temp
+            }
 
+        }
+
+        impl<'a,T: Copy> Row<usize> for $id 
+        {            
+            type Output = Vec<T>;
+
+            fn get_row(self, idx: usize) -> Self::Output
+            {
+                let mut temp: Vec<T> = Vec::new();
+                for i in 0..self.col { temp.push(self[idx][i]) }
+                temp
+            }
+        }
+    }
 }
 
+impl_row_col_traits_for_matrix!(Matrix<T>);
+impl_row_col_traits_for_matrix!(&'a Matrix<T>);
+impl_row_col_traits_for_matrix!(&'a mut Matrix<T>);
+
+/******** Standard Operations ***********/
 macro_rules! impl_matrix_mul {
     ($id:ty) => {
         impl<'a, T: Copy> Mul<T> for $id
@@ -130,7 +176,7 @@ macro_rules! impl_matrix_mul {
                 let inner: Vec<T> = self.into_iter()
                     .map(|l| l * rhs)
                     .collect();
-                let l: usize = inner.len();
+                let l: usize = inner.len().sqrt();
                 Matrix {
                     inner: inner,
                     row: l,
@@ -180,7 +226,9 @@ macro_rules! impl_matrix_mul {
                     Ok(self * rhs)
                 }
             }
-        } 
+        }
+
+        /*********** Mul<Vec> *************/ 
     }
 }
 
@@ -195,24 +243,10 @@ impl_matrix_mul!(Matrix<T>, &'a mut Matrix<T>);
 impl_matrix_mul!(&'a mut Matrix<T>, Matrix<T>);
 impl_matrix_mul!(&'a mut Matrix<T>, &'a mut Matrix<T>);
 
-pub trait CheckedAdd<RHS> {
-
-    type Output;
-    
-    fn checked_add(self, rhs: RHS) -> Self::Output;
-
-}
-
-pub trait CheckedSub<RHS> {
-
-    type Output;
-
-    fn checked_sub(self, rhs: RHS) -> Self::Output;
-
-}
-
-macro_rules! impl_matrix_add_or_sub {
-    ($lhs:ty, $rhs:ty, $unchecked:ident, $func:ident, $checked:ident, $checked_func:ident) => {
+macro_rules! impl_matrix_add_or_sub 
+{
+    ($lhs:ty, $rhs:ty, $unchecked:ident, $func:ident, $checked:ident, $checked_func:ident) => 
+    {
         impl<'a, T: Copy> $unchecked<$rhs> for $lhs 
         where
             T: $unchecked<T,Output=T>
@@ -268,12 +302,7 @@ impl_matrix_add_or_sub!(&'a mut Matrix<T>, Matrix<T>, Sub, sub, CheckedSub, chec
 impl_matrix_add_or_sub!(Matrix<T>, &'a mut Matrix<T>, Sub, sub, CheckedSub, checked_sub);
 impl_matrix_add_or_sub!(&'a mut Matrix<T>, &'a mut Matrix<T>, Sub, sub, CheckedSub, checked_sub);
 
-
 /******* MULTIPLICATIVE IDENTITY ********/
-pub trait Identity {
-    type Output;
-    fn identity(self) -> Self::Output;
-}
 
 macro_rules! impl_matrix_identity {
     ($s:ty) => {

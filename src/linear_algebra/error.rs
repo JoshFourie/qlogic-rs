@@ -24,6 +24,8 @@ enum Repr {
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum ErrorKind {
     MatrixStructure,
+    Custom,
+    NoneError,
     Other
 }
 
@@ -31,7 +33,9 @@ impl ErrorKind {
     pub(crate) fn as_str(&self) -> &'static str {
         match *self {
             ErrorKind::MatrixStructure => "matrix is badly formed for the operation",
-            ErrorKind::Other => "undefined error in crate",
+            ErrorKind::Custom => "custom error",
+            ErrorKind::NoneError => "called try! on a None",
+            ErrorKind::Other => "undefined error in crate",   
         }
     }
 }
@@ -46,6 +50,14 @@ impl From<ErrorKind> for LinearAlgebraError {
 pub(crate) struct CustomError {
     kind: ErrorKind,
     error: Box<dyn std::error::Error+Send+Sync>
+}
+
+impl From<std::option::NoneError> for LinearAlgebraError
+{
+    fn from(_e: std::option::NoneError) -> Self
+    {
+        Self::from(ErrorKind::NoneError)
+    }
 }
  
 impl Display for LinearAlgebraError {
