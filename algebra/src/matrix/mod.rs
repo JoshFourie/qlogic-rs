@@ -35,15 +35,3 @@ impl<T> Into<Vec<T>> for Matrix<T>
         self.inner 
     } 
 }
-
-impl<'a, T> std::ops::Index<usize> for &'a crate::matrix::Matrix<T>
-{
-    type Output = [T];
-
-    fn index<'b>(&'b self,idx:usize) -> &'b Self::Output {
-        let i0: usize = idx * self.col;
-        let ter: usize = i0 + self.col;
-        let i: std::ops::Range<usize> = i0..ter;
-        &self.inner[i]
-    }
-}
