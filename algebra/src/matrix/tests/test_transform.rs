@@ -1,11 +1,4 @@
-use crate::linear_algebra::interface::{
-    Transpose,
-    Diagonal,
-    Kronecker,
-    ElementaryRowOperations
-};
-
-use super::Matrix;
+use super::*;
 
 fn default() -> Matrix<usize>
 {

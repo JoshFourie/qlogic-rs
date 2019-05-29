@@ -2,11 +2,11 @@ use std::error::Error;
 use std::fmt::{Display, Formatter, Result};
 
 #[derive(Debug)]
-pub struct LinearAlgebraError {
+pub struct AlgebraError {
     repr: Repr
 }
 
-impl LinearAlgebraError {
+impl AlgebraError {
     pub(crate) fn kind(&self) -> ErrorKind {
         match &self.repr {
             Repr::Simple(kind) => *kind,
@@ -40,7 +40,7 @@ impl ErrorKind {
     }
 }
 
-impl From<ErrorKind> for LinearAlgebraError {
+impl From<ErrorKind> for AlgebraError {
     #[inline] fn from(e: ErrorKind) -> Self {
         Self { repr: Repr::Simple(e) }
     }
@@ -52,7 +52,7 @@ pub(crate) struct CustomError {
     error: Box<dyn std::error::Error+Send+Sync>
 }
 
-impl From<std::option::NoneError> for LinearAlgebraError
+impl From<std::option::NoneError> for AlgebraError
 {
     fn from(_e: std::option::NoneError) -> Self
     {
@@ -60,13 +60,13 @@ impl From<std::option::NoneError> for LinearAlgebraError
     }
 }
  
-impl Display for LinearAlgebraError {
+impl Display for AlgebraError {
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(f, "{:?}", self.repr)
     }
 }
 
-impl Error for LinearAlgebraError {
+impl Error for AlgebraError {
     
     fn description(&self) -> &str {
         match self.repr {

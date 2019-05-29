@@ -1,5 +1,8 @@
+/*** Types ***/
 
-/***** Impl *******/
+pub type Result<T> = std::result::Result<T, crate::error::AlgebraError>;
+
+/*** Impl ***/
 
 pub trait CheckedMul<RHS> {
 
