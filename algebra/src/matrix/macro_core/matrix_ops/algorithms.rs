@@ -43,7 +43,7 @@ macro_rules! impl_lu_decomp
                 let mut L: Matrix<T> = (&A).identity();
                 let mut U: Matrix<T> = (&A) * T::zero();
 
-                let mut p: Matrix<T> = 
+                let mut P: Matrix<T> = 
                 {
                     let mut idx: T = T::zero();
                     let i: Vec<T> = vec![T::zero(); m]
@@ -127,7 +127,7 @@ macro_rules! impl_lu_decomp
                         // println!(" \n PA: {:?}", A);
 
                         // we have to adjust r at this point for zero-indexing
-                        p.inner.swap(u,r);
+                        P.inner.swap(u,r);
 
                         // setting row in L/U to corresponding row of A.
                         for idx in r+1..m { L[idx][r] = A[idx][k]/A[r][k] }
@@ -148,7 +148,7 @@ macro_rules! impl_lu_decomp
                         r += 1;
                     }
                 }
-                (A, L, U)
+                (P, L, U)
             }
         }
     }
@@ -326,11 +326,16 @@ where
             0.0, 0.0, 0.0, 0.0
         ].into();
 
-        let (_,L,U) = A.plu_decomposition(); 
+        let (P,L,U) = A.plu_decomposition(); 
 
         assert_eq!(LE,L);
 
         assert_eq!(UE,U);
+
+        println!("{:?}", P);
+
+
+        panic!();
     }
 
     #[ignore]#[test] fn test_plu_decomposition_for_matrix_two()

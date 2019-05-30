@@ -14,7 +14,7 @@ impl<T:Copy> Iterator for MatrixIter<T> {
     }
 }
 
-macro_rules! imlp_into_iter {
+macro_rules! impl_into_iter {
 
     ($id:ty) => {
         impl<'a, T:Copy> IntoIterator for $id {
@@ -32,6 +32,6 @@ macro_rules! imlp_into_iter {
     }
 }
 
-imlp_into_iter!(crate::matrix::Matrix<T>);
-imlp_into_iter!(&'a crate::matrix::Matrix<T>);
-imlp_into_iter!(&'a mut crate::matrix::Matrix<T>);
+impl_into_iter!(crate::matrix::Matrix<T>);
+impl_into_iter!(&'a crate::matrix::Matrix<T>);
+impl_into_iter!(&'a mut crate::matrix::Matrix<T>);
