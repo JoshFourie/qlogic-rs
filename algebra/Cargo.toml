@@ -6,9 +6,6 @@ edition = "2018"
 
 [dependencies]
 num = "0.2"
-num-integer = "0.1"
-num-traits = "0.2"
-itertools = "0.8"
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"

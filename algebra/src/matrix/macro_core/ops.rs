@@ -46,11 +46,11 @@ macro_rules! impl_mul {
             }
         }
     
-        impl<'a, T: Copy> crate::interface::CheckedMul<$rhs> for $lhs
+        impl<'a, T: Copy> crate::matrix::interface::CheckedMul<$rhs> for $lhs
         where
             T: std::ops::Mul<Output=T> + num::Zero
         {
-            type Output = crate::interface::Result<crate::matrix::Matrix<T>>;
+            type Output = crate::matrix::interface::Result<crate::matrix::Matrix<T>>;
 
             fn checked_mul(self, rhs: $rhs) -> Self::Output 
             {
@@ -90,11 +90,11 @@ macro_rules! impl_add_or_sub
             }
         }  
 
-        impl<'a, T: Copy> crate::interface::$checked<$rhs> for $lhs 
+        impl<'a, T: Copy> crate::matrix::interface::$checked<$rhs> for $lhs 
         where
             T: std::ops::$unchecked<T,Output=T>
         {
-            type Output = crate::interface::Result<crate::matrix::Matrix<T>>;
+            type Output = crate::matrix::interface::Result<crate::matrix::Matrix<T>>;
 
             fn $checked_func(self, rhs: $rhs) -> Self::Output {
                 if self.col == rhs.col && self.row == self.col {
@@ -109,7 +109,7 @@ macro_rules! impl_add_or_sub
 
 macro_rules! impl_identity {
     ($s:ty) => {
-        impl<'a, T: Clone> crate::interface::Identity for $s 
+        impl<'a, T: Clone> crate::matrix::interface::Identity for $s 
         where
             T: num::Zero + num::One
         {
@@ -125,51 +125,6 @@ macro_rules! impl_identity {
                     I[i][i] = T::one();
                 }
                 I
-            }
-        }
-    }
-}
-
-macro_rules! impl_elem_row_operations
-{
-    ($id:ty) => 
-    {
-        impl<'a, T: Copy> crate::interface::ElementaryRowOperations<T,usize> for $id
-        where
-            T: std::ops::Add<Output=T> + std::ops::Mul<Output=T> + num::One
-        {
-            type Output = crate::matrix::Matrix<T>;
-    
-            fn row_swap(self, r1: usize, r2: usize) -> Self::Output
-            {
-                let mut mat: crate::matrix::Matrix<T> = self.clone();
-                for c in 0..self.col {
-                    mat[r1][c] = self[r2][c];
-                    mat[r2][c] = self[r1][c];
-                }
-                mat
-            }
-
-            fn row_add(self, scalar: Option<T>, lhs: usize, rhs: usize) -> Self::Output
-            {
-                let mut mat: crate::matrix::Matrix<T> = self.clone();
-                let scal: T = match scalar {
-                    Some(s) => s,
-                    None => T::one()
-                };
-                for c in 0..self.col {
-                    mat[lhs][c] = scal * self[lhs][c] + self[rhs][c];
-                }
-                mat
-            }
-
-            fn row_mul(self, scal: T, r: usize) -> Self::Output
-            {
-                let mut mat: crate::matrix::Matrix<T> = self.clone();
-                for c in 0..self.col {
-                    mat[r][c] = scal * mat[r][c];   
-                }
-                mat
             }
         }
     }

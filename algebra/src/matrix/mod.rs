@@ -1,12 +1,16 @@
 #![allow(non_snake_case)]
 
-use num_integer::Roots;
+use num::integer::Roots;
 
 mod macro_core;
 
+mod matrix_ops;
+
+pub mod interface;
+
 mod iter;
 
-#[cfg(test)] mod tests;
+// #[cfg(test)] mod tests;
 
 /// A structure representing a Matrix.
 #[derive(Default, Debug, PartialEq, Clone)]

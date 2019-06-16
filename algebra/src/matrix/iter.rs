@@ -1,5 +1,7 @@
+use crate::matrix;
+
 pub struct MatrixIter<T> {
-    mat: Vec<T>,
+    mat: matrix::Matrix<T>,
     count: usize,
 }
 
@@ -7,31 +9,54 @@ impl<T:Copy> Iterator for MatrixIter<T> {
     type Item = T;
     fn next(&mut self) -> Option<T> {
         let idx: usize = self.count;
-        if self.mat.len() > self.count {
+        if self.mat.inner.len() > idx {
             self.count += 1;
-            Some(self.mat[idx])
+            Some(self.mat.inner[idx])
         } else { None }
     }
 }
 
-macro_rules! impl_into_iter {
+impl<T:Copy> IntoIterator for matrix::Matrix<T>
+{
+    type Item = T;
 
-    ($id:ty) => {
-        impl<'a, T:Copy> IntoIterator for $id {
-            type Item = T;
-            type IntoIter = crate::matrix::iter::MatrixIter<T>;
-            
-            fn into_iter(self) -> Self::IntoIter 
-            {
-                crate::matrix::iter::MatrixIter {
-                    mat: self.into(),
-                    count: 0,
-                }
-            }
+    type IntoIter = MatrixIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter
+    {
+        MatrixIter {
+            mat: self,
+            count: 0
         }
     }
 }
 
-impl_into_iter!(crate::matrix::Matrix<T>);
-impl_into_iter!(&'a crate::matrix::Matrix<T>);
-impl_into_iter!(&'a mut crate::matrix::Matrix<T>);
+impl<'a, T:Copy> IntoIterator for &'a matrix::Matrix<T>
+{
+    type Item = T;
+
+    type IntoIter = MatrixIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter
+    {
+        MatrixIter {
+            mat: self.clone(),
+            count: 0
+        }
+    }
+}
+
+impl<'a, T:Copy> IntoIterator for &'a mut matrix::Matrix<T>
+{
+    type Item = T;
+
+    type IntoIter = MatrixIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter
+    {
+        MatrixIter {
+            mat: self.clone(),
+            count: 0
+        }
+    }
+}

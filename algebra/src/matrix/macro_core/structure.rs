@@ -41,7 +41,7 @@ macro_rules! impl_getter
 {
     ($id:ty) => 
     {
-        impl<'a,T> crate::interface::Dimension<usize> for $id {
+        impl<'a,T> crate::matrix::interface::Dimension<usize> for $id {
             fn dim(self) -> (usize,usize)
             {
                 (self.row, self.col)
@@ -54,7 +54,7 @@ macro_rules! impl_row_col_traits
 {
     ($id:ty) =>
     {
-        impl<'a,T: Copy> crate::interface::Column<usize> for $id 
+        impl<'a,T: Copy> crate::matrix::interface::Column<usize> for $id 
         {            
             type Output = Vec<T>;
 
@@ -67,7 +67,7 @@ macro_rules! impl_row_col_traits
 
         }
 
-        impl<'a,T: Copy> crate::interface::Row<usize> for $id 
+        impl<'a,T: Copy> crate::matrix::interface::Row<usize> for $id 
         {            
             type Output = Vec<T>;
 
