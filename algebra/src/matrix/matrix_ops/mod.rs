@@ -17,3 +17,7 @@ mod qr;
 mod substitution;
 
 mod vector;
+
+mod minor;
+
+mod sub_matrix;

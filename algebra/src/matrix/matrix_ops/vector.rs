@@ -1,3 +1,5 @@
+//! Docs: InProgress, view src.
+
 use crate::vector;
 
 use crate::matrix;

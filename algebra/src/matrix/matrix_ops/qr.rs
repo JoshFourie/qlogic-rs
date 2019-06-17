@@ -1,3 +1,5 @@
+//! Docs: InProgress, view src.
+
 use crate::matrix;
 
 use matrix::interface;
@@ -62,34 +64,14 @@ where
                 // define 2 * vk1 * vk1
                 let VV: matrix::Matrix<T> = vk.clone().direct_product(vk);
 
-                println!("{:?}", VV);
-
                 // define householder rotation as I - 2vv*
                 I - (VV * <T as std::convert::From<f32>>::from(2.0))                
             };
-
+            
             householder
         };
 
-        let mut Q: matrix::Matrix<T> = (&self).clone();
-
-        for k in 0..n 
-        {
-            let Qk = get_householder(&mut Q, k);
-
-            Q = Qk.transpose() * Q;
-        }
-
-        let mut R: matrix::Matrix<T> = (&self).clone();
-
-        for k in (0..n).rev() 
-        {
-            let Rk = get_householder(&mut R,k);
-
-            R = Rk * R;
-        }
-
-        (Q * self.clone(),R * self.clone())
+        unimplemented!()
     }
 }
 

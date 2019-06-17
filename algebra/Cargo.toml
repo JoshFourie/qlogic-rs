@@ -1,11 +1,8 @@
 [package]
-name = "basic_linear_algebra"
+name = "algebra"
 version = "0.1.0"
 authors = ["Josh Fourie <josh.fourie97@gmail.com>"]
 edition = "2018"
 
 [dependencies]
 num = "0.2"
-
-[dev-dependencies]
-assert_approx_eq = "1.1.0"

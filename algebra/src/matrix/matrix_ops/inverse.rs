@@ -1,8 +1,8 @@
+//! Docs: InProgress, view src.
+
 use crate::matrix;
 
 use matrix::interface;
-
-use interface::LU;
 
 impl<T> interface::Inverse for matrix::Matrix<T>
 {
@@ -11,7 +11,6 @@ impl<T> interface::Inverse for matrix::Matrix<T>
 
     fn inverse(self) -> Self::Output
     {
-        
 
         unimplemented!()
     }

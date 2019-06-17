@@ -1,5 +1,13 @@
+//! A module containing the `MatrixIter` structure for iteration.
+//! 
+//! The structure currently takes ownership of either a `Matrix` structure,
+//! or a copy of a `Matrix` structure but might be extended to store
+//! a reference to a `Matrix` structure to avoid copies.
+
 use crate::matrix;
 
+/// A struct for iterating over the `Matrix` structure. Type parameters
+/// require a `Copy` bound to copy out of a slice.
 pub struct MatrixIter<T> {
     mat: matrix::Matrix<T>,
     count: usize,
