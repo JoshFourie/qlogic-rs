@@ -58,9 +58,9 @@
 
 use num::integer::Roots;
 
-mod macro_core;
+mod core;
 
-mod matrix_ops;
+mod ops;
 
 pub mod interface;
 

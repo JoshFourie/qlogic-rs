@@ -87,11 +87,12 @@ where
     }
 }
 
-#[ignore] #[test] fn test_balance() {
+#[test] fn test_balance() {
 
     use interface::Balance;
+    use float_cmp::ApproxEq;
 
-    let T1: matrix::Matrix<f64> = matrix::Matrix {
+    let T: matrix::Matrix<f64> = matrix::Matrix {
         inner: vec![
             -5.5849 * 10_f64.powf(-1.0),
             -2.4075 * 10_f64.powf(7.0),
@@ -123,14 +124,13 @@ where
         row: 4,
         col: 4
     };
-    let C: _ = T1.balance();
+    let C: _ = T.balance();
 
-    for (exp,test) in E.into_iter()
-        .zip(C.into_iter())
+    for (test,exp) in C.into_iter()
+            .zip(E)
     {
-        match exp - test < 0.0001 {
-            true => { },
-            false => { assert_eq!(exp,test) }
+        if !test.approx_eq(exp, (0.001, 4)) {
+            panic!("{} != {}", test, exp)
         }
     }
 }

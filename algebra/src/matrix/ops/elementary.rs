@@ -15,26 +15,20 @@ where
     type Output = Self;
 
     #[inline]
-    fn row_swap(mut self, r1: usize, r2: usize) -> Self::Output
-    {
-        let ref mut _self = self;
-        _self.row_swap(r1, r2);
+    fn row_swap(mut self, r1: usize, r2: usize) -> Self::Output {
+        (&mut self).row_swap(r1, r2);
         self
     }
 
     #[inline]
-    fn row_add(mut self, scalar: Option<T>, lhs: usize, rhs: usize) -> Self::Output
-    {
-        let ref mut _self = self;
-        _self.row_add(scalar, lhs, rhs);
+    fn row_add(mut self, scalar: Option<T>, lhs: usize, rhs: usize) -> Self::Output {
+        (&mut self).row_add(scalar, lhs, rhs);
         self
     }
 
     #[inline]
-    fn row_mul(mut self, scal: T, r: usize) -> Self::Output
-    {
-        let ref mut _self = self;
-        _self.row_mul(scal, r);
+    fn row_mul(mut self, scal: T, r: usize) -> Self::Output {
+        (&mut self).row_mul(scal, r);
         self
     }
    
@@ -51,10 +45,8 @@ where
     fn row_swap(self, r1: usize, r2: usize) -> Self::Output
     {
         let mut mat: crate::matrix::Matrix<T> = self.clone();
-        for c in 0..self.col {
-            mat[r1][c] = self[r2][c];
-            mat[r2][c] = self[r1][c];
-        }
+        mat[r1][..self.col].clone_from_slice(&self[r2][..self.col]);
+        mat[r2][..self.col].clone_from_slice(&self[r1][..self.col]);
         mat
     }
 
@@ -93,9 +85,8 @@ where
     fn row_swap(mut self, r1: usize, r2: usize) -> Self::Output
     {
         for col in 0..self.col {
-            let buf: T = self[r1][col];
-            self[r1][col] = self[r2][col];
-            self[r2][col] = buf;
+            let mem_cpy_item: T = self[r1][col];
+            self[r1][col] = std::mem::replace(&mut self[r2][col], mem_cpy_item);
         }
     }
 

@@ -16,7 +16,7 @@ macro_rules! impl_index
         {
             type Output = [T];
 
-            fn index<'b>(&'b self,idx:usize) -> &'b Self::Output {
+            fn index(&self, idx:usize) -> &Self::Output {
                 let i0: usize = idx * self.col;
                 let ter: usize = i0 + self.col;
                 let i: std::ops::Range<usize> = i0..ter;
@@ -26,7 +26,7 @@ macro_rules! impl_index
 
         impl<'a, T> std::ops::IndexMut<usize> for $id
         {
-            fn index_mut<'b>(&'b mut self, idx:usize) -> &'b mut Self::Output {
+            fn index_mut(&mut self, idx:usize) -> &mut Self::Output {
                 let i0: usize = idx * self.col;
                 let ter: usize = i0 + self.col;
                 let i: std::ops::Range<usize> = i0..ter;

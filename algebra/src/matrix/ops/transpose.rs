@@ -14,10 +14,8 @@ impl<T: Clone> interface::Transpose for matrix::Matrix<T>
     type Output = matrix::Matrix<T>;
 
     #[inline]
-    fn transpose(mut self) -> Self::Output 
-    {
-        let ref mut mat: _ = self;
-        mat.transpose(); 
+    fn transpose(mut self) -> Self::Output {
+        (&mut self).transpose(); 
         self
     }
 }
@@ -26,8 +24,7 @@ impl<'a, T: Clone> interface::Transpose for &'a matrix::Matrix<T>
 {
     type Output = matrix::Matrix<T>;
 
-    fn transpose(self) -> Self::Output 
-    {
+    fn transpose(self) -> Self::Output {
         matrix::Matrix {
             inner: _tranpose_internal(self),
             row: self.col,
@@ -40,19 +37,13 @@ impl<'a, T: Clone> interface::Transpose for &'a mut matrix::Matrix<T>
 {
     type Output = ();
 
-    fn transpose(mut self) -> Self::Output
-    {
+    fn transpose(mut self) -> Self::Output {
         let cache_row: usize = self.row;
         let cache_col: usize = self.col;
 
-        if cache_row != cache_row {
-            self.inner = _tranpose_internal(self);
-            self.row = cache_col;
-            self.col = cache_row;
-        } else {
+        if cache_row == cache_col {
             for i in 0..cache_row {
-                for j in i..cache_col 
-                {
+                for j in i..cache_col {
                     if i != j { 
                         let buf: T = self[i][j].clone();
                         self[i][j] = self[j][i].clone();
@@ -60,6 +51,10 @@ impl<'a, T: Clone> interface::Transpose for &'a mut matrix::Matrix<T>
                     }
                 }
             }
+        } else {
+            self.inner = _tranpose_internal(self);
+            self.row = cache_col;
+            self.col = cache_row;
         }
     }
 }

@@ -82,12 +82,13 @@ where
 {
     use crate::matrix;
 
-    use matrix::interface::{BackwardSubstitution};
+    use matrix::interface::{ForwardSubstitution, BackwardSubstitution};
 
     use crate::vector;
 
-    #[test] fn test_forward_substitution()
-    {
+    use float_cmp::ApproxEq;
+
+    #[test] fn test_forward_substitution() {
         let matrix: matrix::Matrix<f64> = vec![
             3.0, 0.0, 0.0, 0.0,
             -1.0, 1.0, 0.0, 0.0,
@@ -103,16 +104,14 @@ where
             5.0/3.0, 23.0, 3.0, -43.0/3.0, 305.0/6.0, 
         ].into();
 
-        let test: _ = matrix.backward_substitution(vector);
+        let test: _ = matrix.forward_substitution(vector);
 
-        for (e,t) in exp.into_iter()
-            .zip(test.into_iter())
+        for (test,exp) in test.into_iter()
+            .zip(exp)
         {
-            let x = e-t;
-
-            if x < 0.0001 || x > 0.0001 {
-
-            } else { panic!("expected {}, found {}", e, t) }
+            if !test.approx_eq(exp, (0.001, 4)) {
+                panic!("{} != {}", test, exp)
+            }
         }
     }
 
@@ -131,19 +130,17 @@ where
 
         let exp: vector::Vector<f64> = vec![
             // 3.0, -4.0, -1.0, 2.0
-            4.78571, 1.61905, -0.047619, 0.857143
+            4.78571, 1.61905, -0.047_619, 0.857_143
         ].into();
 
         let test: _ = matrix.backward_substitution(vector);
 
-        for (e,t) in exp.into_iter()
-            .zip(test.into_iter())
+        for (test,exp) in test.into_iter()
+            .zip(exp)
         {
-            let x = e-t;
-
-            if x < 0.0001 || x > 0.0001 {
-
-            } else { panic!("expected {}, found {}", e, t) }
+            if !test.approx_eq(exp, (0.001, 4)) {
+                panic!("{} != {}", test, exp)
+            }
         }
     }
 }

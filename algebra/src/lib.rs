@@ -3,6 +3,7 @@
 #![feature(specialization)]
 #![feature(trivial_bounds)]
 #![feature(associated_type_defaults)]
+#![warn(clippy::all)]
 
 pub mod matrix;
 

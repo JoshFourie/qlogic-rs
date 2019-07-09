@@ -181,13 +181,13 @@ safe_kronecker!(&'a mut matrix::Matrix<T>, ());
         col: 2
     };
 
-    let ref T1A_ref = T1A;
+    let T1A_ref = &T1A;
 
-    let ref T1B_ref = T1B;
+    let T1B_ref = &T1B;
 
-    let ref T1_ref = T1A_ref.kronecker(T1B_ref);
+    let T1_ref = &T1A_ref.kronecker(T1B_ref);
 
-    let ref T1_ref_safe = T1A_ref.safe_kronecker(T1B_ref).unwrap();
+    let T1_ref_safe = &T1A_ref.safe_kronecker(T1B_ref).unwrap();
 
     let T1: _ = T1A.kronecker(T1B);
 
@@ -204,7 +204,7 @@ safe_kronecker!(&'a mut matrix::Matrix<T>, ());
         col: 4
     };
 
-    let ref E1_ref = E1;
+    let E1_ref = &E1;
 
     assert_eq!(T1_ref, E1_ref);
 

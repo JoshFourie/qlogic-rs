@@ -38,7 +38,7 @@ where
             }
 
             Self {
-                inner: inner,
+                inner,
                 row: 1,
                 col: cached_cols
             }
@@ -68,22 +68,20 @@ where
             if self[piv][k] != T::zero() {
 
                 for col in k..cached_cols {
-                    let buf: T = self[r][col];
-                    self[r][col] = self[piv][col];
-                    self[piv][col] = buf;
+                    let mem_cpy_item: T = self[r][col];
+                    self[r][col] = std::mem::replace(&mut self[piv][col], mem_cpy_item);
                 }
 
                 for col in 0..r {
-                    let buf: T = L[r][col];
-                    L[r][col] = L[piv][col];
-                    L[piv][col] = buf;
+                    let mem_cpy_item: T = L[r][col];
+                    L[r][col] = std::mem::replace(&mut L[piv][col], mem_cpy_item);
                 }
                 
                 P.inner.swap(piv,r);        
 
                 for idx in r+1..cached_rows { L[idx][r] = self[idx][k] / self[r][k] }
 
-                for idx in k..cached_cols { U[r][idx] = self[r][idx] }
+                U[r][k..cached_cols].clone_from_slice(&self[r][k..cached_cols]);
 
                 for row in r..cached_rows {
                     for col in k..cached_cols
@@ -132,7 +130,7 @@ where
         1.0, 0.0, 0.0, 0.0,
         -0.5, 1.0, 0.0, 0.0,
         0.5, 1.0, 1.0, 0.0,
-        0.5, 0.0, 0.16666666667, 1.0 
+        0.5, 0.0, 0.166_666_67, 1.0 
     ].into();
 
     let UE: matrix::Matrix<f32> = vec![
