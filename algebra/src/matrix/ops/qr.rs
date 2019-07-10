@@ -21,7 +21,6 @@ where
     T: num::Float
     + ops::Mul<Output=T>
     + From<f32>
-    + std::fmt::Debug
 {
     type Output = (matrix::Matrix<T>, matrix::Matrix<T>);
 
@@ -73,7 +72,6 @@ where
     T: num::Float
     + ops::Mul<Output=T>
     + From<f32>
-    + std::fmt::Debug
 {
     fn new(source_matrix: &matrix::Matrix<T>, k: usize) -> Self {
         Self {

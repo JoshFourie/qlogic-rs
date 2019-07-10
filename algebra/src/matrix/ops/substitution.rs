@@ -23,23 +23,19 @@ where
 
     fn forward_substitution(self, rhs: vector::Vector<T>) -> Self::Output
     {
-        // check structure
-
-        let mut x: vector::Vector<T> = vec![T::zero(); self.row].into();
-
-        for i in 0..self.row 
-        {
+        let mut x: vector::Vector<T> = Vec::new().into();
+        for i in 0..self.row {
             let dot: T = {
                 let mut val: T = T::zero();
-                for j in 0..i-1 {
-                    val += self[j][i] * x[j];
+                for j in 0..i {
+                    val += self[i][j] * x[j];
                 }
                 val
             };
-
-            x[i] = (rhs[i] - dot)/self[i][i];      
+            x.push(
+                (rhs[i] - dot)/self[i][i]
+            );      
         }
-
         x
     }   
 }
@@ -101,7 +97,7 @@ where
         ].into();
 
         let exp: vector::Vector<f64> = vec![
-            5.0/3.0, 23.0, 3.0, -43.0/3.0, 305.0/6.0, 
+            5.0/3.0, 23.0/3.0, -43.0/3.0, 305.0/6.0, 
         ].into();
 
         let test: _ = matrix.forward_substitution(vector);
