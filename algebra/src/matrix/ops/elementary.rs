@@ -6,7 +6,7 @@ use matrix::interface;
 
 use std::ops;
 
-impl<T: Copy> interface::ERO<T, usize> for matrix::Matrix<T>
+impl<T: Copy> interface::ElementaryRow<T, usize> for matrix::Matrix<T>
 where
     T: ops::Add<Output=T> 
     + ops::Mul<Output=T> 
@@ -34,7 +34,7 @@ where
    
 }
 
-impl<'a, T: Copy> interface::ERO<T,usize> for &'a matrix::Matrix<T>
+impl<'a, T: Copy> interface::ElementaryRow<T,usize> for &'a matrix::Matrix<T>
 where
     T: ops::Add<Output=T> 
     + ops::Mul<Output=T> 
@@ -74,7 +74,7 @@ where
 }
 
 
-impl<'a, T: Copy> interface::ERO<T, usize> for &'a mut matrix::Matrix<T>
+impl<'a, T: Copy> interface::ElementaryRow<T, usize> for &'a mut matrix::Matrix<T>
 where
     T: ops::Add<Output=T> 
     + ops::Mul<Output=T> 
@@ -115,7 +115,7 @@ where
 
     use matrix::Matrix;
 
-    use matrix::interface::ERO;
+    use matrix::interface::ElementaryRow;
 
     #[test] fn test_elementary_row_swap_for_matrix()
     {

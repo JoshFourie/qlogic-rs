@@ -24,11 +24,11 @@ where
 {
     type Output = (matrix::Matrix<T>, matrix::Matrix<T>);
 
-    fn qr(mut self) -> Self::Output
+    default fn qr(mut self) -> (matrix::Matrix<T>, matrix::Matrix<T>)
     {
         let A: Self = self.clone();
         let col: usize = self.col; 
-        let I: &Self = &(&self).identity();
+        let I: Self = (&self).identity();
 
         let mut series_of_Q: Vec<Self> = Vec::with_capacity(col);
         let mut series_of_R: Vec<Self> = Vec::with_capacity(col);
@@ -54,13 +54,13 @@ where
             .fold(I.clone(),|acc,Rk| acc * Rk) * A;
         
         let Q: Self = series_of_Q.into_iter()
-            .fold(I.clone(), |acc,Qk| acc * Qk);
+            .fold(I, |acc,Qk| acc * Qk);
 
         (Q,R)
     }
 }
 
-struct HouseholderTransform<T> {
+pub struct HouseholderTransform<T> {
     I: matrix::Matrix<T>,
     x: vector::Vector<T>,
     k: usize,
@@ -130,11 +130,73 @@ where
 
         let exp_R: matrix::Matrix<f64> = vec![14.0, 21.0, -14.0, 0.0, 175.0, -70.0, 0.0, 0.0, -35.0].into();
 
-        let (Q,R) = matrix.qr();
+        let (Q,R):_ = matrix.qr();
 
         for (test,exp) in Q.into_iter()
             .zip(exp_Q)
             .chain(R.into_iter().zip(exp_R))
+        {
+            if !test.approx_eq(exp, (0.001, 4)) {
+                panic!("{} != {}", test, exp)
+            }
+        }
+    }
+
+    #[test] fn second_test_qr_decomposition()
+    {
+        let matrix: matrix::Matrix<f64> = vec![
+            2.0, 4.0, 2.0,
+            -1.0, 0.0, -4.0,
+            2.0, 2.0, -1.0
+        ].into();
+
+        let exp_Q: matrix::Matrix<f64> = vec![
+            2.0/3.0, 2.0/3.0, 1.0/3.0,
+            -1.0/3.0, 2.0/3.0, -2.0/3.0,
+            2.0/3.0, -1.0/3.0, -2.0/3.0
+        ].into();
+
+        let exp_R: matrix::Matrix<f64> = vec![
+            3.0, 4.0, 2.0,
+            0.0, 2.0, -1.0,
+            0.0, 0.0, 4.0
+        ].into();
+
+        let (Q,R): _ = matrix.clone().qr();
+        let test_matrix: _ = Q*R;
+        
+        for (test,exp) in test_matrix.into_iter()
+            .zip(matrix)
+        {
+            if !test.approx_eq(exp, (0.001, 4)) {
+                panic!("{} != {}", test, exp)
+            }
+        }
+    }
+
+    #[test] fn test_qr_eigenvalue()
+    {
+        use crate::matrix::interface::Diagonal;
+
+        let matrix: matrix::Matrix<f64> = vec![
+            9.0, 5.0, 1.0, 2.0, 1.0,
+            9.0, 7.0, 10.0, 5.0, 8.0,
+            1.0, 7.0, 2.0, 4.0, 3.0,
+            4.0, 3.0, 2.0, 10.0, 5.0,
+            6.0, 5.0, 4.0, 10.0, 6.0
+        ].into();
+
+        let (Q,R): _ = matrix.qr();
+        
+        let A: _ = R*Q;
+
+        let expected_eiganvalues: Vec<f64> = vec![
+            25.8275, -4.9555, -0.1586, 6.4304, 6.8562
+        ];     
+        let test_eigenvalues: _ = A.diagonal();
+
+        for (test,exp) in test_eigenvalues.into_iter()
+            .zip(expected_eiganvalues)
         {
             if !test.approx_eq(exp, (0.001, 4)) {
                 panic!("{} != {}", test, exp)

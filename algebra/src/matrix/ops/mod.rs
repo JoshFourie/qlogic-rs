@@ -21,3 +21,5 @@ mod vector;
 mod minor;
 
 mod sub_matrix;
+
+mod eigenvalue;

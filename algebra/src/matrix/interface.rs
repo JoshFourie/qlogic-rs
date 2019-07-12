@@ -26,7 +26,6 @@ pub trait CheckedMul<RHS> {
     type Output;
 
     fn checked_mul(self, rhs: RHS) -> Self::Output;
-
 }
 
 /// A trait for adding with integrity checks over the elements and dimensions.
@@ -35,7 +34,6 @@ pub trait CheckedAdd<RHS> {
     type Output;
     
     fn checked_add(self, rhs: RHS) -> Self::Output;
-
 }
 
 /// A trait for subtracting with integrity checks over the elements and dimensions.
@@ -44,14 +42,12 @@ pub trait CheckedSub<RHS> {
     type Output;
 
     fn checked_sub(self, rhs: RHS) -> Self::Output;
-
 }
 
 /// A trait for returning the row and col values of the `Matrix`.
 pub trait Dimension<T> {
 
     fn dim(self) -> (T,T);
-
 }
 
 /// A trait for returning a column from a `Matrix`. The Output may
@@ -61,7 +57,6 @@ pub trait Column<T> {
     type Output;
 
     fn get_col(self, idx: T) -> Self::Output;
-
 }
 
 /// A trait for returning a row from a `Matrix`. The Output may
@@ -71,7 +66,6 @@ pub trait Row<T> {
     type Output;
 
     fn get_row(self, idx: T) -> Self::Output;
-
 }
 
 /// A trait for returning the [identity] of a `Matrix`. It
@@ -83,7 +77,6 @@ pub trait Identity {
     type Output;
     
     fn identity(self) -> Self::Output;
-
 }
 
 /// A [transpose] of a doubly indexed object is the object obtained 
@@ -96,8 +89,7 @@ pub trait Transpose {
 
     type Output;
     
-    fn transpose(self) -> Self::Output;
-    
+    fn transpose(self) -> Self::Output;   
 }
 
 /// A [`Transpose`] operation that identifies errors and returns exceptions
@@ -109,13 +101,11 @@ pub trait SafeTranspose {
     type Output;
     
     fn safe_transpose(self) -> Self::Output;
-    
 }
 
 pub trait Norm<T> { // eigenvalues required.
     
     fn eucl_norm(self) -> T;
-
 }
 
 /// A trait storing the [balancing] sub-routine used for improving the accuracy
@@ -127,7 +117,6 @@ pub trait Balance
     type Output;
 
     fn balance(self) -> Self::Output;
-
 }
 
 /// A trait storing the multiplicative [inverse] of the `Matrix` 
@@ -167,7 +156,6 @@ pub trait Diagonal<T> {
     fn diagonal(self) -> Self::Output;
 
     fn trace(self) -> T;
-
 }
 
 /// Given an m×n matrix A and a p×q matrix B, their [Kronecker] product `C = A(X)B`,
@@ -186,7 +174,6 @@ pub trait Kronecker<RHS> {
     type Output;
 
     fn kronecker(self, rhs: RHS) -> Self::Output;
-
 }
 
 /// A [`Kronecker`] operation that identifies errors and returns exceptions
@@ -198,7 +185,6 @@ pub trait SafeKronecker<RHS> {
     type Output;
 
     fn safe_kronecker(self, rhs: RHS) -> Self::Output;
-
 }
 
 /// A trait storing the [QR Decomposition] routine.
@@ -209,13 +195,12 @@ pub trait QR {
     type Output;
 
     fn qr(self) -> Self::Output;
-
 }
 
 /// A trait storing the 3 [Elementary Row Operations].
 /// 
 /// [Elementary Row Operations]: http://mathworld.wolfram.com/ElementaryRowandColumnOperations.html.
-pub trait ERO<T,U> {
+pub trait ElementaryRow<T,U> {
 
     type Output;
     
@@ -224,7 +209,6 @@ pub trait ERO<T,U> {
     fn row_add(self, scal: Option<T>, lhs: U, rhs: U) -> Self::Output;
 
     fn row_mul(self, scal: T, r: U) -> Self::Output;
-
 }
 
 /// A trait storing a routine for solving a triangular system by [forward substitution].
@@ -237,7 +221,6 @@ pub trait ForwardSubstitution<T> {
     type Vector = crate::vector::Vector<T>;
 
     fn forward_substitution(self, b: Self::Vector) -> Self::Output;
-
 }
 
 /// A trait storing a routine for solving a triangular system by [backward substitution].
@@ -250,19 +233,25 @@ pub trait BackwardSubstitution<T> {
     type Vector = crate::vector::Vector<T>;
 
     fn backward_substitution(self, rhs: Self::Vector) -> Self::Output;
-
 }
 
 /// A trait for returning the [minor] of a Matrix.interface
 /// 
 /// [minor]: http://mathworld.wolfram.com/Minor.html.
-pub trait Minor<T>
-{
+pub trait Minor<T> {
+
     fn minor(self, row: T, col: T) -> Self;
 }
 
 /// A trait for extracting a smaller Matrix from a larger one.
-pub trait SubMatrix<T>
-{
+pub trait SubMatrix<T> {
+
     fn sub_matrix(self, row: T, col: T) -> Self;   
+}
+
+pub trait EigenValue {
+
+    type Output;
+
+    fn eigenvalues(self) -> Self::Output;
 }
