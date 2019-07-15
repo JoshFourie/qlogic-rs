@@ -80,3 +80,23 @@ macro_rules! impl_row_col_traits
         }
     }
 }
+
+impl<'a,T: Copy> crate::matrix::interface::MutableColumn<usize> for &'a mut crate::matrix::Matrix<T> {
+
+    type Output = &'a mut [T];
+
+    fn get_mut_col(mut self, idx: usize) -> Self::Output {
+        unimplemented!()
+    }
+
+}
+
+impl<'a,T: Copy> crate::matrix::interface::MutableRow<usize> for &'a mut crate::matrix::Matrix<T> {
+
+    type Output = &'a mut [T];
+
+    fn get_mut_row(mut self, idx: usize) -> Self::Output {
+        unimplemented!()
+    }
+
+}

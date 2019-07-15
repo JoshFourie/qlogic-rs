@@ -59,6 +59,13 @@ pub trait Column<T> {
     fn get_col(self, idx: T) -> Self::Output;
 }
 
+pub trait MutableColumn<T> {
+    
+    type Output;
+
+    fn get_mut_col(self, idx: T) -> Self::Output;
+}
+
 /// A trait for returning a row from a `Matrix`. The Output may
 /// be defined as something like a `Vec<T>` or a `vector::Vector<T>`.
 pub trait Row<T> {
@@ -66,6 +73,13 @@ pub trait Row<T> {
     type Output;
 
     fn get_row(self, idx: T) -> Self::Output;
+}
+
+pub trait MutableRow<T> {
+    
+    type Output;
+
+    fn get_mut_row(self, idx: T) -> Self::Output;
 }
 
 /// A trait for returning the [identity] of a `Matrix`. It
@@ -235,20 +249,17 @@ pub trait BackwardSubstitution<T> {
     fn backward_substitution(self, rhs: Self::Vector) -> Self::Output;
 }
 
-/// A trait for returning the [minor] of a Matrix.interface
+/// A trait for returning the [minor] of a Matrix.
 /// 
 /// [minor]: http://mathworld.wolfram.com/Minor.html.
 pub trait Minor<T> {
 
-    fn minor(self, row: T, col: T) -> Self;
+    type Output;
+
+    fn minor(self, row: T, col: T) -> Self::Output;
 }
 
-/// A trait for extracting a smaller Matrix from a larger one.
-pub trait SubMatrix<T> {
-
-    fn sub_matrix(self, row: T, col: T) -> Self;   
-}
-
+/// A trait for retrieving the Eigenvalues of a Matrix.
 pub trait EigenValue {
 
     type Output;

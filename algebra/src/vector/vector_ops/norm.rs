@@ -4,7 +4,7 @@ use vector::interface;
 
 impl<T: Clone> interface::Norm<T> for vector::Vector<T>
 where
-    T: num::Float
+    T: num::traits::real::Real
 {
     fn eucl_norm(self) -> T
     {
