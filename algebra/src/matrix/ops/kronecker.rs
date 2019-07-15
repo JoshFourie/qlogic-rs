@@ -105,6 +105,8 @@ where
 /// ```rust.ignore
 ///     c[i][j] = a[a0][a1] * b[b0][b1]
 /// ```
+
+// TODO: turn into object...
 fn _kronecker_internal<T: Copy>(
     lhs: &matrix::Matrix<T>, 
     rhs: &matrix::Matrix<T>,

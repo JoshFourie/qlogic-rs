@@ -21,3 +21,5 @@ mod vector;
 mod minor;
 
 mod eigenvalue;
+
+mod householder;
