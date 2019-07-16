@@ -25,11 +25,7 @@ impl<'a, T: Clone> interface::Transpose for &'a matrix::Matrix<T>
     type Output = matrix::Matrix<T>;
 
     fn transpose(self) -> Self::Output {
-        matrix::Matrix {
-            inner: _tranpose_internal(self),
-            row: self.col,
-            col: self.row
-        }
+        MatrixTransposition::new(self).transpose()
     }
 }
 
@@ -45,16 +41,46 @@ impl<'a, T: Clone> interface::Transpose for &'a mut matrix::Matrix<T>
             for i in 0..cache_row {
                 for j in i..cache_col {
                     if i != j { 
-                        let buf: T = self[i][j].clone();
-                        self[i][j] = self[j][i].clone();
-                        self[j][i] = buf;
+                        let mem_cpy_item: T = self[i][j].clone();
+                        self[i][j] = std::mem::replace(&mut self[j][i], mem_cpy_item)
                     }
                 }
             }
         } else {
-            self.inner = _tranpose_internal(self);
+            let mat: _ = MatrixTransposition::new(self)
+                .transpose();
+            self.inner = mat.inner;
             self.row = cache_col;
             self.col = cache_row;
+        }
+    }
+}
+
+struct MatrixTransposition<'a,T> {
+    mat: &'a matrix::Matrix<T>
+} 
+
+impl<'a,T: Clone> MatrixTransposition<'a,T>
+{
+    fn new(mat: &'a matrix::Matrix<T>) -> Self {
+        Self { mat }
+    }
+
+    fn transpose(self) -> matrix::Matrix<T> 
+    {
+        let mat = self.mat;
+        let mut buf: Vec<T> = Vec::new();
+        
+        for i in 0..mat.row {
+            for j in 0..mat.col {
+                buf.push(mat[j][i].clone())
+            }
+        }
+
+        matrix::Matrix {
+            row: mat.row,
+            col: mat.col,
+            inner: buf
         }
     }
 }

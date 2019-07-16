@@ -47,7 +47,6 @@ where
     + ops::Sub<Output=T>
     + ops::AddAssign
     + num::Zero   
-    + std::fmt::Debug
 {
     type Output = vector::Vector<T>;
 

@@ -4,7 +4,7 @@ use crate::vector;
 
 use crate::matrix;
 
-use matrix::interface::{Column, Row};
+use matrix::interface::Row;
 
 use vector::interface::Dot;
 
@@ -17,16 +17,8 @@ where
 {
     type Output = vector::Vector<T>;
 
-    fn mul(self, rhs: vector::Vector<T>) -> Self::Output
-    {
-        let mut new: vector::Vector<T> = Default::default();
-
-        for i in 0..self.row {
-            let vector: vector::Vector<T> = (&self).get_row(i).into();
-            new.push(rhs.clone().dot(vector))
-        }
-
-        new
+    fn mul(self, rhs: vector::Vector<T>) -> Self::Output {
+        MatrixVectorProduct::new(rhs, self).matrix_vector_product()
     }
 }
 
@@ -37,17 +29,34 @@ where
 {
     type Output = vector::Vector<T>;
 
-    fn mul(self, rhs: matrix::Matrix<T>) -> Self::Output
-    {  
-        let mut new: vector::Vector<T> = Default::default();
-
-        for i in 0..rhs.col {
-            let vector: vector::Vector<T> = (&rhs).get_col(i).into();
-            new.push(vector.clone().dot(vector))
-        }
-
-        new
+    fn mul(self, rhs: matrix::Matrix<T>) -> Self::Output {  
+        MatrixVectorProduct::new(self, rhs).matrix_vector_product()
     }
+}
+
+struct MatrixVectorProduct<T> {
+    vec: vector::Vector<T>,
+    mat: matrix::Matrix<T>
+}
+
+impl<T: Copy> MatrixVectorProduct<T> 
+where
+    T: ops::Mul<Output=T>
+    + num::Zero
+{
+    fn new(vec: vector::Vector<T>, mat: matrix::Matrix<T>) -> Self {
+        Self { vec,mat }
+    }
+
+    fn matrix_vector_product(self) -> vector::Vector<T> 
+    {
+        let mut new: vector::Vector<T> = Default::default();
+        for i in 0..self.mat.row {
+            let vector: vector::Vector<T> = (&self.mat).get_row(i).into();
+            new.push(self.vec.clone().dot(vector))
+        }
+        new
+    }    
 }
 
 #[cfg(test)] mod tests 

@@ -24,16 +24,8 @@ where
 {
     type Output = Self;
 
-    fn kronecker(self, rhs: Self) -> Self::Output
-    {
-        let new_row = self.row * rhs.row;
-        let new_col = self.col * rhs.col;
-
-        matrix::Matrix {
-            inner: _kronecker_internal(&self, &rhs, new_row, new_col),
-            row: new_row,
-            col: new_col
-        }
+    fn kronecker(self, rhs: Self) -> Self::Output {
+        KroneckerProduct::new(&self, &rhs).kronecker_product()
     }
 }
 
@@ -50,40 +42,19 @@ where
 {
     type Output = matrix::Matrix<T>;
 
-    fn kronecker(self, rhs: Self) -> Self::Output
-    {
-        let new_row = self.row * rhs.row;
-        let new_col = self.col * rhs.col;
-
-        matrix::Matrix {
-            inner: _kronecker_internal(self, rhs, new_row, new_col),
-            row: new_row,
-            col: new_col
-        }
+    fn kronecker(self, rhs: Self) -> Self::Output {
+        KroneckerProduct::new(self, rhs).kronecker_product()
     }
 }
 
-/// A trait implementation of [`Kronecker`] that replaces the `self` object with
-/// the constructed `Matrix<T>` structure. The function allocates a `Vec<T>` on the heap
-/// that is assigned to `self.inner`.
-/// 
-/// See: `internal` for more implementation details.
-/// 
-/// `internal`: ../fn._kronecker_internal.html
 impl<'a, T: Copy> interface::Kronecker<Self> for &'a mut matrix::Matrix<T>
 where
     T: ops::Mul<Output=T>
 {
-    type Output = ();
+    type Output = matrix::Matrix<T>;
 
-    fn kronecker(self, rhs: Self)
-    {        
-        let new_row = self.row * rhs.row;
-        let new_col = self.col * rhs.col;
-
-        self.inner = _kronecker_internal(self, rhs, new_row, new_col);
-        self.row = new_row;
-        self.col = new_col;
+    fn kronecker(self, rhs: Self) -> Self::Output {        
+        KroneckerProduct::new(self, rhs).kronecker_product()
     }
 }
 
@@ -107,30 +78,39 @@ where
 /// ```
 
 // TODO: turn into object...
-fn _kronecker_internal<T: Copy>(
-    lhs: &matrix::Matrix<T>, 
-    rhs: &matrix::Matrix<T>,
-    new_row: usize,
-    new_col: usize
-) -> Vec<T>
+struct KroneckerProduct<'a,T> {
+    lhs: &'a matrix::Matrix<T>,
+    rhs: &'a matrix::Matrix<T>,
+}
+
+impl<'a,T: Copy> KroneckerProduct<'a,T> 
 where
     T: ops::Mul<Output=T>
 {
-    let mut buf: Vec<T> = Vec::new();
-
-    for i in 0..new_row {
-        for j in 0..new_col
-        {
-            let a0 = integer::div_floor(i, rhs.row);
-            let a1 = integer::div_floor(j, rhs.col);
-
-            let b0 = i % rhs.row;
-            let b1 = j % rhs.col;
-
-            buf.push(lhs[a0][a1] * rhs[b0][b1]);
-        }  
+    fn new(lhs: &'a matrix::Matrix<T>, rhs: &'a matrix::Matrix<T>) -> Self {
+        Self { lhs,rhs }
     }
-    buf
+
+    fn kronecker_product(self) -> matrix::Matrix<T> 
+    {
+        let mut buf: Vec<T> = Vec::new();
+        let row: usize = self.lhs.row * self.rhs.row;
+        let col: usize = self.lhs.col * self.rhs.col;
+
+        for i in 0..row {
+            for j in 0..col
+            {
+                let a0 = integer::div_floor(i, self.rhs.row);
+                let a1 = integer::div_floor(j, self.rhs.col);
+
+                let b0 = i % self.rhs.row;
+                let b1 = j % self.rhs.col;
+
+                buf.push(self.lhs[a0][a1] * self.rhs[b0][b1]);
+            }  
+        }
+        matrix::Matrix::new(buf, row, col)
+    }
 }
 
 use interface::Kronecker;
@@ -144,12 +124,12 @@ use interface::Kronecker;
 /// declare the length of the data.
 macro_rules! safe_kronecker {
     
-    ($id: ty, $result: ty) => {
+    ($id: ty) => {
         impl<'a, T: Copy> interface::SafeKronecker<Self> for $id
         where
             T: ops::Mul<Output=T>
         {
-            type Output = interface::Result<$result>;
+            type Output = interface::Result<matrix::Matrix<T>>;
 
             #[inline]
             fn safe_kronecker(self, rhs: Self) -> Self::Output
@@ -164,9 +144,9 @@ macro_rules! safe_kronecker {
     }
 }
 
-safe_kronecker!(matrix::Matrix<T>, Self);
-safe_kronecker!(&'a matrix::Matrix<T>, matrix::Matrix<T>);
-safe_kronecker!(&'a mut matrix::Matrix<T>, ());
+safe_kronecker!(matrix::Matrix<T>);
+safe_kronecker!(&'a matrix::Matrix<T>);
+safe_kronecker!(&'a mut matrix::Matrix<T>);
 
 #[test] fn test_kronecker()
 {
