@@ -25,8 +25,7 @@ where
         let active_matrix_end = mat.col;
         let matrix_col = mat.col;
 
-        while active_matrix_end > 2 
-        {
+        while active_matrix_end > 2 {
             let active_matrix_start = active_matrix_end - 1;
 
             let (mut x, mut y, mut z): (T,T,T) = Self::precompute_xyz(
