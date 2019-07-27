@@ -16,6 +16,22 @@ where
     }
 }
 
+impl<'a,T: Clone> ops::Sub<Self> for &'a vector::Vector<T> 
+where
+    T: ops::Sub<T,Output=T>
+{
+    type Output = vector::Vector<T>;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        self.inner
+            .iter()
+            .zip(rhs.inner.iter())
+            .map(|(x,y)| {
+                x.clone()-y.clone()
+            }).collect::<Vec<T>>().into()
+    }
+}
+
 #[test] fn test_vector_subtraction()
 {
     let k: vector::Vector<isize> = vec![4,5].into();

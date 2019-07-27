@@ -15,7 +15,7 @@ where
     type Output = (matrix::Matrix<T>, matrix::Matrix<T>);
 
     fn qr(self) -> (matrix::Matrix<T>, matrix::Matrix<T>) {
-       householder::HouseholderDecomposition::new(self).qr()
+       householder::HouseholderDecomposition::new(self).into_tuple()
     }
 }
 
@@ -61,33 +61,20 @@ where
         }
     }
 
+    #[ignore]
     #[test] fn test_qr_eigenvalue()
     {
-        use crate::matrix::interface::Diagonal;
+        use crate::matrix::interface::Transpose;
 
         let matrix: matrix::Matrix<f64> = vec![
-            9.0, 5.0, 1.0, 2.0, 1.0,
-            9.0, 7.0, 10.0, 5.0, 8.0,
-            1.0, 7.0, 2.0, 4.0, 3.0,
-            4.0, 3.0, 2.0, 10.0, 5.0,
-            6.0, 5.0, 4.0, 10.0, 6.0
+            4.0, -3.0, 0.0, 0.0,
+            -3.0, 2.0, 3.16228, 0.0,
+            0.0, 3.16228, -1.4, 0.2,
+            0.0, 0.0, -0.2, 1.4
         ].into();
 
-        let (Q,R): _ = matrix.qr();
-        
-        let A: _ = R*Q;
-
-        let expected_eiganvalues: Vec<f64> = vec![
-            25.8275, -4.9555, -0.1586, 6.4304, 6.8562
-        ];     
-        let test_eigenvalues: _ = A.diagonal();
-
-        for (test,exp) in test_eigenvalues.into_iter()
-            .zip(expected_eiganvalues)
-        {
-            if !test.approx_eq(exp, (0.001, 4)) {
-                panic!("{} != {}", test, exp)
-            }
-        }
+        let (Q,R): _ = matrix.clone().qr();
+        println!("{:?}", Q.clone().transpose()*matrix*Q);
+        panic!("")
     }
 }

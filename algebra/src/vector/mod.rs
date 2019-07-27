@@ -2,7 +2,7 @@ mod structure;
 
 pub mod interface;
 
-mod vector_ops;
+mod ops;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Vector<T> {

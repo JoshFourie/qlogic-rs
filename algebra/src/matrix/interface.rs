@@ -266,3 +266,10 @@ pub trait EigenValue {
 
     fn eigenvalues(self) -> Self::Output;
 }
+
+pub trait SchurDecomposition {
+
+    type Output;
+
+    fn schur(self) -> Self::Output;
+}

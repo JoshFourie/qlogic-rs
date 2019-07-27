@@ -35,12 +35,17 @@ impl_row_col_traits!(&'a mut crate::matrix::Matrix<T>);
 impl_mul!(crate::matrix::Matrix<T>);
 impl_mul!(&'a crate::matrix::Matrix<T>);
 impl_mul!(&'a mut crate::matrix::Matrix<T>);
+
 impl_mul!(crate::matrix::Matrix<T>, crate::matrix::Matrix<T>);
 impl_mul!(crate::matrix::Matrix<T>, &'a crate::matrix::Matrix<T>);
+impl_mul!(crate::matrix::Matrix<T>, &'a mut crate::matrix::Matrix<T>);
+
 impl_mul!(&'a crate::matrix::Matrix<T>, crate::matrix::Matrix<T>);
 impl_mul!(&'a crate::matrix::Matrix<T>, &'a crate::matrix::Matrix<T>);
-impl_mul!(crate::matrix::Matrix<T>, &'a mut crate::matrix::Matrix<T>);
+impl_mul!(&'a crate::matrix::Matrix<T>, &'a mut crate::matrix::Matrix<T>);
+
 impl_mul!(&'a mut crate::matrix::Matrix<T>, crate::matrix::Matrix<T>);
+impl_mul!(&'a mut crate::matrix::Matrix<T>, &'a crate::matrix::Matrix<T>);
 impl_mul!(&'a mut crate::matrix::Matrix<T>, &'a mut crate::matrix::Matrix<T>);
 
 impl_add_or_sub!(crate::matrix::Matrix<T>, crate::matrix::Matrix<T>, Add, add, CheckedAdd, checked_add);
