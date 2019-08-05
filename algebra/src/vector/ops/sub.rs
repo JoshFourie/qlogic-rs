@@ -32,13 +32,14 @@ where
     }
 }
 
-#[test] fn test_vector_subtraction()
-{
-    let k: vector::Vector<isize> = vec![4,5].into();
-    let v: vector::Vector<isize> = vec![12,2].into();
+#[test] 
+fn test_vector_subtraction() {
+    let k: vector::Vector<isize> = vec![14,0,0].into();
+    let v: vector::Vector<isize> = vec![12,6,-4].into();
 
     let test_vector: _ = v-k;
-    let expected_vector: vector::Vector<_> = vec![8,-3].into();
+    let expected_vector: vector::Vector<_> = vec![-2,6,-4].into();
 
     assert_eq!(test_vector, expected_vector); 
 }
+

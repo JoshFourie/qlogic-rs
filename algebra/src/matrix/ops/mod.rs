@@ -23,5 +23,3 @@ mod minor;
 mod eigenvalue;
 
 mod householder;
-
-mod schur;
