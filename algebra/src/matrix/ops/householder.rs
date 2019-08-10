@@ -121,18 +121,6 @@ mod test {
     }
 
     #[test]
-    fn test_householder_zeroing() {
-        let matrix: matrix::Matrix<f64> = vec![
-            14.0, 21.0, -14.0,
-            0.0, -49.0, -14.0,
-            0.0, 168.0, -77.0
-        ].into();
-        let test: _ = Householder::new(&matrix, 1);
-        println!("{:?}", test.0);
-        panic!("")
-    }
-
-    #[test]
     fn test_helper_x_vector() {
         let matrix: _ = test_matrix();
         let test: _ = Helper::new(&matrix, 0).x;

@@ -34,25 +34,17 @@ where
     fn balance(mut self) -> Self::Output
     {
         let n: usize = self.row;
-
         let beta: T = <T as convert::From<_>>::from(2.0);
-
         let mut D: Self = (&self).identity();
 
         let mut converged: bool = false;
-
         while !converged {
-
             converged = true;
-
             for i in 0..n {
 
                 let mut c: T = (&self).get_col(i).eucl_norm();
-
                 let mut r: T = (&self).get_row(i).eucl_norm();
-
                 let s: T = num::pow(c,2) + num::pow(r,2);
-
                 let mut f: T = T::one();
 
                 while c < r/beta {
@@ -68,11 +60,8 @@ where
                 }
 
                 if (num::pow(c,2) + num::pow(r,2)) < <T as convert::From<_>>::from(0.95) * s {
-                    
                     converged = false;
-
                     D[i][i] *= f;
-
                     for j in 0..n {
                         self[j][i] *= f;
                         self[i][j] /= f;
@@ -80,10 +69,9 @@ where
                 }
             }
         }
-
-        // A = D^(-1)AD
-
-        unimplemented!()
+        
+        // may need to apply D^-1 A D
+        unimplemented!();
     }
 }
 

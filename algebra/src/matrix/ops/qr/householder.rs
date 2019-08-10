@@ -1,5 +1,5 @@
 use crate::matrix;
-use matrix::interface::{Identity, Kronecker, Minor, Transpose};
+use matrix::interface::{Identity, Minor, Transpose};
 use matrix::ops::householder;
 
 use num::traits::real;
@@ -164,17 +164,7 @@ mod test {
             -4.0, 24.0, -41.0
         ].into();
 
-        /* let k: usize = 0;
-        let (buf, _): _ = HouseholderDecomposition::single_round(
-            &(&matrix).minor(k..matrix.row, k..matrix.col), 0
-        );
-        let mut Q1: _ = (&matrix).identity();
-        let mut iter: _ = buf.into_iter();
-        for i in k..matrix.row {
-            for j in k..matrix.col {
-                Q1[i][j] = iter.next().unwrap();
-            }
-        } */
+
         let (Q1,_): _ = HouseholderDecomposition::single_round(&matrix, 0); 
         let test: _ = &Q1 * &matrix;  
         let exp_Q1A: matrix::Matrix<f64> = vec![
@@ -191,17 +181,6 @@ mod test {
             }
         }
 
-        /* let k: usize = 1;
-        let (buf, _): _ = HouseholderDecomposition::single_round(
-            &test.minor(k..matrix.row, k..matrix. col), 0
-        );
-        let mut Q2: _ = (&matrix).identity();
-        let mut iter: _ = buf.into_iter();
-        for i in k..matrix.row {
-            for j in k..matrix.col {
-                Q2[i][j] = iter.next().unwrap();
-            }
-        } */
         let (Q2,_): _ = HouseholderDecomposition::single_round(&test, 1);
         let exp_Q2: matrix::Matrix<f64> = vec![
             1.0, 0.0, 0.0,
@@ -209,7 +188,6 @@ mod test {
             0.0, 24.0/25.0, 7.0/25.0
         ].into();
 
-        println!("{:?}\n{:?}",Q2, exp_Q2);
         for (t,e) in Q2.into_iter()
             .zip(exp_Q2)
         {
@@ -217,46 +195,5 @@ mod test {
                 panic!("{} != {}", t, e)
             }
         }
-    }
-
-    #[ignore]
-    #[test] 
-    fn test_qr_eigenvalue() {
-        let mut matrix: matrix::Matrix<f64> = vec![
-            4.0, -3.0, 0.0, 0.0,
-            -3.0, 2.0, 3.16228, 0.0,
-            0.0, 3.16228, -1.4, 0.2,
-            0.0, 0.0, -0.2, 1.4
-        ].into();
-
-        let (Q,R): _ = HouseholderDecomposition::single_round(&mut matrix, 2);
-        unimplemented!()
-    }
-
-    #[test]
-    fn test_qr_algorithm() {
-        let matrix: _ = matrix::Matrix::from(vec![
-            52_f32, 30_f32, 49_f32, 28_f32,
-            30_f32, 50_f32, 7_f32, 44_f32,
-            49_f32, 8_f32, 46_f32, 16_f32,
-            28_f32, 44_f32, 16_f32, 22_f32
-        ]);
-
-        let exp: _ = matrix::Matrix::from(vec![
-            132.6279,  0.0000,   0.00000,  0.00000,
-            0.0000, 52.4423,   0.00000,  0.00000,
-            0.0000,  0.0000, -11.54113,  0.00000,
-            0.0000,  0.0000,   0.00000, -3.52904,
-        ]);
-
-        let mut X: _ = vec![matrix.clone()];
-        for i in 0..5 {
-            let (Q,R): _ = HouseholderDecomposition::single_round(&mut X[i].clone(), 2);
-            X.push(R*Q);
-        }
-
-        let test: matrix::Matrix<_> = X.into_iter().fold(matrix.identity(), |acc,x| acc*x);
-
-        unimplemented!()
     }
 }
