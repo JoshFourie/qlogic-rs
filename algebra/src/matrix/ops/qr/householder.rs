@@ -30,9 +30,8 @@ where
     pub fn single_round(mat: &matrix::Matrix<T>, k: usize) -> (matrix::Matrix<T>, matrix::Matrix<T>) {
         let P: matrix::Matrix<T> = {
             let minor: _ = mat.minor(k..mat.row, k..mat.col);
-            let buf: matrix::Matrix<T> = householder::Householder::new(
-                &minor, 0
-            ).into();
+            let buf: matrix::Matrix<T> = householder::Householder::new(&minor, 0).into();
+            
             let mut P: _ = mat.identity();
             let mut buf_iter: _ = buf.transpose().into_iter();
             for i in k..mat.row {

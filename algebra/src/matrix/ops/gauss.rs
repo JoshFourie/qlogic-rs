@@ -73,6 +73,39 @@ where
     }
 }
 
+impl<'a, T:Copy> interface::BackwardSubstitution<T> for &'a matrix::Matrix<T>
+where
+    T: ops::Div<Output=T>
+    + ops::Mul<Output=T>
+    + ops::Sub<Output=T>
+    + ops::AddAssign
+    + num::Zero   
+{
+    type Output = vector::Vector<T>;
+
+    type Vector = vector::Vector<T>;
+
+    fn backward_substitution(self, b: Self::Vector) -> Self::Output
+    {
+        let mut x: vector::Vector<T> = vec![T::zero(); self.row].into();
+
+        for i in (0..self.row).rev()
+        {
+            let dot: T = {
+                let mut sigma: T = T::zero();
+                for j in i+1..self.row {
+                    sigma += self[i][j] * x[j]
+                }
+                sigma
+            }; 
+
+            x[i] = (b[i] - dot)/self[i][i]
+        }
+
+        x
+    }
+}
+
 #[cfg(test)] mod tests
 {
     use crate::matrix;

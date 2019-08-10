@@ -3,6 +3,7 @@ use matrix::interface;
 use num::traits::real;
 
 pub mod householder;
+mod francis;
 
 // rayleigh quotient shift: https://ocw.mit.edu/courses/mathematics/18-335j-introduction-to-numerical-methods-fall-2010/readings/MIT18_335JF10_lec16.pdf
 // implicit psuedocode: https://people.inf.ethz.ch/arbenz/ewp/Lnotes/chapter4.pdf

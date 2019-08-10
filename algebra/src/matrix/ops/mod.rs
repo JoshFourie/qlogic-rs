@@ -14,7 +14,7 @@ mod inverse;
 
 mod qr;
 
-mod substitution;
+mod gauss;
 
 mod vector;
 
