@@ -59,11 +59,8 @@
 use num::integer::Roots;
 
 mod core;
-
 mod ops;
-
 pub mod interface;
-
 mod iter;
 
 /// A structure representing a Matrix.
@@ -90,7 +87,7 @@ mod iter;
 /// }
 /// ```
 
-#[derive(Default, Debug, PartialEq, Clone)]
+#[derive(Default, PartialEq, Clone)]
 pub struct Matrix<T>
 {
     inner: Vec<T>,
@@ -125,3 +122,16 @@ impl<T> Into<Vec<T>> for Matrix<T>
         self.inner 
     } 
 }
+
+impl<T:Clone> std::fmt::Debug for Matrix<T> 
+where
+    T: std::fmt::Debug
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for row in 0..self.row {
+            write!(f, "\n   {}: {:?}", row, self[row].to_vec())?
+        }
+        Ok(())
+    }
+}
+

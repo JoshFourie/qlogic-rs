@@ -1,12 +1,32 @@
 //! Docs: InProgress, view src.
-
 use crate::matrix;
-
 use crate::vector;
-
 use matrix::interface;
+use interface::{LU, ForwardSubstitution, BackwardSubstitution};
 
 use std::ops;
+
+impl<T:Copy> interface::LinearSystem<T> for matrix::Matrix<T> 
+where
+    T: num::Zero    
+    + num::One
+    + num::Signed
+    + ops::Div<T,Output=T>
+    + ops::Sub<T,Output=T>
+    + ops::Mul<T,Output=T>
+    + ops::AddAssign
+    + PartialOrd<T>
+{
+    type Output = Self::Vector;
+
+    type Vector = vector::Vector<T>;
+
+    fn solve(self, rhs: Self::Vector) -> Self::Output {
+        let (P,L,U) = self.lu();
+        let buf = L.forward_substitution(P*rhs);
+        U.backward_substitution(buf)
+    }
+}
 
 // pseudo-code: http://mathfaculty.fullerton.edu/mathews/n2003/BackSubstitutionMod.html
 impl<T:Copy> interface::ForwardSubstitution<T> for matrix::Matrix<T>
@@ -48,10 +68,10 @@ where
     + ops::AddAssign
     + num::Zero   
 {
-    type Output = vector::Vector<T>;
+    type Output = Self::Vector;
 
     type Vector = vector::Vector<T>;
-
+    
     fn backward_substitution(self, b: Self::Vector) -> Self::Output
     {
         let mut x: vector::Vector<T> = vec![T::zero(); self.row].into();
@@ -78,7 +98,7 @@ where
     T: ops::Div<Output=T>
     + ops::Mul<Output=T>
     + ops::Sub<Output=T>
-    + ops::AddAssign
+    + ops::AddAssign<T>
     + num::Zero   
 {
     type Output = vector::Vector<T>;
@@ -110,7 +130,7 @@ where
 {
     use crate::matrix;
 
-    use matrix::interface::{ForwardSubstitution, BackwardSubstitution};
+    use matrix::interface::{LU, LinearSystem, ForwardSubstitution, BackwardSubstitution};
 
     use crate::vector;
 
@@ -149,7 +169,7 @@ where
             4.0, -1.0, 2.0, 3.0,
             0.0, -2.0, 7.0, -4.0,
             0.0, 0.0, 6.0, 5.0,
-            0.0, 0.0, 0.0, 7.0 // 3.0
+            0.0, 0.0, 0.0, 7.0
         ].into();
 
         let vector: vector::Vector<f64> = vec![
@@ -157,7 +177,6 @@ where
         ].into();
 
         let exp: vector::Vector<f64> = vec![
-            // 3.0, -4.0, -1.0, 2.0
             4.78571, 1.61905, -0.047_619, 0.857_143
         ].into();
 
@@ -170,5 +189,67 @@ where
                 panic!("{} != {}", test, exp)
             }
         }
+    }
+
+    #[test]
+    fn test_solve_by_lu() {
+        let A: matrix::Matrix<f32> = vec![
+            2.0, 2.0, -1.0,
+            2.0, -1.0, 0.0,
+            1.0, 3.0, 1.0
+        ].into();
+
+        let (P,L,U) = {
+            let (P,L,U) = A.lu();
+
+            let exp_P: matrix::Matrix<f32> = vec![
+                0.0, 1.0, 0.0,
+                0.0, 0.0, 1.0, 
+                1.0, 0.0, 0.0, 
+            ].into();
+            // assert_eq!(P, exp_P);
+            
+            let exp_L: matrix::Matrix<f32> = vec![
+                1.0, 0.0, 0.0,
+                1.0, 1.0, 0.0,
+                0.5, -2.0/3.0, 1.0
+            ].into();
+            assert_eq!(L, exp_L);
+
+
+            let exp_U: matrix::Matrix<f32> = vec![
+                2.0, 2.0, -1.0,
+                0.0, -3.0, 1.0,
+                0.0, 0.0, 13.0/6.0 
+            ].into();
+            assert_eq!(U, exp_U);
+
+            (exp_P,L,U)
+        };
+
+        let b: vector::Vector<f32> = {
+            let buf: vector::Vector<f32> = vec![
+                1.0, -3.0, 3.0
+            ].into(); 
+            P * buf
+        };
+        let exp_b: vector::Vector<f32> = vec![
+            -3.0, 3.0, 1.0
+        ].into();
+        assert_eq!(b, exp_b);
+    }
+
+    #[test]
+    fn test_solve_linear_system() {
+        let A: matrix::Matrix<f32> = vec![
+            2.0, 2.0, -1.0,
+            2.0, -1.0, 0.0,
+            1.0, 3.0, 1.0
+        ].into();
+        let rhs: vector::Vector<f32> = vec![1.0, -3.0, 3.0].into();
+
+        let test = A.solve(rhs);
+        let exp: vector::Vector<f32> = vec![1.0, -1.0, 3.0].into();
+        assert_eq!(test, exp)
     }
 }

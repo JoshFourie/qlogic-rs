@@ -273,3 +273,12 @@ pub trait SchurDecomposition {
 
     fn schur(self) -> Self::Output;
 }
+
+pub trait LinearSystem<T> {
+    
+    type Output;
+    
+    type Vector;
+
+    fn solve(self, rhs: Self::Vector) -> Self::Output;
+}

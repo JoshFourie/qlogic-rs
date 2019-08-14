@@ -1,36 +1,83 @@
 use crate::matrix;
 use matrix::interface;
-use interface::{Identity, BackwardSubstitution};
+use interface::{Identity, LU, BackwardSubstitution, ForwardSubstitution};
+
+use crate::vector;
 
 use std::ops;
 
 impl<T:Copy> interface::Inverse for matrix::Matrix<T>
 where
-    T: ops::Div<Output=T>
+    T: num::Zero 
+    + num::One 
+    + ops::Div<Output=T>
     + ops::Mul<Output=T>
     + ops::Sub<Output=T>
-    + ops::AddAssign
-    + num::Zero   
-    + num::One
+    + ops::AddAssign<T>
+    + num::Signed
+    + PartialOrd<T>
 {
     type Output = Self;
 
     fn inverse(self) -> Self::Output 
     {
-        // let mat: _ = AugmentedMatrix::new(self).into_matrix();
-        // let mut inv: Vec<T> = Vec::new();
-        // let I: _ = (&self).identity();
-
-        // for idx in 0..self.col {
-        //     let buf: _ = (&self).backward_substitution(I[idx].to_vec().into());
-        //     inv.append(&mut buf.into())
-        // }
-
-        // inv.into()
-
+        let (_, L, U) = self.lu();
+        let I: _ = (&L).identity();
         
+        let mut solved_lower = (&I).clone();
+        for col in 0..I.col {
+            let rhs = vector::Vector::from(I[col].to_vec());
+            let solution: Vec<T> = L.clone()
+                .backward_substitution(rhs)
+                .into();
+            solved_lower[col].clone_from_slice(&solution)
+        }
+
+        solved_lower
     }
 }
+
+/*
+struct PenroseAlgorithm<T> {
+    mat: matrix::Matrix<T>
+}
+
+impl<T: Copy> PenroseAlgorithm<T> 
+where
+    T: num::Zero 
+    + num::One
+    + ops::Mul<T,Output=T>
+    + ops::Div<T,Output=T>
+    + ops::Sub<T,Output=T>
+    + ops::Div<usize,Output=T>
+{
+    fn new(mat: matrix::Matrix<T>) -> Self {
+        let I = (&mat).identity();
+        let B =  (&mat).adjoint() * (&mat);
+        let rank: usize = (&mat).rank();
+        let mut sigma: Vec<matrix::Matrix<T>> = vec![I.clone()];
+
+        for k in 1..rank {
+            let prev: matrix::Matrix<T> = sigma.last()
+                .expect("expected previous matrix in series")
+                .clone();
+            let trace: T = ((&prev) * (&B)).trace();
+            sigma.push(
+                I.clone()*(trace/k) - (prev * B.clone())
+            )
+        }
+        
+        let last: matrix::Matrix<T> = sigma.last()
+            .expect("expected previous matrix in series")
+            .clone();
+        let trace: T = (last.clone() * B.clone()).trace();
+        let dagger: matrix::Matrix<T> = last * mat.adjoint() * (rank/trace);
+        
+        Self {
+            mat: dagger
+        }
+    }
+} */
 
 struct AugmentedMatrix<T>(matrix::Matrix<T>);
 

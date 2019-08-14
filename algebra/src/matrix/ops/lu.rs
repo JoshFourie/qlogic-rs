@@ -1,10 +1,10 @@
 //! Docs: InProgress, view src.
 
 use crate::matrix;
-
 use crate::matrix::interface;
-
 use interface::{Identity, Column};
+
+use crate::vector;
 
 use std::ops;
 
@@ -27,21 +27,14 @@ where
         let mut L: Self = (&self).identity();
         let mut U: Self = (&self) * T::zero();
 
-        let mut P: Self = 
+        let mut P: vector::Vector<usize> =
         {
-            let mut val: T = T::zero();
-            let mut inner: Vec<T> = Vec::new();
-
-            for _ in 0..cached_cols {
-                val += T::one();
-                inner.push(val)
+            let mut inner: Vec<usize> = Vec::new();
+            for i in 0..cached_cols {
+                inner.push(i)
             }
 
-            Self {
-                inner,
-                row: 1,
-                col: cached_cols
-            }
+            vector::Vector::from(inner)
         };
         let mut r: usize = 0;
 
@@ -50,16 +43,16 @@ where
             let piv: usize = 
             {
                 let mut max_idx: usize = 0;
-                let mut max_val: T = T::zero();
+                let mut selected: T = T::zero();
 
                 for (curr_idx, curr_val) in (&self).get_col(k)
                     .into_iter()
                     .enumerate()
                 {
                     let buf = curr_val.abs();
-                    if buf > max_val {
+                    if buf > selected {
                         max_idx = curr_idx;
-                        max_val = buf
+                        selected = buf
                     }
                 }
                 max_idx
@@ -77,7 +70,7 @@ where
                     L[r][col] = std::mem::replace(&mut L[piv][col], mem_cpy_item);
                 }
                 
-                P.inner.swap(piv,r);        
+                P.swap(piv,r);        
 
                 for idx in r+1..cached_rows { L[idx][r] = self[idx][k] / self[r][k] }
 
@@ -94,7 +87,12 @@ where
             }
         }
 
-        (P,L,U)
+        let mut PM = matrix::Matrix::from(vec![T::zero(); self.col * self.row]);
+        for (row, col) in P.into_iter().enumerate(){
+            PM[row][col] = T::one()
+        }       
+
+        (PM,L,U)
     }
 }
 
@@ -140,36 +138,51 @@ where
         0.0, 0.0, 0.0, 0.0
     ].into();
 
-    let (_,L,U) = A.lu(); 
+    let PE: matrix::Matrix<f32> = vec![
+        0.0, 1.0, 0.0, 0.0, 
+        0.0, 0.0, 1.0, 0.0, 
+        0.0, 0.0, 0.0, 1.0, 
+        1.0, 0.0, 0.0, 0.0, 
+    ].into();
+
+    let (P,L,U) = A.lu(); 
 
     assert_eq!(LE,L);
 
     assert_eq!(UE,U);
+
+    assert_eq!(PE,P);
 }
 
-#[ignore]#[test] fn test_lu_decomposition_two()
-{
+#[test]
+fn test_permutation_index() {
     let A: matrix::Matrix<f32> = vec![
-        1.0, -2.0, 3.0,
-        2.0, -5.0, 12.0,
-        0.0, 2.0, 10.0
+        2.0, 2.0, -1.0,
+        2.0, -1.0, 0.0,
+        1.0, 3.0, 1.0
     ].into();
 
-    let LE: matrix::Matrix<f32> = vec![
+    let (P,L,U) = A.lu();
+
+    let exp_P: matrix::Matrix<f32> = vec![
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0, 
+        1.0, 0.0, 0.0, 
+    ].into();
+    assert_eq!(P, exp_P);
+    
+    let exp_L: matrix::Matrix<f32> = vec![
         1.0, 0.0, 0.0,
-        2.0, 1.0, 0.0,
-        0.0, -2.0, 1.0 
+        1.0, 1.0, 0.0,
+        0.5, -2.0/3.0, 1.0
     ].into();
+    assert_eq!(L, exp_L);
 
-    let UE: matrix::Matrix<f32> = vec![
-        1.0, -2.0, 3.0,
-        0.0, -1.0, 6.0,
-        0.0, 0.0, 2.0
+
+    let exp_U: matrix::Matrix<f32> = vec![
+        2.0, 2.0, -1.0,
+        0.0, -3.0, 1.0,
+        0.0, 0.0, 13.0/6.0 
     ].into();
-
-    let (_,L,U) = A.lu(); 
-
-    assert_eq!(LE,L);
-
-    assert_eq!(UE,U);
+    assert_eq!(U, exp_U);
 }

@@ -17,6 +17,11 @@ impl<T> Vector<T>{
         self.inner.push(val)
     } 
 
+    #[inline]
+    pub fn swap(&mut self, i: usize, j: usize) {
+        self.inner.swap(i,j)
+    }
+
 }
 
 impl<T> Into<Vec<T>> for Vector<T>
