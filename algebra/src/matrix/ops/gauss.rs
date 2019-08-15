@@ -194,9 +194,9 @@ where
     #[test]
     fn test_solve_by_lu() {
         let A: matrix::Matrix<f32> = vec![
+            1.0, 3.0, 1.0,
             2.0, 2.0, -1.0,
-            2.0, -1.0, 0.0,
-            1.0, 3.0, 1.0
+            2.0, -1.0, 0.0
         ].into();
 
         let (P,L,U) = {
@@ -207,7 +207,7 @@ where
                 0.0, 0.0, 1.0, 
                 1.0, 0.0, 0.0, 
             ].into();
-            // assert_eq!(P, exp_P);
+            assert_eq!(P, exp_P);
             
             let exp_L: matrix::Matrix<f32> = vec![
                 1.0, 0.0, 0.0,
@@ -242,9 +242,9 @@ where
     #[test]
     fn test_solve_linear_system() {
         let A: matrix::Matrix<f32> = vec![
+            1.0, 3.0, 1.0,
             2.0, 2.0, -1.0,
-            2.0, -1.0, 0.0,
-            1.0, 3.0, 1.0
+            2.0, -1.0, 0.0
         ].into();
         let rhs: vector::Vector<f32> = vec![1.0, -3.0, 3.0].into();
 

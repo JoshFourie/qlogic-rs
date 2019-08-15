@@ -21,19 +21,7 @@ where
 
     fn inverse(self) -> Self::Output 
     {
-        let (_, L, U) = self.lu();
-        let I: _ = (&L).identity();
-        
-        let mut solved_lower = (&I).clone();
-        for col in 0..I.col {
-            let rhs = vector::Vector::from(I[col].to_vec());
-            let solution: Vec<T> = L.clone()
-                .backward_substitution(rhs)
-                .into();
-            solved_lower[col].clone_from_slice(&solution)
-        }
-
-        solved_lower
+        unimplemented!() 
     }
 }
 
