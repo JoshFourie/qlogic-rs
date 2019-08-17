@@ -33,13 +33,13 @@ Some bonus features that have been implemented out of interest or as ancillary t
     - Householder Reflector
     - QR Decomposition
     - Elementary Row Operations
+    - Inverse
 
 There are some remaining components that need to be implemented:
 - Vectors:
     - Gram-Scmidt procedure for finding the orthonormal basis set.
 - Matrix:
     - Eigenvectors.
-    - Inverse.
     - Singular Value Decomposition
 
 Then there are some others that should be improved because they are currently lacking:
