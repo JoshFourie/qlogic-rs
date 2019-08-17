@@ -1,6 +1,6 @@
 use crate::matrix;
 use matrix::interface;
-use interface::{Identity, LU, BackwardSubstitution, ForwardSubstitution};
+use interface::{Identity, LinearSystem};
 
 use crate::vector;
 
@@ -21,7 +21,13 @@ where
 
     fn inverse(self) -> Self::Output 
     {
-        unimplemented!() 
+        let mut buf: _ = (&self).identity();
+        for col in 0..buf.col {
+            let vec: vector::Vector<T> = buf[col].to_vec().into();
+            let sol: Vec<T> = self.clone().solve(vec).into();
+            buf[col].clone_from_slice(sol.as_slice())
+        } 
+        buf
     }
 }
 
@@ -96,6 +102,7 @@ where
 mod test {
     use super::*;
     use interface::Inverse;
+    use float_cmp::ApproxEq;
 
     #[test]
     fn test_augment() {
@@ -133,7 +140,15 @@ mod test {
             1.0/4.0, 1.0/2.0, 3.0/4.0
         ].into();
 
-        assert_eq!(test, exp)       
+        println!("{:?} {:?}", test, exp);
+        
+        for (t,e) in test.into_iter()
+            .zip(exp)
+        {
+            if !t.abs().approx_eq(e.abs(), (0.001, 4)) {
+                panic!("{:?} != {:?}", t, e)
+            }
+        }       
     }
 
 }
