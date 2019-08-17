@@ -256,7 +256,7 @@ pub trait Minor<T> {
 
     type Output;
 
-    fn minor(self, row: T, col: T) -> Self::Output;
+    fn minor(self, range: T) -> Self::Output;
 }
 
 /// A trait for retrieving the Eigenvalues of a Matrix.
@@ -281,4 +281,12 @@ pub trait LinearSystem<T> {
     type Vector;
 
     fn solve(self, rhs: Self::Vector) -> Self::Output;
+}
+
+pub trait SubMatrix {
+
+    type Range;
+
+    fn insert_minor(self, rhs: Self, range: Self::Range) -> Self;
+
 }

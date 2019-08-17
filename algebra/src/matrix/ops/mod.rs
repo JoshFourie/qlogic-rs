@@ -23,3 +23,5 @@ mod minor;
 mod eigenvalue;
 
 mod householder;
+
+mod submatrix;

@@ -32,12 +32,22 @@ where
                     householder::Householder::from_ae1(ae1, &helper)
                 }; 
 
+                let r: usize = Self::max(1, k);
+                
                 
             }
 
         }
 
         unimplemented!()
+    }
+
+    fn max(lhs: usize, rhs: usize) -> usize {
+        if lhs >= rhs {
+            lhs
+        } else {
+            rhs
+        }
     }
 }
 

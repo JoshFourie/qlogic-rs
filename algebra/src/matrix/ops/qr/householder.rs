@@ -1,6 +1,6 @@
 use crate::matrix;
-use matrix::interface::{Identity, Minor, Transpose};
-use matrix::ops::householder;
+use matrix::interface::{Identity, Minor, SubMatrix, Transpose};
+use matrix::ops::{householder,submatrix};
 
 use num::traits::real;
 
@@ -29,18 +29,11 @@ where
 
     pub fn single_round(mat: &matrix::Matrix<T>, k: usize) -> (matrix::Matrix<T>, matrix::Matrix<T>) {
         let P: matrix::Matrix<T> = {
-            let minor: _ = mat.minor(k..mat.row, k..mat.col);
-            let buf: matrix::Matrix<T> = householder::Householder::new(&minor, 0).into();
-            
-            let mut P: _ = mat.identity();
-            let mut buf_iter: _ = buf.transpose().into_iter();
-            for i in k..mat.row {
-                for j in k..mat.col {
-                    P[i][j] = buf_iter.next()
-                        .expect("size of minor does not correlate to matrix subsize");
-                }
-            }
-            P
+            let range: _ = submatrix::SubMatrixRange::new(k..mat.row, k..mat.col);
+            let minor: _ = mat.minor(range.clone());
+            let house: _ = householder::Householder::new(&minor, 0).into();
+            let out: _ = mat.identity().insert_minor(house, range);
+            out
         };
 
         let Q: _ = (&P).transpose();
