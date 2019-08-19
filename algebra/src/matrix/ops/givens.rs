@@ -158,7 +158,6 @@ mod tests
         let (i,j): (usize,usize) = (0,1);
 
         let test: matrix::Matrix<f64> = {
-
             let rotators: _ = {
                 let constants: _ = super::GivensConstants::new(x[i], x[j]);
                 let vectors: _ = super::GivensVectors::new(&A,i,j);
