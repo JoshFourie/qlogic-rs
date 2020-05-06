@@ -1,8 +1,8 @@
-use std::ops::{Add, Mul};
+use std::ops::{Add, Mul, Neg};
 
 use super::Vector;
 
-pub trait VectorSpace<T>: VIdentity<T> + VBinOps<T>
+pub trait VectorSpace<T>: VIdentity<T> + VBinOps<T> + VInverse<T>
 {
     type Vector: Vector<T>;
 
@@ -37,7 +37,8 @@ where
 
     fn vadd(&self, lhs: Self::Vector, rhs: Self::Vector) -> Self::Vector 
     {
-        lhs.into_iter()
+        lhs
+            .into_iter()
             .zip(rhs)
             .map(|(l,r)| l + r)
             .collect()
@@ -60,7 +61,8 @@ where
 
     fn vscale(&self, scalar: T, vector: Self::Vector) -> Self::Vector 
     {
-        vector.into_iter()
+        vector
+            .into_iter()
             .map(|val| scalar * val)
             .collect()
     }
@@ -94,16 +96,16 @@ pub trait VMultiplicativeIdent
 }
 
 
-pub trait VInverse<T>: VMultiplicativeInverse<T> + VAdditiveInverse<T>
+pub trait VInverse<T>: VAdditiveInverse<T>
 {
-    // Supertrait
+    // Supertrait.
 }
 
-pub trait VMultiplicativeInverse<T>
+impl<T,U> VInverse<T> for U
+where
+    U: VAdditiveInverse<T>
 {
-    type Vector: Vector<T>;
-
-    fn mul_inv(&self, vector: Self::Vector) -> Self::Vector;
+    // Empty.
 }
 
 pub trait VAdditiveInverse<T>
@@ -111,6 +113,22 @@ pub trait VAdditiveInverse<T>
     type Vector: Vector<T>;
 
     fn additive_inv(&self, vector: Self::Vector) -> Self::Vector;
+}
+
+impl<T,U> VAdditiveInverse<T> for U
+where
+    U: VectorSpace<T>,
+    T: Neg<Output=T>
+{
+    type Vector = <U as VectorSpace<T>>::Vector;
+
+    fn additive_inv(&self, vector: Self::Vector) -> Self::Vector 
+    {
+        vector
+            .into_iter()
+            .map(|val| -val)
+            .collect()
+    }
 }
 
 
@@ -142,7 +160,7 @@ macro_rules! vscale
 #[allow(non_snake_case)]
 mod tests 
 {
-    use super::{VectorSpace, VAdd, VAdditiveIdent, VMultiplicativeIdent,  VScale};
+    use super::{VectorSpace, VAdd, VAdditiveIdent, VMultiplicativeIdent, VAdditiveInverse, VScale};
     use crate::{vadd, vscale};
 
     struct DummyVectorSpace;
@@ -242,7 +260,12 @@ mod tests
     #[test]
     fn test_additive_inverse()
     {
-        todo!("Additive inverse.")
+        let vector_space = DummyVectorSpace;
+        let x: Vec<isize> = vec![ 3, 1, 5 ];
+        let exp: Vec<isize> = vec![ -3, -1, -5 ];
+        
+        let test: Vec<isize> = vector_space.additive_inv(x);
+        assert_eq!(test, exp);
     }
 
     #[test]
