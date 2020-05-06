@@ -23,9 +23,9 @@ where
 
 pub trait VAdd<T>
 {   
-    type AdditiveVector: Vector<T>;
+    type Vector: Vector<T>;
 
-    fn vadd(&self, lhs: Self::AdditiveVector, rhs: Self::AdditiveVector) -> Self::AdditiveVector;
+    fn vadd(&self, lhs: Self::Vector, rhs: Self::Vector) -> Self::Vector;
 }
 
 impl<T,U> VAdd<T> for U
@@ -33,9 +33,9 @@ where
     U: VectorSpace<T>,
     T: Copy + Add<T,Output=T>
 {
-    type AdditiveVector = U::Vector;
+    type Vector = <U as VectorSpace<T>>::Vector;
 
-    fn vadd(&self, lhs: Self::AdditiveVector, rhs: Self::AdditiveVector) -> Self::AdditiveVector 
+    fn vadd(&self, lhs: Self::Vector, rhs: Self::Vector) -> Self::Vector 
     {
         lhs.into_iter()
             .zip(rhs)
@@ -46,9 +46,9 @@ where
 
 pub trait VScale<T> 
 {
-    type ScalarVector: Vector<T>;
+    type Vector: Vector<T>;
 
-    fn vscale(&self, scalar: T, vector: Self::ScalarVector) -> Self::ScalarVector;
+    fn vscale(&self, scalar: T, vector: Self::Vector) -> Self::Vector;
 }
 
 impl<T,U> VScale<T> for U
@@ -56,9 +56,9 @@ where
     U: VectorSpace<T>,
     T: Copy + Mul<T,Output=T>
 {
-    type ScalarVector = U::Vector;
+    type Vector = <U as VectorSpace<T>>::Vector;
 
-    fn vscale(&self, scalar: T, vector: Self::ScalarVector) -> Self::ScalarVector 
+    fn vscale(&self, scalar: T, vector: Self::Vector) -> Self::Vector 
     {
         vector.into_iter()
             .map(|val| scalar * val)
@@ -67,14 +67,14 @@ where
 }
 
 
-pub trait VIdentity<T>: VMultiplicativeIdent<Scalar=T> + VAdditiveIdent
+pub trait VIdentity<T>: VMultiplicativeIdent<Output=T> + VAdditiveIdent
 {
     // Supertrait.
 }  
 
 impl<T,U> VIdentity<T> for U
 where
-    U: VMultiplicativeIdent<Scalar=T> + VAdditiveIdent
+    U: VMultiplicativeIdent<Output=T> + VAdditiveIdent
 {
     // Empty.
 }
@@ -88,9 +88,29 @@ pub trait VAdditiveIdent
 
 pub trait VMultiplicativeIdent
 {
-    type Scalar;
+    type Output;
 
-    fn mul_ident(&self) -> Self::Scalar;
+    fn mul_ident(&self) -> Self::Output;
+}
+
+
+pub trait VInverse<T>: VMultiplicativeInverse<T> + VAdditiveInverse<T>
+{
+    // Supertrait
+}
+
+pub trait VMultiplicativeInverse<T>
+{
+    type Vector: Vector<T>;
+
+    fn mul_inv(&self, vector: Self::Vector) -> Self::Vector;
+}
+
+pub trait VAdditiveInverse<T>
+{
+    type Vector: Vector<T>;
+
+    fn additive_inv(&self, vector: Self::Vector) -> Self::Vector;
 }
 
 
@@ -151,9 +171,9 @@ mod tests
 
     impl VMultiplicativeIdent for DummyVectorSpace
     {
-        type Scalar = isize;
+        type Output = isize;
 
-        fn mul_ident(&self) -> Self::Scalar 
+        fn mul_ident(&self) -> Self::Output 
         {
             1_isize
         }
@@ -197,7 +217,7 @@ mod tests
     }
 
     #[test]
-    fn test_associative()
+    fn test_associative_addition()
     {
         let vector_space = DummyVectorSpace;
         let x = vec![ 3, 1, 5 ];
@@ -213,11 +233,16 @@ mod tests
     fn test_additive_ident()
     {
         let vector_space = DummyVectorSpace;
-        let x = vec![ 3, 1, 5 ];
         let exp = vec![ 0, 0, 0 ];
 
         let test = vector_space.additive_ident();
         assert_eq!(test, exp);
+    }
+
+    #[test]
+    fn test_additive_inverse()
+    {
+        todo!("Additive inverse.")
     }
 
     #[test]
