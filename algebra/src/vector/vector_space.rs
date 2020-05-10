@@ -146,23 +146,12 @@ macro_rules! vadd
     ($vector_space:expr, $lhs:expr) => { $lhs };
 }
 
-#[macro_export]
-macro_rules! vscale 
-{
-    ($vector_space:expr, $lhs:expr, $($rhs:expr),+) => {
-        {
-            use crate::vector::VScale;
-            $vector_space.vscale($lhs, &crate::vscale!($vector_space, $($rhs),+))
-        }
-    };
-    ($vector_space:expr, $lhs:expr, ) => { { $lhs } };
-}
 
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod tests 
 {
-    use crate::{vadd, vscale};
+    use crate::{vadd};
     use super::{VectorSpace, VAdd, VScale, VAdditiveIdent, VMultiplicativeIdent, VAdditiveInverse};
 
     use std::iter::FromIterator;
@@ -331,7 +320,8 @@ mod tests
     }
 
 
-    /// Benchmarked: 35,946 ns/iter
+    /// Benchmarked: 35,946 ns/iter for addition.
+    /// Bencharked: 52,145 ns/iter for multiplication.
     mod benchmarks
     {
         use test::Bencher;
@@ -340,20 +330,6 @@ mod tests
 
         const BENCH_ADDITION_TEST_SIZE: usize = 10000;
         const BENCH_ADDITION_TEST_CONST: isize = 123456789;
-
-
-        #[bench]
-        fn bench_addition(bench: &mut Bencher) 
-        {
-            bench.iter(|| {
-                let vector_space = BenchmarkedDummyVectorSpace;
-            
-                let x = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
-                let y = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
-                let z = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
-                vadd!(vector_space, &x, &y, &z)
-            });
-        }
 
         struct BenchmarkedDummyVectorSpace;
 
@@ -398,6 +374,36 @@ mod tests
                 3
             }
         }
+
+        #[bench]
+        fn bench_addition(bench: &mut Bencher) 
+        {
+            bench.iter(|| {
+                let vector_space = BenchmarkedDummyVectorSpace;
+            
+                let x: _ = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
+                let y: _ = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
+                let z: _ = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
+                vadd!(vector_space, &x, &y, &z)
+            });
+        }
+
+        #[bench]
+        fn bench_multiplication(bench: &mut Bencher) 
+        {
+            bench.iter(|| {
+                let vector_space = BenchmarkedDummyVectorSpace;
+            
+                let x: _ = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
+                let y: _ = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
+                let z: _ = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
+                let x_out: _ = vector_space.vscale(&123456789, &x);
+                let y_out: _ = vector_space.vscale(&123456789, &y);
+                let z_out: _ = vector_space.vscale(&123456789, &z);
+                (x_out, y_out, z_out)
+            });
+        }
+
     }
 
 }
