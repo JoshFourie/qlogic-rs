@@ -97,12 +97,12 @@ pub trait VAdditiveIdent
     fn additive_ident(&self) -> Self::Output;    
 }
 
-// pub trait VMultiplicativeIdent
-// {
-//     type Output;
+pub trait VMultiplicativeIdent
+{
+    type Output;
 
-//     fn mul_ident(&self) -> Self::Output;
-// }
+    fn mul_ident(&self) -> Self::Output;
+}
 
 
 // pub trait VInverse<T>: VAdditiveInverse<T>
@@ -117,27 +117,33 @@ pub trait VAdditiveIdent
 //     // Empty.
 // }
 
-// pub trait VAdditiveInverse<T>
-// {
-//     fn additive_inv(&self, vector: T) -> T;
-// }
+pub trait VAdditiveInverse
+{
+    type Vector;
 
-// impl<T,U> VAdditiveInverse<T> for U
-// where
-//     U: VectorSpace<T>,
-//     T: Neg<Output=T>
-// {
-//     type Vector = <U as VectorSpace<T>>::Vector;
+    type Output;
 
-//     fn additive_inv(&self, vector: Self::Vector) -> Self::Vector 
-//     {
-//         // vector
-//         //     .into_iter()
-//         //     .map(|val| -val)
-//         //     .collect()
-//         unimplemented!()
-//     }
-// }
+    fn additive_inv(&self, vector: Self::Vector) -> Self::Output;
+}
+
+impl<U> VAdditiveInverse for U
+where
+    U: VectorSpace,
+    U::Vector: IntoIterator<Item=U::Scalar> + FromIterator<U::Scalar>,
+    U::Scalar: Neg<Output=U::Scalar>
+{
+    type Vector = U::Vector;
+
+    type Output = U::Vector;
+
+    fn additive_inv(&self, vector: Self::Vector) -> Self::Vector 
+    {
+        vector
+            .into_iter()
+            .map(|val| -val)
+            .collect()
+    }
+}
 
 
 // #[macro_export]
@@ -171,7 +177,7 @@ mod tests
     // use super::{VectorSpace, VAdd, VAdditiveIdent, VMultiplicativeIdent, VAdditiveInverse, VScale};
     // use crate::{vadd, vscale};
 
-    use super::{VectorSpace, VAdd, VScale, VAdditiveIdent};
+    use super::{VectorSpace, VAdd, VScale, VAdditiveIdent, VMultiplicativeIdent, VAdditiveInverse};
 
     struct DummyVectorSpace;
 
@@ -199,15 +205,15 @@ mod tests
         }
     }
 
-//     impl VMultiplicativeIdent for DummyVectorSpace
-//     {
-//         type Output = isize;
+    impl VMultiplicativeIdent for DummyVectorSpace
+    {
+        type Output = isize;
 
-//         fn mul_ident(&self) -> Self::Output 
-//         {
-//             1_isize
-//         }
-//     }
+        fn mul_ident(&self) -> Self::Output 
+        {
+            1_isize
+        }
+    }
 
     #[test]
     fn test_addition() 
@@ -269,16 +275,16 @@ mod tests
         assert_eq!(test, exp);
     }
 
-//     #[test]
-//     fn test_additive_inverse()
-//     {
-//         let vector_space = DummyVectorSpace;
-//         let x: Vec<isize> = vec![ 3, 1, 5 ];
-//         let exp: Vec<isize> = vec![ -3, -1, -5 ];
+    #[test]
+    fn test_additive_inverse()
+    {
+        let vector_space = DummyVectorSpace;
+        let x: Vec<isize> = vec![ 3, 1, 5 ];
+        let exp: Vec<isize> = vec![ -3, -1, -5 ];
         
-//         let test: Vec<isize> = vector_space.additive_inv(x);
-//         assert_eq!(test, exp);
-//     }
+        let test: Vec<isize> = vector_space.additive_inv(x);
+        assert_eq!(test, exp);
+    }
 
 //     #[test]
 //     fn test_vadd() {
