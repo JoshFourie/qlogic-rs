@@ -116,8 +116,9 @@ pub trait VAdditiveInverse
 impl<U> VAdditiveInverse for U
 where
     U: VectorSpace,
-    U::Vector: IntoIterator<Item=U::Scalar> + FromIterator<U::Scalar>,
-    U::Scalar: Neg<Output=U::Scalar>
+    U::Vector: FromIterator<U::Scalar>,
+    for <'a> &'a U::Vector: IntoIterator<Item=&'a U::Scalar>,
+    for <'a> &'a U::Scalar: Neg<Output=U::Scalar>,
 {
     type Vector = U::Vector;
 
