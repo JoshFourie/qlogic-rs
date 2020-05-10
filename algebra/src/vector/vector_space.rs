@@ -90,12 +90,12 @@ where
 //     // Empty.
 // }
 
-// pub trait VAdditiveIdent
-// {
-//     type Output;
+pub trait VAdditiveIdent
+{
+    type Output;
 
-//     fn additive_ident(&self) -> Self::Output;    
-// }
+    fn additive_ident(&self) -> Self::Output;    
+}
 
 // pub trait VMultiplicativeIdent
 // {
@@ -171,7 +171,7 @@ mod tests
     // use super::{VectorSpace, VAdd, VAdditiveIdent, VMultiplicativeIdent, VAdditiveInverse, VScale};
     // use crate::{vadd, vscale};
 
-    use super::{VectorSpace, VAdd, VScale};
+    use super::{VectorSpace, VAdd, VScale, VAdditiveIdent};
 
     struct DummyVectorSpace;
 
@@ -189,15 +189,15 @@ mod tests
         }
     }
 
-//     impl VAdditiveIdent for DummyVectorSpace
-//     {
-//         type Output = Vector3;
+    impl VAdditiveIdent for DummyVectorSpace
+    {
+        type Output = Vector3;
 
-//         fn additive_ident(&self) -> Self::Output 
-//         {
-//             vec![0; 3]
-//         }
-//     }
+        fn additive_ident(&self) -> Self::Output 
+        {
+            vec![0; 3]
+        }
+    }
 
 //     impl VMultiplicativeIdent for DummyVectorSpace
 //     {
@@ -259,15 +259,15 @@ mod tests
 //         assert_eq!(lhs, rhs);
 //     }
 
-//     #[test]
-//     fn test_additive_ident()
-//     {
-//         let vector_space = DummyVectorSpace;
-//         let exp = vec![ 0, 0, 0 ];
+    #[test]
+    fn test_additive_ident()
+    {
+        let vector_space = DummyVectorSpace;
+        let exp = vec![ 0, 0, 0 ];
 
-//         let test = vector_space.additive_ident();
-//         assert_eq!(test, exp);
-//     }
+        let test = vector_space.additive_ident();
+        assert_eq!(test, exp);
+    }
 
 //     #[test]
 //     fn test_additive_inverse()
