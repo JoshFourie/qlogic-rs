@@ -165,9 +165,40 @@ mod tests
     use crate::{vadd, vscale};
     use super::{VectorSpace, VAdd, VScale, VAdditiveIdent, VMultiplicativeIdent, VAdditiveInverse};
 
+    use std::iter::FromIterator;
+
     struct DummyVectorSpace;
 
-    type Vector3 = Vec<isize>;
+    #[derive(Debug, PartialEq)]
+    struct Vector3([isize; 3]);
+
+    impl<'a> IntoIterator for &'a Vector3
+    {
+        type Item = &'a isize;
+        type IntoIter = std::slice::Iter<'a, isize>;
+
+        fn into_iter(self) -> Self::IntoIter {
+            self.0.into_iter()
+        }
+    }
+
+    impl<'a> FromIterator<isize> for Vector3
+    {
+        fn from_iter<T>(iter: T) -> Self 
+        where
+            T: IntoIterator<Item = isize>
+        {
+            let mut buf: [isize; 3] = [0; 3];
+            for (idx, item) in iter
+                .into_iter()
+                .enumerate() 
+            {
+                assert!(idx < 3);
+                buf[idx] = item;
+            }
+            Vector3(buf)
+        }
+    }
 
     impl VectorSpace for DummyVectorSpace 
     {
@@ -199,7 +230,7 @@ mod tests
 
         fn additive_ident(&self) -> Self::Output 
         {
-            vec![0; 3]
+            Vector3([0; 3])
         }
     }
 
@@ -217,10 +248,10 @@ mod tests
     fn test_addition() 
     {
         let vector_space = DummyVectorSpace;
-        let x = vec![ 3, 0, -1 ];
-        let y = vec![ 10, 1, 2 ];
+        let x = Vector3([ 3, 0, -1 ]);
+        let y = Vector3([ 10, 1, 2 ]);
 
-        let exp = vec![ 13, 1, 1 ];
+        let exp = Vector3([ 13, 1, 1 ]);
         let test = vector_space.vadd(&x, &y);
 
         assert_eq!(exp, test);
@@ -230,10 +261,10 @@ mod tests
     fn test_multiplication()
     {
         let vector_space = DummyVectorSpace;
-        let x = vec![ 3, 0, -1 ];
+        let x = Vector3([ 3, 0, -1 ]);
         let c = 2;
 
-        let exp = vec![ 6, 0, -2 ];
+        let exp = Vector3([ 6, 0, -2 ]);
         let test = vector_space.vscale(&c, &x);
         assert_eq!(exp, test);
     }
@@ -242,8 +273,8 @@ mod tests
     fn test_commutative()
     {
         let vector_space = DummyVectorSpace;
-        let x = vec![ 3, 1, 5 ];
-        let y = vec![ 6, 2, 7 ];
+        let x = Vector3([ 3, 1, 5 ]);
+        let y = Vector3([ 6, 2, 7 ]);
 
         let lhs = vector_space.vadd(&x, &y);
         let rhs = vector_space.vadd(&y, &x);
@@ -254,12 +285,12 @@ mod tests
     fn test_associative_addition()
     {
         let vector_space = DummyVectorSpace;
-        let x = vec![ 3, 1, 5 ];
-        let y = vec![ 6, 2, 7 ];
-        let z = vec![ 4, 5, 1 ];
+        let x = Vector3([ 3, 1, 5 ]);
+        let y = Vector3([ 6, 2, 7 ]);
+        let z = Vector3([ 4, 5, 1 ]);
 
-        let lhs: Vec<isize> = vadd!(vector_space, &x, &y, &z);
-        let rhs: Vec<isize> = vadd!(vector_space, &y, &z, &x);
+        let lhs: Vector3 = vadd!(vector_space, &x, &y, &z);
+        let rhs: Vector3 = vadd!(vector_space, &y, &z, &x);
         assert_eq!(lhs, rhs);
     }
 
@@ -267,7 +298,7 @@ mod tests
     fn test_additive_ident()
     {
         let vector_space = DummyVectorSpace;
-        let exp = vec![ 0, 0, 0 ];
+        let exp = Vector3([ 0, 0, 0 ]);
 
         let test = vector_space.additive_ident();
         assert_eq!(test, exp);
@@ -277,10 +308,10 @@ mod tests
     fn test_additive_inverse()
     {
         let vector_space = DummyVectorSpace;
-        let x: Vec<isize> = vec![ 3, 1, 5 ];
-        let exp: Vec<isize> = vec![ -3, -1, -5 ];
+        let x: Vector3 = Vector3([ 3, 1, 5 ]);
+        let exp: Vector3 = Vector3([ -3, -1, -5 ]);
         
-        let test: Vec<isize> = vector_space.additive_inv(x);
+        let test: Vector3 = vector_space.additive_inv(x);
         assert_eq!(test, exp);
     }
 
@@ -290,12 +321,12 @@ mod tests
 
         let vector_space = DummyVectorSpace;
         
-        let x: Vec<isize> = vec![ 3, 1, 5 ];
-        let y: Vec<isize> = vec![ 6, 2, 7 ];
-        let z: Vec<isize> = vec![ 4, 5, 1 ];
-        let test: Vec<isize> = vadd!(vector_space, &x, &y, &z);
+        let x: Vector3 = Vector3([ 3, 1, 5 ]);
+        let y: Vector3 = Vector3([ 6, 2, 7 ]);
+        let z: Vector3 = Vector3([ 4, 5, 1 ]);
+        let test: Vector3 = vadd!(vector_space, &x, &y, &z);
 
-        let exp: Vec<isize> = vec![ 13, 8, 13];
+        let exp: Vector3 = Vector3([ 13, 8, 13]);
         assert_eq!(test, exp);
     }
 }
