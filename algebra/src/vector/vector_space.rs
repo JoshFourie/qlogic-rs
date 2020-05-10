@@ -178,7 +178,7 @@ mod tests
         type IntoIter = std::slice::Iter<'a, isize>;
 
         fn into_iter(self) -> Self::IntoIter {
-            self.0.into_iter()
+            self.0.iter()
         }
     }
 
