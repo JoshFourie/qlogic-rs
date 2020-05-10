@@ -1,44 +1,39 @@
 mod vector_space;
 pub use vector_space::*;
 
-use std::{ops, iter};
-use ops::{Index, IndexMut};
 use iter::FromIterator;
+use ops::{Index, IndexMut};
+use std::{iter, ops};
 
-pub trait Vector<T> 
-{
+pub trait Vector<T> {
     // Supertrait.
 }
 
-impl<T,U> Vector<T> for U
+impl<T, U> Vector<T> for U
 where
-    U: VSubscript<T> + VIterable<T>
+    U: VSubscript<T> + VIterable<T>,
 {
     // Empty.
 }
 
-
-pub trait VSubscript<T>: Index<usize, Output=T> + IndexMut<usize>
-{
+pub trait VSubscript<T>: Index<usize, Output = T> + IndexMut<usize> {
     // Supertrait.
 }
 
-impl<T,U> VSubscript<T> for U
+impl<T, U> VSubscript<T> for U
 where
-    U: Index<usize, Output=T> + IndexMut<usize>
+    U: Index<usize, Output = T> + IndexMut<usize>,
 {
     // Empty.
 }
 
-
-pub trait VIterable<T>: IntoIterator<Item=T> + FromIterator<T>
-{
+pub trait VIterable<T>: IntoIterator<Item = T> + FromIterator<T> {
     // Supertrait.
 }
 
-impl<T,U> VIterable<T> for U
+impl<T, U> VIterable<T> for U
 where
-    U: IntoIterator<Item=T> + FromIterator<T>
+    U: IntoIterator<Item = T> + FromIterator<T>,
 {
     // Empty.
 }
