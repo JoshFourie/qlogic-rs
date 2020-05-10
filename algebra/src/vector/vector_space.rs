@@ -96,11 +96,44 @@ pub trait VAdditiveIdent
     fn additive_ident(&self) -> Self::Output;    
 }
 
+impl<U> VAdditiveIdent for U
+where
+    U: VectorSpace,
+    U::Scalar: num_traits::Zero,
+    U::Vector: FromIterator<U::Scalar>
+{
+    type Output = U::Vector;
+    
+    fn additive_ident(&self) -> Self::Output {
+        use num_traits::Zero;
+
+        ( 0..self.dimensions() )
+            .into_iter()
+            .map(|_| U::Scalar::zero() )
+            .collect()
+    }
+}
+
+
 pub trait VMultiplicativeIdent
 {
     type Output;
 
     fn mul_ident(&self) -> Self::Output;
+}
+
+impl<U> VMultiplicativeIdent for U
+where
+    U: VectorSpace,
+    U::Scalar: num_traits::One
+{
+    type Output = U::Scalar;
+    
+    fn mul_ident(&self) -> Self::Output {
+        use num_traits::One;
+
+        U::Scalar::one()
+    }
 }
 
 
@@ -210,26 +243,6 @@ mod tests
         fn dimensions(&self) -> usize 
         {
             3
-        }
-    }
-
-    impl VAdditiveIdent for DummyVectorSpace
-    {
-        type Output = Vector3;
-
-        fn additive_ident(&self) -> Self::Output 
-        {
-            Vector3([0; 3])
-        }
-    }
-
-    impl VMultiplicativeIdent for DummyVectorSpace
-    {
-        type Output = isize;
-
-        fn mul_ident(&self) -> Self::Output 
-        {
-            1_isize
         }
     }
 
