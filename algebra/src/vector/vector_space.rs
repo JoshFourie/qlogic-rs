@@ -333,7 +333,7 @@ mod tests
 
         struct BenchmarkedDummyVectorSpace;
 
-        struct BenchmarkedVector3([isize; 10000]);
+        struct BenchmarkedVector3([isize; BENCH_ADDITION_TEST_SIZE]);
 
         impl<'a> IntoIterator for &'a BenchmarkedVector3
         {
@@ -351,12 +351,12 @@ mod tests
             where
                 T: IntoIterator<Item = isize>
             {
-                let mut buf: [isize; 10000] = [0; 10000];
+                let mut buf: _ = [0; BENCH_ADDITION_TEST_SIZE];
                 for (idx, item) in iter
                     .into_iter()
                     .enumerate() 
                 {
-                    assert!(idx < 10000);
+                    assert!(idx < BENCH_ADDITION_TEST_SIZE);
                     buf[idx] = item;
                 }
                 BenchmarkedVector3(buf)
@@ -371,7 +371,7 @@ mod tests
 
             fn dimensions(&self) -> usize 
             {
-                3
+                BENCH_ADDITION_TEST_SIZE
             }
         }
 
@@ -397,9 +397,9 @@ mod tests
                 let x: _ = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
                 let y: _ = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
                 let z: _ = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
-                let x_out: _ = vector_space.vscale(&123456789, &x);
-                let y_out: _ = vector_space.vscale(&123456789, &y);
-                let z_out: _ = vector_space.vscale(&123456789, &z);
+                let x_out: _ = vector_space.vscale(&BENCH_ADDITION_TEST_CONST, &x);
+                let y_out: _ = vector_space.vscale(&BENCH_ADDITION_TEST_CONST, &y);
+                let z_out: _ = vector_space.vscale(&BENCH_ADDITION_TEST_CONST, &z);
                 (x_out, y_out, z_out)
             });
         }
