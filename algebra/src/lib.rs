@@ -1,1 +1,3 @@
+#![feature(specialization)]
+
 mod vector;
