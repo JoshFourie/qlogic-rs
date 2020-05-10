@@ -12,37 +12,6 @@ pub trait VectorSpace
     fn dimensions(&self) -> usize;
 }
 
-
-// pub trait VAdd
-// {   
-//     type Input;
-
-//     type Output;
-
-//     fn vadd(&self, lhs: Self::Input, rhs: Self::Input) -> Self::Output;
-// }
-
-// impl<U> VAdd for U
-// where
-//     U: VectorSpace,
-//     U::Vector: IntoIterator<Item=U::Scalar> + FromIterator<U::Scalar>,
-//     U::Scalar: Add<U::Scalar, Output=U::Scalar>,
-// {
-//     type Input = U::Vector;
-
-//     type Output = U::Vector;
-
-//     fn vadd(&self, lhs: Self::Input, rhs: Self::Input) -> Self::Output
-//     {
-//         lhs
-//             .into_iter()
-//             .zip( rhs.into_iter() )
-//             .map(|(l,r)| l + r)
-//             .collect()
-//     }
-// }
-
-
 pub trait VAdd
 {
     type Input;
