@@ -1,7 +1,6 @@
-use std::{ops, iter, marker};
+use std::{ops, iter};
 use ops::{Add, Mul, Neg};
 use iter::FromIterator;
-use marker::PhantomData;
 
 
 // pub trait VectorSpace<T,U>: VIdentity<T> + VBinOps<T,U> + VInverse<T>
@@ -78,17 +77,17 @@ where
 }
 
 
-// pub trait VIdentity<T>: VMultiplicativeIdent<Output=T> + VAdditiveIdent
-// {
-//     // Supertrait.
-// }  
+pub trait VIdentity: VMultiplicativeIdent + VAdditiveIdent
+{
+    // Supertrait.
+}  
 
-// impl<T,U> VIdentity<T> for U
-// where
-//     U: VMultiplicativeIdent<Output=T> + VAdditiveIdent
-// {
-//     // Empty.
-// }
+impl<U> VIdentity for U
+where
+    U: VMultiplicativeIdent + VAdditiveIdent
+{
+    // Empty.
+}
 
 pub trait VAdditiveIdent
 {
@@ -104,18 +103,6 @@ pub trait VMultiplicativeIdent
     fn mul_ident(&self) -> Self::Output;
 }
 
-
-// pub trait VInverse<T>: VAdditiveInverse<T>
-// {
-//     // Supertrait.
-// }
-
-// impl<T,U> VInverse<T> for U
-// where
-//     U: VAdditiveInverse<T>
-// {
-//     // Empty.
-// }
 
 pub trait VAdditiveInverse
 {
@@ -146,37 +133,35 @@ where
 }
 
 
-// #[macro_export]
-// macro_rules! vadd 
-// {
-//     ($vector_space:expr, $lhs:expr, $($rhs:expr),+) => {
-//         {
-//             use crate::vector::VAdd;
-//             $vector_space.vadd($lhs, crate::vadd!($vector_space, $($rhs),+))
-//         }
-//     };
-//     ($vector_space:expr, $lhs:expr) => { { $lhs } };
-// }
+#[macro_export]
+macro_rules! vadd 
+{
+    ($vector_space:expr, $lhs:expr, $($rhs:expr),+) => {
+        {
+            use crate::vector::VAdd;
+            $vector_space.vadd($lhs, crate::vadd!($vector_space, $($rhs),+))
+        }
+    };
+    ($vector_space:expr, $lhs:expr) => { { $lhs } };
+}
 
-// #[macro_export]
-// macro_rules! vscale 
-// {
-//     ($vector_space:expr, $lhs:expr, $($rhs:expr),+) => {
-//         {
-//             use crate::vector::VScale;
-//             $vector_space.vscale($lhs, crate::vscale!($vector_space, $($rhs),+))
-//         }
-//     };
-//     ($vector_space:expr, $lhs:expr) => { { $lhs } };
-// }
+#[macro_export]
+macro_rules! vscale 
+{
+    ($vector_space:expr, $lhs:expr, $($rhs:expr),+) => {
+        {
+            use crate::vector::VScale;
+            $vector_space.vscale($lhs, crate::vscale!($vector_space, $($rhs),+))
+        }
+    };
+    ($vector_space:expr, $lhs:expr) => { { $lhs } };
+}
 
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod tests 
 {
-    // use super::{VectorSpace, VAdd, VAdditiveIdent, VMultiplicativeIdent, VAdditiveInverse, VScale};
-    // use crate::{vadd, vscale};
-
+    use crate::{vadd, vscale};
     use super::{VectorSpace, VAdd, VScale, VAdditiveIdent, VMultiplicativeIdent, VAdditiveInverse};
 
     struct DummyVectorSpace;
@@ -240,30 +225,30 @@ mod tests
         assert_eq!(exp, test);
     }
 
-//     #[test]
-//     fn test_commutative()
-//     {
-//         let vector_space = DummyVectorSpace;
-//         let x = vec![ 3, 1, 5 ];
-//         let y = vec![ 6, 2, 7 ];
+    #[test]
+    fn test_commutative()
+    {
+        let vector_space = DummyVectorSpace;
+        let x = vec![ 3, 1, 5 ];
+        let y = vec![ 6, 2, 7 ];
 
-//         let lhs = vector_space.vadd(x.clone(), y.clone());
-//         let rhs = vector_space.vadd(y, x);
-//         assert_eq!(lhs, rhs);
-//     }
+        let lhs = vector_space.vadd(x.clone(), y.clone());
+        let rhs = vector_space.vadd(y, x);
+        assert_eq!(lhs, rhs);
+    }
 
-//     #[test]
-//     fn test_associative_addition()
-//     {
-//         let vector_space = DummyVectorSpace;
-//         let x = vec![ 3, 1, 5 ];
-//         let y = vec![ 6, 2, 7 ];
-//         let z = vec![ 4, 5, 1 ];
+    #[test]
+    fn test_associative_addition()
+    {
+        let vector_space = DummyVectorSpace;
+        let x = vec![ 3, 1, 5 ];
+        let y = vec![ 6, 2, 7 ];
+        let z = vec![ 4, 5, 1 ];
 
-//         let lhs: Vec<isize> = vadd!(vector_space, x.clone(), y.clone(), z.clone());
-//         let rhs: Vec<isize> = vadd!(vector_space, y, z, x);
-//         assert_eq!(lhs, rhs);
-//     }
+        let lhs: Vec<isize> = vadd!(vector_space, x.clone(), y.clone(), z.clone());
+        let rhs: Vec<isize> = vadd!(vector_space, y, z, x);
+        assert_eq!(lhs, rhs);
+    }
 
     #[test]
     fn test_additive_ident()
@@ -286,18 +271,18 @@ mod tests
         assert_eq!(test, exp);
     }
 
-//     #[test]
-//     fn test_vadd() {
-//         use crate::vadd;
+    #[test]
+    fn test_vadd() {
+        use crate::vadd;
 
-//         let vector_space = DummyVectorSpace;
+        let vector_space = DummyVectorSpace;
         
-//         let x: Vec<isize> = vec![ 3, 1, 5 ];
-//         let y: Vec<isize> = vec![ 6, 2, 7 ];
-//         let z: Vec<isize> = vec![ 4, 5, 1 ];
-//         let test: Vec<isize> = vadd!(vector_space, x, y, z);
+        let x: Vec<isize> = vec![ 3, 1, 5 ];
+        let y: Vec<isize> = vec![ 6, 2, 7 ];
+        let z: Vec<isize> = vec![ 4, 5, 1 ];
+        let test: Vec<isize> = vadd!(vector_space, x, y, z);
 
-//         let exp: Vec<isize> = vec![ 13, 8, 13];
-//         assert_eq!(test, exp);
-//     }
+        let exp: Vec<isize> = vec![ 13, 8, 13];
+        assert_eq!(test, exp);
+    }
 }
