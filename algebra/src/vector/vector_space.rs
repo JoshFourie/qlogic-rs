@@ -329,4 +329,75 @@ mod tests
         let exp: Vector3 = Vector3([ 13, 8, 13]);
         assert_eq!(test, exp);
     }
+
+
+    /// Benchmarked: 35,946 ns/iter
+    mod benchmarks
+    {
+        use test::Bencher;
+
+        use super::*;
+
+        const BENCH_ADDITION_TEST_SIZE: usize = 10000;
+        const BENCH_ADDITION_TEST_CONST: isize = 123456789;
+
+
+        #[bench]
+        fn bench_addition(bench: &mut Bencher) 
+        {
+            bench.iter(|| {
+                let vector_space = BenchmarkedDummyVectorSpace;
+            
+                let x = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
+                let y = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
+                let z = BenchmarkedVector3([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
+                vadd!(vector_space, &x, &y, &z)
+            });
+        }
+
+        struct BenchmarkedDummyVectorSpace;
+
+        struct BenchmarkedVector3([isize; 10000]);
+
+        impl<'a> IntoIterator for &'a BenchmarkedVector3
+        {
+            type Item = &'a isize;
+            type IntoIter = std::slice::Iter<'a, isize>;
+
+            fn into_iter(self) -> Self::IntoIter {
+                self.0.iter()
+            }
+        }
+
+        impl<'a> FromIterator<isize> for BenchmarkedVector3
+        {
+            fn from_iter<T>(iter: T) -> Self 
+            where
+                T: IntoIterator<Item = isize>
+            {
+                let mut buf: [isize; 10000] = [0; 10000];
+                for (idx, item) in iter
+                    .into_iter()
+                    .enumerate() 
+                {
+                    assert!(idx < 10000);
+                    buf[idx] = item;
+                }
+                BenchmarkedVector3(buf)
+            }
+        }
+
+        impl VectorSpace for BenchmarkedDummyVectorSpace 
+        {
+            type Scalar = isize;
+
+            type Vector = BenchmarkedVector3;
+
+            fn dimensions(&self) -> usize 
+            {
+                3
+            }
+        }
+    }
+
 }
