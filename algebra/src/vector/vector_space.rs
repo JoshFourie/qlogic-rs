@@ -1,65 +1,74 @@
-use std::ops::{Add, Mul, Neg};
+use std::{ops, iter, marker};
+use ops::{Add, Mul, Neg};
+use iter::FromIterator;
+use marker::PhantomData;
 
-use super::Vector;
 
-pub trait VectorSpace<T>: VIdentity<T> + VBinOps<T> + VInverse<T>
+// pub trait VectorSpace<T,U>: VIdentity<T> + VBinOps<T,U> + VInverse<T>
+pub trait VectorSpace
 {
-    type Vector: Vector<T>;
+    type Scalar;
+
+    type Vector;
 
     fn dimensions(&self) -> usize;
 }
 
-pub trait VBinOps<T>: VAdd<T> + VScale<T>
-{
-    // Supertrait.
-}
 
-impl<T,U> VBinOps<T> for U
-where
-    U: VAdd<T> + VScale<T>
-{
-    // Empty.
-}
-
-pub trait VAdd<T>
+pub trait VAdd
 {   
-    type Vector: Vector<T>;
+    type Input;
 
-    fn vadd(&self, lhs: Self::Vector, rhs: Self::Vector) -> Self::Vector;
+    type Output;
+
+    fn vadd(&self, lhs: Self::Input, rhs: Self::Input) -> Self::Output;
 }
 
-impl<T,U> VAdd<T> for U
+impl<U> VAdd for U
 where
-    U: VectorSpace<T>,
-    T: Copy + Add<T,Output=T>
+    U: VectorSpace,
+    U::Vector: IntoIterator<Item=U::Scalar> + FromIterator<U::Scalar>,
+    U::Scalar: Add<U::Scalar, Output=U::Scalar>,
 {
-    type Vector = <U as VectorSpace<T>>::Vector;
+    type Input = U::Vector;
 
-    fn vadd(&self, lhs: Self::Vector, rhs: Self::Vector) -> Self::Vector 
+    type Output = U::Vector;
+
+    fn vadd(&self, lhs: U::Vector, rhs: U::Vector) -> Self::Output
     {
         lhs
             .into_iter()
-            .zip(rhs)
+            .zip( rhs.into_iter() )
             .map(|(l,r)| l + r)
             .collect()
     }
 }
 
-pub trait VScale<T> 
-{
-    type Vector: Vector<T>;
 
-    fn vscale(&self, scalar: T, vector: Self::Vector) -> Self::Vector;
+pub trait VScale 
+{
+    type Scalar;
+
+    type Vector;
+
+    type Output;
+
+    fn vscale(&self, scalar: Self::Scalar, vector: Self::Vector) -> Self::Output;
 }
 
-impl<T,U> VScale<T> for U
+impl<U> VScale for U
 where
-    U: VectorSpace<T>,
-    T: Copy + Mul<T,Output=T>
+    U: VectorSpace,
+    U::Vector: IntoIterator<Item=U::Scalar> + FromIterator<U::Scalar>,
+    U::Scalar: Copy + Mul<U::Scalar, Output=U::Scalar>,
 {
-    type Vector = <U as VectorSpace<T>>::Vector;
+    type Scalar = U::Scalar;
 
-    fn vscale(&self, scalar: T, vector: Self::Vector) -> Self::Vector 
+    type Vector = U::Vector;
+
+    type Output = U::Vector;
+
+    fn vscale(&self, scalar: Self::Scalar, vector: Self::Vector) -> Self::Output        
     {
         vector
             .into_iter()
@@ -69,106 +78,109 @@ where
 }
 
 
-pub trait VIdentity<T>: VMultiplicativeIdent<Output=T> + VAdditiveIdent
-{
-    // Supertrait.
-}  
+// pub trait VIdentity<T>: VMultiplicativeIdent<Output=T> + VAdditiveIdent
+// {
+//     // Supertrait.
+// }  
 
-impl<T,U> VIdentity<T> for U
-where
-    U: VMultiplicativeIdent<Output=T> + VAdditiveIdent
-{
-    // Empty.
-}
+// impl<T,U> VIdentity<T> for U
+// where
+//     U: VMultiplicativeIdent<Output=T> + VAdditiveIdent
+// {
+//     // Empty.
+// }
 
-pub trait VAdditiveIdent
-{
-    type Output;
+// pub trait VAdditiveIdent
+// {
+//     type Output;
 
-    fn additive_ident(&self) -> Self::Output;    
-}
+//     fn additive_ident(&self) -> Self::Output;    
+// }
 
-pub trait VMultiplicativeIdent
-{
-    type Output;
+// pub trait VMultiplicativeIdent
+// {
+//     type Output;
 
-    fn mul_ident(&self) -> Self::Output;
-}
-
-
-pub trait VInverse<T>: VAdditiveInverse<T>
-{
-    // Supertrait.
-}
-
-impl<T,U> VInverse<T> for U
-where
-    U: VAdditiveInverse<T>
-{
-    // Empty.
-}
-
-pub trait VAdditiveInverse<T>
-{
-    type Vector: Vector<T>;
-
-    fn additive_inv(&self, vector: Self::Vector) -> Self::Vector;
-}
-
-impl<T,U> VAdditiveInverse<T> for U
-where
-    U: VectorSpace<T>,
-    T: Neg<Output=T>
-{
-    type Vector = <U as VectorSpace<T>>::Vector;
-
-    fn additive_inv(&self, vector: Self::Vector) -> Self::Vector 
-    {
-        vector
-            .into_iter()
-            .map(|val| -val)
-            .collect()
-    }
-}
+//     fn mul_ident(&self) -> Self::Output;
+// }
 
 
-#[macro_export]
-macro_rules! vadd 
-{
-    ($vector_space:expr, $lhs:expr, $($rhs:expr),+) => {
-        {
-            use crate::vector::VAdd;
-            $vector_space.vadd($lhs, crate::vadd!($vector_space, $($rhs),+))
-        }
-    };
-    ($vector_space:expr, $lhs:expr) => { { $lhs } };
-}
+// pub trait VInverse<T>: VAdditiveInverse<T>
+// {
+//     // Supertrait.
+// }
 
-#[macro_export]
-macro_rules! vscale 
-{
-    ($vector_space:expr, $lhs:expr, $($rhs:expr),+) => {
-        {
-            use crate::vector::VScale;
-            $vector_space.vscale($lhs, crate::vscale!($vector_space, $($rhs),+))
-        }
-    };
-    ($vector_space:expr, $lhs:expr) => { { $lhs } };
-}
+// impl<T,U> VInverse<T> for U
+// where
+//     U: VAdditiveInverse<T>
+// {
+//     // Empty.
+// }
+
+// pub trait VAdditiveInverse<T>
+// {
+//     fn additive_inv(&self, vector: T) -> T;
+// }
+
+// impl<T,U> VAdditiveInverse<T> for U
+// where
+//     U: VectorSpace<T>,
+//     T: Neg<Output=T>
+// {
+//     type Vector = <U as VectorSpace<T>>::Vector;
+
+//     fn additive_inv(&self, vector: Self::Vector) -> Self::Vector 
+//     {
+//         // vector
+//         //     .into_iter()
+//         //     .map(|val| -val)
+//         //     .collect()
+//         unimplemented!()
+//     }
+// }
+
+
+// #[macro_export]
+// macro_rules! vadd 
+// {
+//     ($vector_space:expr, $lhs:expr, $($rhs:expr),+) => {
+//         {
+//             use crate::vector::VAdd;
+//             $vector_space.vadd($lhs, crate::vadd!($vector_space, $($rhs),+))
+//         }
+//     };
+//     ($vector_space:expr, $lhs:expr) => { { $lhs } };
+// }
+
+// #[macro_export]
+// macro_rules! vscale 
+// {
+//     ($vector_space:expr, $lhs:expr, $($rhs:expr),+) => {
+//         {
+//             use crate::vector::VScale;
+//             $vector_space.vscale($lhs, crate::vscale!($vector_space, $($rhs),+))
+//         }
+//     };
+//     ($vector_space:expr, $lhs:expr) => { { $lhs } };
+// }
 
 #[cfg(test)]
 #[allow(non_snake_case)]
 mod tests 
 {
-    use super::{VectorSpace, VAdd, VAdditiveIdent, VMultiplicativeIdent, VAdditiveInverse, VScale};
-    use crate::{vadd, vscale};
+    // use super::{VectorSpace, VAdd, VAdditiveIdent, VMultiplicativeIdent, VAdditiveInverse, VScale};
+    // use crate::{vadd, vscale};
+
+    use super::{VectorSpace, VAdd, VScale};
 
     struct DummyVectorSpace;
 
     type Vector3 = Vec<isize>;
 
-    impl VectorSpace<isize> for DummyVectorSpace 
+    impl VectorSpace for DummyVectorSpace 
     {
+        type Scalar = isize;
+
         type Vector = Vector3;
 
         fn dimensions(&self) -> usize 
@@ -177,25 +189,25 @@ mod tests
         }
     }
 
-    impl VAdditiveIdent for DummyVectorSpace
-    {
-        type Output = Vector3;
+//     impl VAdditiveIdent for DummyVectorSpace
+//     {
+//         type Output = Vector3;
 
-        fn additive_ident(&self) -> Self::Output 
-        {
-            vec![0; 3]
-        }
-    }
+//         fn additive_ident(&self) -> Self::Output 
+//         {
+//             vec![0; 3]
+//         }
+//     }
 
-    impl VMultiplicativeIdent for DummyVectorSpace
-    {
-        type Output = isize;
+//     impl VMultiplicativeIdent for DummyVectorSpace
+//     {
+//         type Output = isize;
 
-        fn mul_ident(&self) -> Self::Output 
-        {
-            1_isize
-        }
-    }
+//         fn mul_ident(&self) -> Self::Output 
+//         {
+//             1_isize
+//         }
+//     }
 
     #[test]
     fn test_addition() 
@@ -222,64 +234,64 @@ mod tests
         assert_eq!(exp, test);
     }
 
-    #[test]
-    fn test_commutative()
-    {
-        let vector_space = DummyVectorSpace;
-        let x = vec![ 3, 1, 5 ];
-        let y = vec![ 6, 2, 7 ];
+//     #[test]
+//     fn test_commutative()
+//     {
+//         let vector_space = DummyVectorSpace;
+//         let x = vec![ 3, 1, 5 ];
+//         let y = vec![ 6, 2, 7 ];
 
-        let lhs = vector_space.vadd(x.clone(), y.clone());
-        let rhs = vector_space.vadd(y, x);
-        assert_eq!(lhs, rhs);
-    }
+//         let lhs = vector_space.vadd(x.clone(), y.clone());
+//         let rhs = vector_space.vadd(y, x);
+//         assert_eq!(lhs, rhs);
+//     }
 
-    #[test]
-    fn test_associative_addition()
-    {
-        let vector_space = DummyVectorSpace;
-        let x = vec![ 3, 1, 5 ];
-        let y = vec![ 6, 2, 7 ];
-        let z = vec![ 4, 5, 1 ];
+//     #[test]
+//     fn test_associative_addition()
+//     {
+//         let vector_space = DummyVectorSpace;
+//         let x = vec![ 3, 1, 5 ];
+//         let y = vec![ 6, 2, 7 ];
+//         let z = vec![ 4, 5, 1 ];
 
-        let lhs: Vec<isize> = vadd!(vector_space, x.clone(), y.clone(), z.clone());
-        let rhs: Vec<isize> = vadd!(vector_space, y, z, x);
-        assert_eq!(lhs, rhs);
-    }
+//         let lhs: Vec<isize> = vadd!(vector_space, x.clone(), y.clone(), z.clone());
+//         let rhs: Vec<isize> = vadd!(vector_space, y, z, x);
+//         assert_eq!(lhs, rhs);
+//     }
 
-    #[test]
-    fn test_additive_ident()
-    {
-        let vector_space = DummyVectorSpace;
-        let exp = vec![ 0, 0, 0 ];
+//     #[test]
+//     fn test_additive_ident()
+//     {
+//         let vector_space = DummyVectorSpace;
+//         let exp = vec![ 0, 0, 0 ];
 
-        let test = vector_space.additive_ident();
-        assert_eq!(test, exp);
-    }
+//         let test = vector_space.additive_ident();
+//         assert_eq!(test, exp);
+//     }
 
-    #[test]
-    fn test_additive_inverse()
-    {
-        let vector_space = DummyVectorSpace;
-        let x: Vec<isize> = vec![ 3, 1, 5 ];
-        let exp: Vec<isize> = vec![ -3, -1, -5 ];
+//     #[test]
+//     fn test_additive_inverse()
+//     {
+//         let vector_space = DummyVectorSpace;
+//         let x: Vec<isize> = vec![ 3, 1, 5 ];
+//         let exp: Vec<isize> = vec![ -3, -1, -5 ];
         
-        let test: Vec<isize> = vector_space.additive_inv(x);
-        assert_eq!(test, exp);
-    }
+//         let test: Vec<isize> = vector_space.additive_inv(x);
+//         assert_eq!(test, exp);
+//     }
 
-    #[test]
-    fn test_vadd() {
-        use crate::vadd;
+//     #[test]
+//     fn test_vadd() {
+//         use crate::vadd;
 
-        let vector_space = DummyVectorSpace;
+//         let vector_space = DummyVectorSpace;
         
-        let x: Vec<isize> = vec![ 3, 1, 5 ];
-        let y: Vec<isize> = vec![ 6, 2, 7 ];
-        let z: Vec<isize> = vec![ 4, 5, 1 ];
-        let test: Vec<isize> = vadd!(vector_space, x, y, z);
+//         let x: Vec<isize> = vec![ 3, 1, 5 ];
+//         let y: Vec<isize> = vec![ 6, 2, 7 ];
+//         let z: Vec<isize> = vec![ 4, 5, 1 ];
+//         let test: Vec<isize> = vadd!(vector_space, x, y, z);
 
-        let exp: Vec<isize> = vec![ 13, 8, 13];
-        assert_eq!(test, exp);
-    }
+//         let exp: Vec<isize> = vec![ 13, 8, 13];
+//         assert_eq!(test, exp);
+//     }
 }

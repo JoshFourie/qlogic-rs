@@ -5,7 +5,7 @@ use std::{ops, iter};
 use ops::{Index, IndexMut};
 use iter::FromIterator;
 
-pub trait Vector<T>: VSubscript<T> + VIterable<T> 
+pub trait Vector<T> 
 {
     // Supertrait.
 }
