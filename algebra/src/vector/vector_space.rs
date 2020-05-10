@@ -51,14 +51,15 @@ pub trait VScale
 
     type Output;
 
-    fn vscale(&self, scalar: Self::Scalar, vector: Self::Vector) -> Self::Output;
+    fn vscale(&self, scalar: &Self::Scalar, vector: &Self::Vector) -> Self::Output;
 }
 
 impl<U> VScale for U
 where
     U: VectorSpace,
-    U::Vector: IntoIterator<Item=U::Scalar> + FromIterator<U::Scalar>,
-    U::Scalar: Copy + Mul<U::Scalar, Output=U::Scalar>,
+    U::Vector: FromIterator<U::Scalar>,
+    for <'a> &'a U::Vector: IntoIterator<Item=&'a U::Scalar>,
+    for <'a> &'a U::Scalar: Mul<&'a U::Scalar, Output=U::Scalar>,
 {
     type Scalar = U::Scalar;
 
@@ -66,7 +67,7 @@ where
 
     type Output = U::Vector;
 
-    fn vscale(&self, scalar: Self::Scalar, vector: Self::Vector) -> Self::Output        
+    fn vscale(&self, scalar: &Self::Scalar, vector: &Self::Vector) -> Self::Output        
     {
         vector
             .into_iter()
@@ -232,7 +233,7 @@ mod tests
         let c = 2;
 
         let exp = vec![ 6, 0, -2 ];
-        let test = vector_space.vscale(c, x);
+        let test = vector_space.vscale(&c, &x);
         assert_eq!(exp, test);
     }
 
