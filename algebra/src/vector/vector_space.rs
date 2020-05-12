@@ -32,7 +32,7 @@ where
 
     type Output = U::Vector;
 
-    default fn vadd(&self, lhs: &Self::Input, rhs: &Self::Input) -> Self::Output
+    fn vadd(&self, lhs: &Self::Input, rhs: &Self::Input) -> Self::Output
     {
         lhs
             .into_iter()
@@ -67,7 +67,7 @@ where
 
     type Output = U::Vector;
 
-    default fn vscale(&self, scalar: &Self::Scalar, vector: &Self::Vector) -> Self::Output        
+    fn vscale(&self, scalar: &Self::Scalar, vector: &Self::Vector) -> Self::Output        
     {
         vector
             .into_iter()
@@ -104,7 +104,7 @@ where
 {
     type Output = U::Vector;
     
-    default fn additive_ident(&self) -> Self::Output 
+    fn additive_ident(&self) -> Self::Output 
     {
         use num_traits::Zero;
 
@@ -130,7 +130,7 @@ where
 {
     type Output = U::Scalar;
     
-    default fn mul_ident(&self) -> Self::Output 
+    fn mul_ident(&self) -> Self::Output 
     {
         use num_traits::One;
         U::Scalar::one()
@@ -158,7 +158,7 @@ where
 
     type Output = U::Vector;
 
-    default fn additive_inv(&self, vector: Self::Vector) -> Self::Output 
+    fn additive_inv(&self, vector: Self::Vector) -> Self::Output 
     {
         vector
             .into_iter()
@@ -387,7 +387,6 @@ mod tests
                 BENCH_ADDITION_TEST_SIZE
             }
         }
-
 
         #[bench]
         fn bench_addition(bench: &mut Bencher) 
