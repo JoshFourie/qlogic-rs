@@ -2,7 +2,6 @@ use std::{ops, iter};
 use ops::{Add, Mul, Neg};
 use iter::FromIterator;
 
-
 pub trait VectorSpace
 {
     type Scalar;
@@ -358,7 +357,7 @@ mod tests
             }
         }
 
-        impl<'a> FromIterator<isize> for BenchVector
+        impl FromIterator<isize> for BenchVector
         {
             fn from_iter<T>(iter: T) -> Self 
             where
@@ -387,7 +386,6 @@ mod tests
                 BENCH_ADDITION_TEST_SIZE
             }
         }
-
 
         #[bench]
         fn bench_addition(bench: &mut Bencher) 
@@ -433,7 +431,6 @@ mod tests
 
         struct BenchVectorSpace;
 
-
         impl VectorSpace for BenchVectorSpace 
         {
             type Scalar = isize;
@@ -445,6 +442,22 @@ mod tests
                 BENCH_ADDITION_TEST_SIZE
             }
         }
+
+        #[cfg(feature="rayon")] use rayon::prelude::*;
+
+        #[cfg(feature="rayon")] 
+        impl VAdd for BenchVectorSpace
+        {
+            fn vadd(&self, lhs: &Self::Input, rhs: &Self::Input) -> Self::Output
+            {
+                lhs
+                    .par_iter()
+                    .zip( rhs.par_iter() )
+                    .map(|(l,r)| l + r)
+                    .collect()
+            }
+        }
+
 
         #[bench]
         fn bench_addition(bench: &mut Bencher) 
