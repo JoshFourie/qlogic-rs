@@ -19,7 +19,7 @@ impl Vector1024<isize>
     }
 }
 
-
+// 726ns/iter
 fn bench_addition(bench: &mut Criterion) 
 {
     let vector_space = VectorSpace1024::new();
@@ -45,37 +45,36 @@ fn bench_addition(bench: &mut Criterion)
 //     });
 // }
 
-// fn bench_addition_against_nalgebra(bench: &mut Criterion)
-// {
-//     let mut group: _ = bench.benchmark_group("Nalgebra Vector Addition Group");
+fn bench_addition_against_nalgebra(bench: &mut Criterion)
+{
+    let mut group: _ = bench.benchmark_group("Nalgebra Vector Addition Group");
 
-//     // Qlogic
-//     {
-//         let vector_space = VectorSpaceImpl;
+    // Qlogic: 726ns/iter
+    {
+        let vector_space = VectorSpace1024::new();
 
-//         let x: Vector1024<isize> = Vector1024::random();
-//         let y: Vector1024<isize> = Vector1024::random();
+        let x: Vector1024<isize> = Vector1024::random();
+        let y: Vector1024<isize> = Vector1024::random();
 
-//         group.bench_function("Q-Logic Vector Addition", |c| {
-//             c.iter(|| {
-//                 vector_space.vadd(&x, &y)
-//             })
-//         });
-//     }
+        group.bench_function("Q-Logic Vector Addition", |c| {
+            c.iter(|| {
+                vector_space.vadd(&x, &y)
+            })
+        });
+    }
 
-//     // Nalgebra
-//     {
-//         use rand::SeedableRng;
-//         let x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(BENCH_ADDITION_TEST_SIZE);
-//         let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(BENCH_ADDITION_TEST_SIZE);
+    // Nalgebra: 324ns/iter
+    {
+        let x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(BENCH_ADDITION_TEST_SIZE);
+        let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(BENCH_ADDITION_TEST_SIZE);
 
-//         group.bench_function("Nalgebra Vector Addition", |c| {
-//             c.iter(|| {
-//                 &x + &y
-//             })
-//         });
-//     }
-// }
+        group.bench_function("Nalgebra Vector Addition", |c| {
+            c.iter(|| {
+                &x + &y
+            })
+        });
+    }
+}
 
 criterion_group!(
     vector_benches, 

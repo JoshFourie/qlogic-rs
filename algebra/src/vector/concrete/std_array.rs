@@ -67,17 +67,16 @@ macro_rules! ndvector {
                 impl<T> VAdd for [< VectorSpace $length >]<T>
                 where
                     T: Copy + Default,
-                    for <'a> &'a T: Add<&'a T, Output=T>
+                    T: Add<T, Output=T>
                 {
                     type Vector = [< Vector $length >]<T>;
 
                     fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
                     {
                         let mut buf: [T; $length] = [T::default() ; $length];
-                        buf
-                            .iter_mut()
-                            .zip( lhs.into_iter().zip( rhs.into_iter() ) )
-                            .for_each(|(out, (l, r))| *out = l + r );
+                        for idx in 0..$length {
+                            buf[idx] = lhs.0[idx] + rhs.0[idx]
+                        }
                         Self::Vector::new(buf)
                     }
                 }
