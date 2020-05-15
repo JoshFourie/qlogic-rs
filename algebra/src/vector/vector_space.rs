@@ -121,36 +121,38 @@ mod tests
         assert!( vector_space.eq(&exp, &test) );
     }
 
-    // #[test]
-    // fn test_commutative()
-    // {
-    //     let vector_space = VectorSpace3;
-    //     let x = vec![ 3, 1, 5 ];
-    //     let y = vec![ 6, 2, 7 ];
+    #[test]
+    fn test_commutative()
+    {
+        let vector_space = VectorSpace3::new();
+        let mut x1 = Vector3::new([ 3, 1, 5 ]);
+        let x2: Vector3<isize> = x1.clone();
+        let mut y = Vector3::new([ 6, 2, 7 ]);
 
-    //     let lhs = VectorSpace3::vadd(&x, &y);
-    //     let rhs = VectorSpace3::vadd(&y, &x);
-    //     assert_eq!(lhs, rhs);
-    // }
+        let lhs = vadd!(vector_space, x1, &y);
+        let rhs = vadd!(vector_space, y, &x2);
+        assert!( vector_space.eq(&lhs, &rhs) );
+    }
 
-    // #[test]
-    // fn test_associative_addition()
-    // {
-    //     let vector_space = VectorSpace3;
-    //     let x = vec![ 3, 1, 5 ];
-    //     let y = vec![ 6, 2, 7 ];
-    //     let z = vec![ 4, 5, 1 ];
+    #[test]
+    fn test_associative_addition()
+    {
+        let vector_space = VectorSpace3::new();
+        let mut x1: Vector3<isize> = Vector3::new([ 3, 1, 5 ]);
+        let x2: Vector3<isize> = x1.clone();
+        let mut y: Vector3<isize> = Vector3::new([ 6, 2, 7 ]);
+        let z = Vector3::new([ 4, 5, 1 ]);
 
-    //     let lhs: Vec<isize> = vadd!(vector_space, &x, &y, &z);
-    //     let rhs: Vec<isize> = vadd!(vector_space, &y, &z, &x);
-    //     assert_eq!(lhs, rhs);
-    // }
+        let lhs: Vector3<isize> = vadd!(vector_space, x1, &y, &z);
+        let rhs: Vector3<isize> = vadd!(vector_space, y, &z, &x2);
+        assert!( vector_space.eq(&lhs, &rhs) );
+    }
 
     // #[test]
     // fn test_additive_ident()
     // {
     //     let vector_space = VectorSpace3;
-    //     let exp = vec![ 0, 0, 0 ];
+    //     let exp = Vector3::new([ 0, 0, 0 ]);
 
     //     let test = vector_space.additive_ident();
     //     assert_eq!(test, exp);
@@ -160,8 +162,8 @@ mod tests
     // fn test_additive_inverse()
     // {
     //     let vector_space = VectorSpace3;
-    //     let x: Vec<isize> = vec![ 3, 1, 5 ];
-    //     let exp: Vec<isize> = vec![ -3, -1, -5 ];
+    //     let x: Vec<isize> = Vector3::new([ 3, 1, 5 ]);
+    //     let exp: Vec<isize> = Vector3::new([ -3, -1, -5 ]);
         
     //     let test: Vec<isize> = vector_space.additive_inv(&x);
     //     assert_eq!(test, exp);
