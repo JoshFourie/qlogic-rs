@@ -15,7 +15,7 @@ macro_rules! ndvector {
 
                 use super::*;
 
-                #[derive(Copy, Clone)]
+                #[derive(Clone)]
                 pub struct [< Vector $length >]<T>([T; $length]);  
 
                 impl<T> [< Vector $length >]<T>

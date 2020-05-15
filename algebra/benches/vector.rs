@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
 use algebra::vector::*;
-use algebra::ndvector;
+use algebra::{ndvector, vadd};
 
 pub const BENCH_ADDITION_TEST_SIZE: usize = 1024;
 
@@ -20,7 +20,7 @@ fn random() -> Vector {
     Vector::new(inner)
 }
 
-// 726ns/iter
+// 294ns/iter
 fn bench_addition(bench: &mut Criterion) 
 {
     let vector_space = Space::new();
@@ -78,10 +78,53 @@ fn bench_addition_against_nalgebra(bench: &mut Criterion)
     }
 }
 
+fn bench_vadd_macro(bench: &mut Criterion)
+{
+    let mut group: _ = bench.benchmark_group("Vector Addition Macro");
+
+    // Macro: 9.4726 us 
+    {
+        let vector_space = Space::new();
+
+        group.bench_function("Macro", |c| {
+            let y: Vector = random();
+            let z: Vector = random();
+            let a: Vector = random();
+            let b: Vector = random();
+
+            let x: _ = random();
+            c.iter(|| {
+                vadd!(vector_space, x.clone(), &y, &z, &a, &b)
+            })
+        });
+    }
+
+    // Hand-Coded: 1.2746 us
+    {
+        let vector_space = Space::new();
+
+        group.bench_function("Hand-Coded", |c| {
+            let y: Vector = random();
+            let z: Vector = random();
+            let a: Vector = random();
+            let b: Vector = random();
+
+            let mut x: Vector = random();
+            c.iter(|| {
+                vector_space.vadd(&mut x, &y);
+                vector_space.vadd(&mut x, &z);
+                vector_space.vadd(&mut x, &a);
+                vector_space.vadd(&mut x, &b);
+            })
+        });
+    }
+}
+
 criterion_group!(
     vector_benches, 
     // bench_multiplication,
-    // bench_addition,
+    bench_addition,
+    bench_vadd_macro,
     bench_addition_against_nalgebra
 );
 

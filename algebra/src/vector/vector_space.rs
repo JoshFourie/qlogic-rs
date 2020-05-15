@@ -68,11 +68,10 @@ macro_rules! vadd
 {
     ($vector_space:expr, $lhs:expr, $($rhs:expr),+) => {
         {
-            use crate::vector::VAdd;
-            $vector_space::vadd($lhs, &crate::vadd!($vector_space, $($rhs),+))
+            $($vector_space.vadd(&mut $lhs, $rhs);)+
+            $lhs
         }
     };
-    ($vector_space:expr, $lhs:expr) => { $lhs };
 }
 
 
@@ -94,9 +93,9 @@ mod tests
         let y = Vector3::new([ 10, 1, 2 ]);
 
         let exp: Vector3<isize> = Vector3::new([ 13, 1, 1 ]);
-        vector_space.vadd(&mut x, &y);
+        let test: Vector3<isize> = vadd!(vector_space, x, &y);
 
-        assert!( VectorSpace3::eq(exp, x) );
+        assert!( VectorSpace3::eq(exp, test) );
     }
 
     // #[test]
@@ -157,17 +156,17 @@ mod tests
     //     assert_eq!(test, exp);
     // }
 
-    // #[test]
-    // fn test_vadd() {
+    #[test]
+    fn test_vadd() {
 
-    //     let vector_space = VectorSpace3;
+        let vector_space = VectorSpace3::new();
         
-    //     let x: Vec<isize> = vec![ 3, 1, 5 ];
-    //     let y: Vec<isize> = vec![ 6, 2, 7 ];
-    //     let z: Vec<isize> = vec![ 4, 5, 1 ];
-    //     let test: Vec<isize> = vadd!(vector_space, &x, &y, &z);
+        let mut x: Vector3<isize> = Vector3::new([ 3, 1, 5 ]);
+        let y: Vector3<isize> = Vector3::new([ 6, 2, 7 ]);
+        let z: Vector3<isize> = Vector3::new([ 4, 5, 1 ]);
+        let test: Vector3<isize> = vadd!(vector_space, x, &y, &z);
 
-    //     let exp: Vec<isize> = vec![ 13, 8, 13];
-    //     assert_eq!(test, exp);
-    // }
+        let exp: Vector3<isize> = Vector3::new([ 13, 8, 13]);
+        assert!( VectorSpace3::eq(test, exp) );
+    }
 }
