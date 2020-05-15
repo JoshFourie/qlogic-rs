@@ -135,7 +135,7 @@ pub trait VAdditiveInverse
 
     type Output;
 
-    fn additive_inv(&self, vector: Self::Vector) -> Self::Output;
+    fn additive_inv(&self, vector: &Self::Vector) -> Self::Output;
 }
 
 impl<U> VAdditiveInverse for U
@@ -149,7 +149,7 @@ where
 
     type Output = U::Vector;
 
-    default fn additive_inv(&self, vector: Self::Vector) -> Self::Output 
+    default fn additive_inv(&self, vector: &Self::Vector) -> Self::Output 
     {
         vector
             .into_iter()
@@ -179,7 +179,6 @@ mod tests
     use crate::{vadd};
     use super::{VectorSpace, VAdd, VScale, VAdditiveIdent, VAdditiveInverse};
 
-
     struct DummyVectorSpace;
 
     impl VectorSpace for DummyVectorSpace 
@@ -193,7 +192,6 @@ mod tests
             3
         }
     }
-
 
     #[test]
     fn test_addition() 
@@ -262,7 +260,7 @@ mod tests
         let x: Vec<isize> = vec![ 3, 1, 5 ];
         let exp: Vec<isize> = vec![ -3, -1, -5 ];
         
-        let test: Vec<isize> = vector_space.additive_inv(x);
+        let test: Vec<isize> = vector_space.additive_inv(&x);
         assert_eq!(test, exp);
     }
 
