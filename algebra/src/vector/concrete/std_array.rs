@@ -11,7 +11,7 @@ macro_rules! ndvector {
             {
                 use std::{marker, ops};
                 use marker::PhantomData;
-                use ops::Add;
+                use ops::{AddAssign, Index, IndexMut};
 
                 use super::*;
 
@@ -37,6 +37,24 @@ macro_rules! ndvector {
                     }
                 }
 
+                impl<T> Index<usize> for [< Vector $length >]<T>
+                {
+                    type Output = T;
+
+                    fn index(&self, idx: usize) -> &Self::Output 
+                    {
+                        &self.0[idx]
+                    }
+                }
+
+                impl<T> IndexMut<usize> for [< Vector $length >]<T>
+                {
+                    fn index_mut(&mut self, idx: usize) -> &mut Self::Output 
+                    {
+                        &mut self.0[idx]
+                    }
+                }
+
 
                 pub struct [< VectorSpace $length >]<T> {
                     _phantom: PhantomData<T>
@@ -44,6 +62,7 @@ macro_rules! ndvector {
 
                 impl<T> [< VectorSpace $length >]<T>
                 {
+                    #[inline]
                     pub fn new() -> Self 
                     {
                         [< VectorSpace $length >] {
@@ -66,18 +85,17 @@ macro_rules! ndvector {
 
                 impl<T> VAdd for [< VectorSpace $length >]<T>
                 where
-                    T: Copy + Default,
-                    T: Add<T, Output=T>
+                    T: Copy + AddAssign<T>
                 {
                     type Vector = [< Vector $length >]<T>;
 
-                    fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
+                    fn vadd(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
                     {
-                        let mut buf: [T; $length] = [T::default() ; $length];
                         for idx in 0..$length {
-                            buf[idx] = lhs.0[idx] + rhs.0[idx]
+                            unsafe { 
+                                lhs.0.get_unchecked_mut(idx).add_assign( rhs.0.get_unchecked(idx).clone() ) 
+                            }
                         }
-                        Self::Vector::new(buf)
                     }
                 }
 

@@ -11,7 +11,7 @@ pub trait VAdd
 {
     type Vector;
 
-    fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector;
+    fn vadd(&self, lhs: &mut Self::Vector, rhs: &Self::Vector);
 }
 
 pub trait VScale 
@@ -90,13 +90,13 @@ mod tests
     fn test_addition() 
     {
         let vector_space = VectorSpace3::new();
-        let x = Vector3::new([ 3, 0, -1 ]);
+        let mut x = Vector3::new([ 3, 0, -1 ]);
         let y = Vector3::new([ 10, 1, 2 ]);
 
         let exp: Vector3<isize> = Vector3::new([ 13, 1, 1 ]);
-        let test: Vector3<isize> = vector_space.vadd(&x, &y);
+        vector_space.vadd(&mut x, &y);
 
-        assert!( VectorSpace3::eq(exp, test) );
+        assert!( VectorSpace3::eq(exp, x) );
     }
 
     // #[test]
