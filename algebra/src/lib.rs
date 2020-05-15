@@ -4,4 +4,4 @@
 
 extern crate test;
 
-mod vector;
+pub mod vector;

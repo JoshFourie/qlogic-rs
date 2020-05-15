@@ -1,11 +1,15 @@
 mod vector_space;
+mod concrete;
+
 pub use vector_space::*;
+pub use concrete::*;
 
 use iter::FromIterator;
 use ops::{Index, IndexMut};
 use std::{iter, ops};
 
-pub trait Vector<T> {
+pub trait Vector<T>
+{
     // Supertrait.
 }
 
