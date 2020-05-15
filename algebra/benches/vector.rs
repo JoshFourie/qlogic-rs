@@ -28,7 +28,7 @@ fn bench_addition(bench: &mut Criterion)
 
     bench.bench_function("Vector Addition", |c| {
         c.iter(|| {
-            vector_space.vadd( x, y )
+            vector_space.vadd( &x, &y )
         })
     });
 }

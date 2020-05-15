@@ -9,11 +9,9 @@ pub trait VectorSpace
 
 pub trait VAdd
 {
-    type Input;
+    type Vector;
 
-    type Output;
-
-    fn vadd(&self, lhs: Self::Input, rhs: Self::Input) -> Self::Output;
+    fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector;
 }
 
 pub trait VScale 
@@ -96,7 +94,7 @@ mod tests
         let y = Vector3::new([ 10, 1, 2 ]);
 
         let exp: Vector3<isize> = Vector3::new([ 13, 1, 1 ]);
-        let test: Vector3<isize> = vector_space.vadd(x, y);
+        let test: Vector3<isize> = vector_space.vadd(&x, &y);
 
         assert!( VectorSpace3::eq(exp, test) );
     }

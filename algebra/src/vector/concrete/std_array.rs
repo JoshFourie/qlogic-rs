@@ -11,7 +11,7 @@ macro_rules! ndvector {
             {
                 use std::{marker, ops};
                 use marker::PhantomData;
-                use ops::AddAssign;
+                use ops::Add;
 
                 use super::*;
 
@@ -23,11 +23,6 @@ macro_rules! ndvector {
                     pub fn new(inner: [T; $length]) -> Self 
                     {
                         [< Vector $length >](inner)
-                    }
-
-                    fn iter_mut(&mut self) -> std::slice::IterMut<'_,T>
-                    {
-                        self.0.iter_mut()
                     }
                 }
 
@@ -71,19 +66,19 @@ macro_rules! ndvector {
 
                 impl<T> VAdd for [< VectorSpace $length >]<T>
                 where
-                    for <'a> T: AddAssign<&'a T>
+                    T: Copy + Default,
+                    for <'a> &'a T: Add<&'a T, Output=T>
                 {
-                    type Input = [< Vector $length >]<T>;
+                    type Vector = [< Vector $length >]<T>;
 
-                    type Output = [< Vector $length >]<T>;
-
-                    fn vadd(&self, mut lhs: Self::Input, rhs: Self::Input) -> Self::Output
+                    fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
                     {
-                        lhs
+                        let mut buf: [T; $length] = [T::default() ; $length];
+                        buf
                             .iter_mut()
-                            .zip( rhs.into_iter() )
-                            .for_each(|(l,r)| *l += r);
-                        lhs
+                            .zip( lhs.into_iter().zip( rhs.into_iter() ) )
+                            .for_each(|(out, (l, r))| *out = l + r );
+                        Self::Vector::new(buf)
                     }
                 }
 
