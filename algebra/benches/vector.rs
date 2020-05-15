@@ -33,7 +33,6 @@ impl VectorSpace for VectorSpaceImpl
     }
 }
 
-#[cfg(not(feature="manual"))] 
 fn bench_addition(bench: &mut Criterion) 
 {
     let vector_space = VectorSpaceImpl;
@@ -47,7 +46,6 @@ fn bench_addition(bench: &mut Criterion)
     });
 }
 
-#[cfg(not(feature="manual"))] 
 fn bench_multiplication(bench: &mut Criterion) 
 {
     let vector_space = VectorSpaceImpl;
@@ -60,7 +58,6 @@ fn bench_multiplication(bench: &mut Criterion)
     });
 }
 
-#[cfg(not(feature="manual"))] 
 fn bench_addition_against_nalgebra(bench: &mut Criterion)
 {
     let mut group: _ = bench.benchmark_group("Nalgebra Vector Addition Group");
@@ -93,7 +90,6 @@ fn bench_addition_against_nalgebra(bench: &mut Criterion)
     }
 }
 
-#[cfg(not(feature="manual"))] 
 criterion_group!(
     vector_benches, 
     bench_multiplication,
@@ -101,5 +97,4 @@ criterion_group!(
     bench_addition_against_nalgebra
 );
 
-#[cfg(not(feature="manual"))] 
 criterion_main!(vector_benches);

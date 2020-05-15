@@ -70,7 +70,6 @@ macro_rules! vadd
 
 #[cfg(test)]
 #[allow(non_snake_case)]
-#[cfg(not(feature="manual"))]
 mod tests 
 {
     use crate::vadd;
