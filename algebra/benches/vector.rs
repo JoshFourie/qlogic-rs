@@ -35,17 +35,19 @@ fn bench_addition(bench: &mut Criterion)
     });
 }
 
-// fn bench_multiplication(bench: &mut Criterion) 
-// {
-//     let vector_space = VectorSpaceImpl;
-//     let x: _ = Vector::new([ BENCH_ADDITION_TEST_CONST; BENCH_ADDITION_TEST_SIZE ]);
+fn bench_multiplication(bench: &mut Criterion) 
+{
+    let vector_space = Space::new();
+    let scalar: isize = 123456789;
 
-//     bench.bench_function("Vector Multiplication", |c| {
-//         c.iter(|| {
-//             vector_space.vscale(&BENCH_ADDITION_TEST_CONST, &x)
-//         })
-//     });
-// }
+    bench.bench_function("Q-Logic Vector Multiplication", |c| {
+        let mut x: Vector = random();
+
+        c.iter(|| {
+            vector_space.vscale(&mut x, &scalar);
+        })
+    });
+}
 
 fn bench_addition_against_nalgebra(bench: &mut Criterion)
 {
@@ -60,7 +62,7 @@ fn bench_addition_against_nalgebra(bench: &mut Criterion)
             let y: Vector = random();
 
             c.iter(|| {
-                vector_space.vadd(&mut x, &y)
+                vector_space.vadd(&mut x, &y);
             })
         });
     }
@@ -68,11 +70,41 @@ fn bench_addition_against_nalgebra(bench: &mut Criterion)
     // Nalgebra: 4.7408 us for 10 000
     {
         group.bench_function("Nalgebra Vector Addition", |c| {
-            let x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(BENCH_ADDITION_TEST_SIZE);
+            let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(BENCH_ADDITION_TEST_SIZE);
             let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(BENCH_ADDITION_TEST_SIZE);
     
             c.iter(|| {
-                &x + &y
+                x += &y
+            })
+        });
+    }
+}
+
+fn bench_multiplication_against_nalgebra(bench: &mut Criterion)
+{
+    let mut group: _ = bench.benchmark_group("Nalgebra Vector Multiplication Group");
+    let scalar: isize = 123456789;
+
+    // Qlogic: 3.7130 us for 10 000
+    {
+        let vector_space = Space::new();
+
+        group.bench_function("Q-Logic Vector Multiplication", |c| {
+            let mut x: Vector = random();
+
+            c.iter(|| {
+                vector_space.vscale(&mut x, &scalar);
+            })
+        });
+    }
+
+    // Nalgebra: 4.7408 us for 10 000
+    {
+        group.bench_function("Nalgebra Vector Multiplication", |c| {
+            let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(BENCH_ADDITION_TEST_SIZE);
+    
+            c.iter(|| {
+                x *= scalar
             })
         });
     }
@@ -82,7 +114,7 @@ fn bench_vadd_macro(bench: &mut Criterion)
 {
     let mut group: _ = bench.benchmark_group("Vector Addition Macro");
 
-    // Macro: 9.4726 us 
+    // Macro: 2.3369 us - ~1us to clone 'x'
     {
         let vector_space = Space::new();
 
@@ -122,10 +154,11 @@ fn bench_vadd_macro(bench: &mut Criterion)
 
 criterion_group!(
     vector_benches, 
-    // bench_multiplication,
+    bench_multiplication,
     bench_addition,
     bench_vadd_macro,
-    bench_addition_against_nalgebra
+    bench_addition_against_nalgebra,
+    bench_multiplication_against_nalgebra
 );
 
 criterion_main!(vector_benches);

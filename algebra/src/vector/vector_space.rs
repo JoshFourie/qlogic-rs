@@ -20,7 +20,7 @@ pub trait VScale
 
     type Vector;
 
-    fn vscale(&self, scalar: &Self::Scalar, vector: &Self::Vector) -> Self::Vector;
+    fn vscale(&self, vector: &mut Self::Vector, scalar: &Self::Scalar);
 }
 
 
@@ -59,7 +59,7 @@ pub trait VPartialEq
 {
     type Vector;
 
-    fn eq(lhs: Self::Vector, rhs: Self::Vector) -> bool;
+    fn eq(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> bool;
 }
 
 
@@ -70,6 +70,17 @@ macro_rules! vadd
         {
             $($vector_space.vadd(&mut $lhs, $rhs);)+
             $lhs
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! vscale 
+{
+    ($vector_space:expr, $vec:expr, $scalar:expr) => {
+        {
+            $vector_space.vscale(&mut $vec, $scalar);
+            $vec
         }
     };
 }
@@ -95,20 +106,20 @@ mod tests
         let exp: Vector3<isize> = Vector3::new([ 13, 1, 1 ]);
         let test: Vector3<isize> = vadd!(vector_space, x, &y);
 
-        assert!( VectorSpace3::eq(exp, test) );
+        assert!( vector_space.eq(&exp, &test) );
     }
 
-    // #[test]
-    // fn test_multiplication()
-    // {
-    //     let vector_space = VectorSpace3;
-    //     let x = vec![ 3, 0, -1 ];
-    //     let c = 2;
+    #[test]
+    fn test_multiplication()
+    {
+        let vector_space = VectorSpace3::new();
+        let mut x = Vector3::new([ 3, 0, -1 ]);
+        let c = 2;
 
-    //     let exp = vec![ 6, 0, -2 ];
-    //     let test = vector_space.vscale(&c, &x);
-    //     assert_eq!(exp, test);
-    // }
+        let exp = Vector3::new([ 6, 0, -2 ]);
+        let test = vscale!(vector_space, x, &c);
+        assert!( vector_space.eq(&exp, &test) );
+    }
 
     // #[test]
     // fn test_commutative()
@@ -157,8 +168,8 @@ mod tests
     // }
 
     #[test]
-    fn test_vadd() {
-
+    fn test_vadd() 
+    {
         let vector_space = VectorSpace3::new();
         
         let mut x: Vector3<isize> = Vector3::new([ 3, 1, 5 ]);
@@ -167,6 +178,6 @@ mod tests
         let test: Vector3<isize> = vadd!(vector_space, x, &y, &z);
 
         let exp: Vector3<isize> = Vector3::new([ 13, 8, 13]);
-        assert!( VectorSpace3::eq(test, exp) );
+        assert!( vector_space.eq(&test, &exp) );
     }
 }

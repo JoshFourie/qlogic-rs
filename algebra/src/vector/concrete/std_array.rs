@@ -11,12 +11,12 @@ macro_rules! ndvector {
             {
                 use std::{marker, ops};
                 use marker::PhantomData;
-                use ops::{AddAssign, Index, IndexMut};
+                use ops::{AddAssign, MulAssign, Index, IndexMut};
 
                 use super::*;
 
                 #[derive(Clone)]
-                pub struct [< Vector $length >]<T>([T; $length]);  
+                pub struct [< Vector $length >]<T>(pub [T; $length]);  
 
                 impl<T> [< Vector $length >]<T>
                 {
@@ -99,13 +99,31 @@ macro_rules! ndvector {
                     }
                 }
 
+                impl<T> VScale for [< VectorSpace $length >]<T>
+                where
+                    T: Copy + MulAssign<T>
+                {
+                    type Vector = [< Vector $length >]<T>;
+
+                    type Scalar = T;
+
+                    fn vscale(&self, vector: &mut Self::Vector, scalar: &Self::Scalar)
+                    {
+                        for idx in 0..$length {
+                            unsafe { 
+                                vector.0.get_unchecked_mut(idx).mul_assign( scalar.clone() ) 
+                            }
+                        }
+                    }
+                }
+
                 impl<T> VPartialEq for [< VectorSpace $length >]<T>
                 where
                     T: PartialEq
                 {
                     type Vector = [< Vector $length >]<T>;
 
-                    fn eq(lhs: Self::Vector, rhs: Self::Vector) -> bool
+                    fn eq(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> bool
                     {
                         for (l, r) in lhs
                             .into_iter()
@@ -123,8 +141,3 @@ macro_rules! ndvector {
     };
 
 } 
-
-use crate::ndvector;
-use crate::vector::*;
-
-ndvector!(1024);
