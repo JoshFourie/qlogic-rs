@@ -114,29 +114,29 @@ pub mod small
         let mut group: _ = bench.benchmark_group("internal-vector-multiplication-small-group");
 
         {
-            // let vector_space = Space::new();
+            let vector_space = Space::new();
 
-            // group.bench_function("VecReference", |c| {
-            //     let x: Vector<isize> = random();
-            //     let y: isize = 125;
+            group.bench_function("stdvec-reference", |c| {
+                let x: Vector<isize> = random();
+                let y: isize = 125;
 
-            //     c.iter(|| {
-            //         vector_space.vscale(&x, &y);
-            //     })
-            // });
+                c.iter(|| {
+                    vector_space.vscale(&x, &y)
+                })
+            });
         }
 
         {
-            // let vector_space = ArraySpace::new();
+            let vector_space = ArraySpace::new();
 
-            // group.bench_function("ArrayReference", |c| {
-            //     let x: ArrayVector<isize> = random_array();
-            //     let y: ArrayVector<isize> = random_array();
+            group.bench_function("array-reference", |c| {
+                let x: ArrayVector<isize> = random_array();
+                let y: isize = 125;
 
-            //     c.iter(|| {
-            //         vector_space.vadd(&x, &y);
-            //     })
-            // });
+                c.iter(|| {
+                    vector_space.vscale(&x, &y)
+                })
+            });
         }
 
         {
@@ -147,7 +147,7 @@ pub mod small
                 let y: isize = 125;
 
                 c.iter(|| {
-                    vector_space.vscale(&mut x, &y);
+                    vector_space.vscale_mut(&mut x, &y);
                 })
             });
         }
@@ -160,7 +160,7 @@ pub mod small
                 let y: isize = 125;
 
                 c.iter(|| {
-                    vector_space.vscale(&mut x, &y);
+                    vector_space.vscale_mut(&mut x, &y);
                 })
             });
         }
