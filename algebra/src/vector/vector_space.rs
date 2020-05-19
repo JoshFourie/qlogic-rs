@@ -90,94 +90,107 @@ mod tests
 {
     use super::*;
     
-    use crate::ndarray;
+    use crate::{ndarray, ndvec};
 
-    ndarray!(3);
+    macro_rules! test {
+        ($name:ident, $object:ty, $space:ty) => {
+            mod $name {
+                use super::*;
 
-    #[test]
-    fn test_addition() 
-    {
-        let vector_space = VectorSpace3::new();
-        let mut x = Vector3::new([ 3, 0, -1 ]);
-        let y = Vector3::new([ 10, 1, 2 ]);
+                #[test]
+                fn test_addition() 
+                {
+                    let vector_space = <$space>::new();
+                    let mut x = <$object>::new([ 3, 0, -1 ]);
+                    let y = <$object>::new([ 10, 1, 2 ]);
 
-        let exp: Vector3<isize> = Vector3::new([ 13, 1, 1 ]);
-        let test: Vector3<isize> = vadd!(vector_space, x, &y);
+                    let exp: $object = <$object>::new([ 13, 1, 1 ]);
+                    let test: $object = vadd!(vector_space, x, &y);
 
-        assert!( vector_space.eq(&exp, &test) );
+                    assert!( vector_space.eq(&exp, &test) );
+                }
+
+                #[test]
+                fn test_multiplication()
+                {
+                    let vector_space = <$space>::new();
+                    let mut x = <$object>::new([ 3, 0, -1 ]);
+                    let c = 2;
+
+                    let exp = <$object>::new([ 6, 0, -2 ]);
+                    let test = vscale!(vector_space, x, &c);
+                    assert!( vector_space.eq(&exp, &test) );
+                }
+
+                #[test]
+                fn test_commutative()
+                {
+                    let vector_space = <$space>::new();
+                    let mut x1 = <$object>::new([ 3, 1, 5 ]);
+                    let x2: $object = x1.clone();
+                    let mut y = <$object>::new([ 6, 2, 7 ]);
+
+                    let lhs = vadd!(vector_space, x1, &y);
+                    let rhs = vadd!(vector_space, y, &x2);
+                    assert!( vector_space.eq(&lhs, &rhs) );
+                }
+
+                #[test]
+                fn test_associative_addition()
+                {
+                    let vector_space = <$space>::new();
+                    let mut x1: $object = <$object>::new([ 3, 1, 5 ]);
+                    let x2: $object = x1.clone();
+                    let mut y: $object = <$object>::new([ 6, 2, 7 ]);
+                    let z = <$object>::new([ 4, 5, 1 ]);
+
+                    let lhs: $object = vadd!(vector_space, x1, &y, &z);
+                    let rhs: $object = vadd!(vector_space, y, &z, &x2);
+                    assert!( vector_space.eq(&lhs, &rhs) );
+                }
+
+                #[test]
+                fn test_additive_ident()
+                {
+                    let vector_space = <$space>::new();
+                    let exp: $object = <$object>::new([ 0, 0, 0 ]);
+
+                    let test: $object = vector_space.additive_ident();
+                    assert!( vector_space.eq(&exp, &test) );
+                }
+
+                #[test]
+                fn test_additive_inverse()
+                {
+                    let vector_space = <$space>::new();
+                    let mut x: $object = <$object>::new([ 3, 1, 5 ]);
+                    let exp: $object = <$object>::new([ -3, -1, -5 ]);
+                    
+                    vector_space.additive_inv(&mut x);
+                    assert!( vector_space.eq(&exp, &x) );
+                }
+
+                #[test]
+                fn test_vadd() 
+                {
+                    let vector_space = <$space>::new();
+                    
+                    let mut x: $object = <$object>::new([ 3, 1, 5 ]);
+                    let y: $object = <$object>::new([ 6, 2, 7 ]);
+                    let z: $object = <$object>::new([ 4, 5, 1 ]);
+                    let test: $object = vadd!(vector_space, x, &y, &z);
+
+                    let exp: $object = <$object>::new([ 13, 8, 13]);
+                    assert!( vector_space.eq(&test, &exp) );
+                }   
+            }
+        };
     }
 
-    #[test]
-    fn test_multiplication()
-    {
-        let vector_space = VectorSpace3::new();
-        let mut x = Vector3::new([ 3, 0, -1 ]);
-        let c = 2;
+    ndarray!(3, VectorArray, VectorSpaceArray);
 
-        let exp = Vector3::new([ 6, 0, -2 ]);
-        let test = vscale!(vector_space, x, &c);
-        assert!( vector_space.eq(&exp, &test) );
-    }
+    test!(test_ndarray, VectorArray<isize>, VectorSpaceArray<isize>);
 
-    #[test]
-    fn test_commutative()
-    {
-        let vector_space = VectorSpace3::new();
-        let mut x1 = Vector3::new([ 3, 1, 5 ]);
-        let x2: Vector3<isize> = x1.clone();
-        let mut y = Vector3::new([ 6, 2, 7 ]);
+    // ndvec!(3);
 
-        let lhs = vadd!(vector_space, x1, &y);
-        let rhs = vadd!(vector_space, y, &x2);
-        assert!( vector_space.eq(&lhs, &rhs) );
-    }
-
-    #[test]
-    fn test_associative_addition()
-    {
-        let vector_space = VectorSpace3::new();
-        let mut x1: Vector3<isize> = Vector3::new([ 3, 1, 5 ]);
-        let x2: Vector3<isize> = x1.clone();
-        let mut y: Vector3<isize> = Vector3::new([ 6, 2, 7 ]);
-        let z = Vector3::new([ 4, 5, 1 ]);
-
-        let lhs: Vector3<isize> = vadd!(vector_space, x1, &y, &z);
-        let rhs: Vector3<isize> = vadd!(vector_space, y, &z, &x2);
-        assert!( vector_space.eq(&lhs, &rhs) );
-    }
-
-    #[test]
-    fn test_additive_ident()
-    {
-        let vector_space = VectorSpace3::new();
-        let exp: Vector3<isize> = Vector3::new([ 0, 0, 0 ]);
-
-        let test: Vector3<isize> = vector_space.additive_ident();
-        assert!( vector_space.eq(&exp, &test) );
-    }
-
-    #[test]
-    fn test_additive_inverse()
-    {
-        let vector_space = VectorSpace3::new();
-        let mut x: Vector3<isize> = Vector3::new([ 3, 1, 5 ]);
-        let exp: Vector3<isize> = Vector3::new([ -3, -1, -5 ]);
-        
-        vector_space.additive_inv(&mut x);
-        assert!( vector_space.eq(&exp, &x) );
-    }
-
-    #[test]
-    fn test_vadd() 
-    {
-        let vector_space = VectorSpace3::new();
-        
-        let mut x: Vector3<isize> = Vector3::new([ 3, 1, 5 ]);
-        let y: Vector3<isize> = Vector3::new([ 6, 2, 7 ]);
-        let z: Vector3<isize> = Vector3::new([ 4, 5, 1 ]);
-        let test: Vector3<isize> = vadd!(vector_space, x, &y, &z);
-
-        let exp: Vector3<isize> = Vector3::new([ 13, 8, 13]);
-        assert!( vector_space.eq(&test, &exp) );
-    }
 }

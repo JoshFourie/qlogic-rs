@@ -3,10 +3,20 @@
 #[macro_export]
 macro_rules! ndarray {
     ($length:tt) => {
+        paste::item!{
+            ndarray!(
+                $length, 
+                [< Vector $length >],
+                [< VectorSpace $length >]
+            );
+        }
+    };
+
+    ($length:tt, $name:ident, $space:ident) => {
         paste::item! {
-            pub use [< _ vector $length >]::{[< Vector $length >], [< VectorSpace $length >]};
+            pub use [< _ vector $name With $space $length >]::{$name, $space};
             
-            mod [< _ vector $length >] 
+            mod [< _ vector $name With $space $length >] 
             {
                 use std::{marker, ops};
                 use marker::PhantomData;
@@ -17,17 +27,17 @@ macro_rules! ndarray {
                 use super::*;
 
                 #[derive(Clone)]
-                pub struct [< Vector $length >]<T>([T; $length]);  
+                pub struct $name<T>([T; $length]);  
 
-                impl<T> [< Vector $length >]<T>
+                impl<T> $name<T>
                 {
                     pub fn new(inner: [T; $length]) -> Self 
                     {
-                        [< Vector $length >](inner)
+                        $name(inner)
                     }
                 }
 
-                impl<'a,T> IntoIterator for &'a [< Vector $length >]<T>
+                impl<'a,T> IntoIterator for &'a $name<T>
                 {
                     type Item = &'a T;
                     type IntoIter = std::slice::Iter<'a,T>;
@@ -38,7 +48,7 @@ macro_rules! ndarray {
                     }
                 }
 
-                impl<T> Index<usize> for [< Vector $length >]<T>
+                impl<T> Index<usize> for $name<T>
                 {
                     type Output = T;
 
@@ -48,7 +58,7 @@ macro_rules! ndarray {
                     }
                 }
 
-                impl<T> IndexMut<usize> for [< Vector $length >]<T>
+                impl<T> IndexMut<usize> for $name<T>
                 {
                     fn index_mut(&mut self, idx: usize) -> &mut Self::Output 
                     {
@@ -57,26 +67,26 @@ macro_rules! ndarray {
                 }
 
 
-                pub struct [< VectorSpace $length >]<T> {
+                pub struct $space<T> {
                     _phantom: PhantomData<T>
                 }
 
-                impl<T> [< VectorSpace $length >]<T>
+                impl<T> $space<T>
                 {
                     #[inline]
                     pub fn new() -> Self 
                     {
-                        [< VectorSpace $length >] {
+                        $space {
                             _phantom: PhantomData
                         }
                     }
                 }
 
-                impl<T> VectorSpace for [< VectorSpace $length >]<T>
+                impl<T> VectorSpace for $space<T>
                 {
                     type Scalar = T;
 
-                    type Vector = [< VectorSpace $length >]<T>;
+                    type Vector = $space<T>;
 
                     fn dimensions(&self) -> usize 
                     {
@@ -84,11 +94,11 @@ macro_rules! ndarray {
                     }
                 }
 
-                impl<T> VAdd for [< VectorSpace $length >]<T>
+                impl<T> VAdd for $space<T>
                 where
                     T: Copy + AddAssign<T>
                 {
-                    type Vector = [< Vector $length >]<T>;
+                    type Vector = $name<T>;
 
                     fn vadd(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
                     {
@@ -100,11 +110,11 @@ macro_rules! ndarray {
                     }
                 }
 
-                impl<T> VScale for [< VectorSpace $length >]<T>
+                impl<T> VScale for $space<T>
                 where
                     T: Copy + MulAssign<T>
                 {
-                    type Vector = [< Vector $length >]<T>;
+                    type Vector = $name<T>;
 
                     type Scalar = T;
 
@@ -118,19 +128,19 @@ macro_rules! ndarray {
                     }
                 }
 
-                impl<T> VAdditiveIdent for [< VectorSpace $length >]<T>
+                impl<T> VAdditiveIdent for $space<T>
                 where
                     T: Copy + Zero
                 {
-                    type Output = [< Vector $length >]<T>;
+                    type Output = $name<T>;
 
                     fn additive_ident(&self) -> Self::Output
                     {
-                        [< Vector $length >]::new( [T::zero(); $length] )
+                        $name::new( [T::zero(); $length] )
                     }
                 }
 
-                impl<T> VMultiplicativeIdent for [< VectorSpace $length >]<T>
+                impl<T> VMultiplicativeIdent for $space<T>
                 where
                     T: One
                 {
@@ -142,11 +152,11 @@ macro_rules! ndarray {
                     }
                 }
 
-                impl<T> VAdditiveInverse for [< VectorSpace $length >]<T>
+                impl<T> VAdditiveInverse for $space<T>
                 where
                     for <'a> &'a T: Neg<Output=T>
                 {
-                    type Vector = [< Vector $length >]<T>;
+                    type Vector = $name<T>;
 
                     fn additive_inv(&self, vector: &mut Self::Vector)
                     {
@@ -159,11 +169,11 @@ macro_rules! ndarray {
                     }
                 }
 
-                impl<T> VPartialEq for [< VectorSpace $length >]<T>
+                impl<T> VPartialEq for $space<T>
                 where
                     T: PartialEq
                 {
-                    type Vector = [< Vector $length >]<T>;
+                    type Vector = $name<T>;
 
                     fn eq(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> bool
                     {
@@ -181,5 +191,4 @@ macro_rules! ndarray {
             }
         }
     };
-
 } 
