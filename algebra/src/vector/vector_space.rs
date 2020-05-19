@@ -238,7 +238,7 @@ mod tests
                 @generic(T)
                 @with_vec(Vec<T>)
             }
-        }
+        }   
 
         test!(test_ndvec, VectorVec<isize>, VectorSpaceVec<isize>);
 

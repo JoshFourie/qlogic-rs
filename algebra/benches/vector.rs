@@ -3,15 +3,34 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use algebra::vector::*;
 use algebra::{ndarray, vadd};
 
-pub const BENCH_ADDITION_TEST_SIZE: usize = 1234567;
+pub const BENCH_ADDITION_TEST_SIZE: usize = 1024;
 
 ndarray!{
     @vector_space(Space) {
         @vector_ident(Vector)
-        @length(1234567)
+        @length(1024)
         @generic(T)
-        @with_vec(Vec<T>)        
+        @with_array(Vec<T>)        
     }
+}
+
+ndarray!{
+    @vector_space(ArraySpace) {
+        @vector_ident(ArrayVector)
+        @length(1024)
+        @generic(T)
+        @with_array([T; 1024])        
+    }
+}
+
+fn random_array() -> ArrayVector<isize> {
+    use rand::{thread_rng, Rng};
+
+    let mut inner: _ = [0; BENCH_ADDITION_TEST_SIZE];
+    for element in inner.iter_mut() {
+        *element = thread_rng().gen()
+    }
+    ArrayVector::new(inner)
 }
 
 fn random() -> Vector<isize> {
@@ -25,18 +44,66 @@ fn random() -> Vector<isize> {
 }
 
 // 294ns/iter
+fn bench_addition_mut(bench: &mut Criterion) 
+{
+    let mut group: _ = bench.benchmark_group("Internal Vector Mutable Addition Group");
+
+    {
+        let vector_space = Space::new();
+
+        group.bench_function("Vec", |c| {
+            let mut x: Vector<isize> = random();
+            let y: Vector<isize> = random();
+
+            c.iter(|| {
+                vector_space.vadd_mut(&mut x, &y);
+            })
+        });
+    }
+
+    {
+        let vector_space = ArraySpace::new();
+
+        group.bench_function("Array", |c| {
+            let mut x: ArrayVector<isize> = random_array();
+            let y: ArrayVector<isize> = random_array();
+
+            c.iter(|| {
+                vector_space.vadd_mut(&mut x, &y);
+            })
+        });
+    }
+}
+
 fn bench_addition(bench: &mut Criterion) 
 {
-    let vector_space = Space::new();
+    let mut group: _ = bench.benchmark_group("Internal Vector Reference Addition Group");
 
-    bench.bench_function("Vector Addition", |c| {
-        let mut x: Vector<isize> = random();
-        let y: Vector<isize> = random();
-    
-        c.iter(|| {
-            vector_space.vadd_mut( &mut x, &y )
-        })
-    });
+    {
+        let vector_space = Space::new();
+
+        group.bench_function("Vec", |c| {
+            let x: Vector<isize> = random();
+            let y: Vector<isize> = random();
+
+            c.iter(|| {
+                vector_space.vadd(&x, &y);
+            })
+        });
+    }
+
+    {
+        let vector_space = ArraySpace::new();
+
+        group.bench_function("Array", |c| {
+            let x: ArrayVector<isize> = random_array();
+            let y: ArrayVector<isize> = random_array();
+
+            c.iter(|| {
+                vector_space.vadd(&x, &y);
+            })
+        });
+    }
 }
 
 fn bench_multiplication(bench: &mut Criterion) 
@@ -53,9 +120,9 @@ fn bench_multiplication(bench: &mut Criterion)
     });
 }
 
-fn bench_addition_against_nalgebra(bench: &mut Criterion)
+fn bench_addition_mut_against_nalgebra(bench: &mut Criterion)
 {
-    let mut group: _ = bench.benchmark_group("Nalgebra Vector Addition Group");
+    let mut group: _ = bench.benchmark_group("Nalgebra Vector Addition Mutable Group");
 
     // Qlogic: 3.7130 us for 10 000
     {
@@ -79,6 +146,37 @@ fn bench_addition_against_nalgebra(bench: &mut Criterion)
     
             c.iter(|| {
                 x += &y
+            })
+        });
+    }
+}
+
+fn bench_addition_against_nalgebra(bench: &mut Criterion)
+{
+    let mut group: _ = bench.benchmark_group("Nalgebra Vector Addition Reference Group");
+
+    // Qlogic: 3.7130 us for 10 000
+    {
+        let vector_space = Space::new();
+
+        group.bench_function("Q-Logic Vector Addition", |c| {
+            let x: Vector<isize> = random();
+            let y: Vector<isize> = random();
+
+            c.iter(|| {
+                vector_space.vadd(&x, &y);
+            })
+        });
+    }
+
+    // Nalgebra: 4.7408 us for 10 000
+    {
+        group.bench_function("Nalgebra Vector Addition", |c| {
+            let x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(BENCH_ADDITION_TEST_SIZE);
+            let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(BENCH_ADDITION_TEST_SIZE);
+    
+            c.iter(|| {
+                &x + &y
             })
         });
     }
@@ -114,7 +212,6 @@ fn bench_multiplication_against_nalgebra(bench: &mut Criterion)
     }
 }
 
-
 fn bench_additive_inverse_against_nalgebra(bench: &mut Criterion)
 {
     let mut group: _ = bench.benchmark_group("Nalgebra Vector Additive Inverse Group");
@@ -144,54 +241,13 @@ fn bench_additive_inverse_against_nalgebra(bench: &mut Criterion)
     }
 }
 
-fn bench_vadd_macro(bench: &mut Criterion)
-{
-    let mut group: _ = bench.benchmark_group("Vector Addition Macro");
-
-    // Macro: 2.3369 us - ~1us to clone 'x'
-    {
-        let vector_space = Space::new();
-
-        group.bench_function("Macro", |c| {
-            let y: Vector<isize> = random();
-            let z: Vector<isize> = random();
-            let a: Vector<isize> = random();
-            let b: Vector<isize> = random();
-
-            let x: _ = random();
-            c.iter(|| {
-                vadd!(vector_space, x.clone(), &y, &z, &a, &b)
-            })
-        });
-    }
-
-    // Hand-Coded: 1.2746 us
-    {
-        let vector_space = Space::new();
-
-        group.bench_function("Hand-Coded", |c| {
-            let y: Vector<isize> = random();
-            let z: Vector<isize> = random();
-            let a: Vector<isize> = random();
-            let b: Vector<isize> = random();
-
-            let mut x: Vector<isize> = random();
-            c.iter(|| {
-                vector_space.vadd_mut(&mut x, &y);
-                vector_space.vadd_mut(&mut x, &z);
-                vector_space.vadd_mut(&mut x, &a);
-                vector_space.vadd_mut(&mut x, &b);
-            })
-        });
-    }
-}
-
 criterion_group!(
     vector_benches, 
     bench_multiplication,
     bench_addition,
-    bench_vadd_macro,
+    bench_addition_mut,
     bench_addition_against_nalgebra,
+    bench_addition_mut_against_nalgebra,
     bench_multiplication_against_nalgebra,
     bench_additive_inverse_against_nalgebra
 );

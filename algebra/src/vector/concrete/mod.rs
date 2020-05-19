@@ -14,38 +14,44 @@ macro_rules! ndarray {
         paste::item! {
             pub use [< _ vector $name With $space $length >]::{$name, $space};
                 
+            #[allow(unused_imports)]
             mod [< _ vector $name With $space $length >] 
             {
                 use std::{marker, ops};
                 use marker::PhantomData;
-                use ops::{AddAssign, MulAssign, Index, IndexMut, Neg};
+                use ops::{AddAssign, Add, MulAssign, Index, IndexMut, Neg};
 
                 use super::{VAdd, VScale, VectorSpace, VPartialEq, VAdditiveInverse, ndarray};
 
                 $(
-                    ndarray!(@implementation $length, $name, $space, $array, $generic);
-                    ndarray!(@array $length, $name, $space, $array, $generic);
+                    ndarray!(@vector $length, $name, $array, $generic);
+                    ndarray!(@vectorspace $length, $name, $space, $array, $generic);
+
+                    ndarray!(@with_array $length, $name, $space, $array, $generic);
                 )?
 
                 $(
-                    ndarray!(@implementation $length, $name, $space, $vector, $generic);
-                    ndarray!(@vec $length, $name, $space, $vector, $generic);
+                    ndarray!(@vector $length, $name, $vector, $generic);
+                    ndarray!(@vectorspace $length, $name, $space, $vector, $generic);
+
+                    ndarray!(@with_vec $length, $name, $space, $vector, $generic);
                 )?
             }
         }
     };
 
-    (@implementation $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+    (@vector $length:expr, $name:ident, $inner:ty, $T:ident) => {
         #[derive(Clone)]
         pub struct $name<$T>($inner);  
 
         impl<$T> $name<$T>
         {
             pub fn new(inner: $inner) -> Self 
-            {
+            {   
+                assert!( inner.len() == $length );
                 $name(inner)
             }
-        }
+        }        
 
         impl<$T> From<$inner> for $name<$T>
         {
@@ -82,7 +88,9 @@ macro_rules! ndarray {
                 &mut self.0[idx]
             }
         }
+    };
 
+    (@vectorspace $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         pub struct $space<$T> {
             _phantom: PhantomData<$T>
         }
@@ -166,7 +174,8 @@ macro_rules! ndarray {
         }
     };
 
-    (@array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+    /********************* VAdd *******************************/
+    (@with_array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         impl<$T> VAdd for $space<$T>
         where
             $T: Copy + AddAssign<$T>
@@ -177,22 +186,28 @@ macro_rules! ndarray {
             {
                 for idx in 0..$length {
                     unsafe { 
-                        lhs.0.get_unchecked_mut(idx).add_assign( rhs.0.get_unchecked(idx).clone() ) 
+                        lhs
+                            .0
+                            .get_unchecked_mut(idx)
+                            .add_assign( rhs.0.get_unchecked(idx).clone() ) 
                     }
                 }
             }
 
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
             {
-                unimplemented!()
+                let mut buf: Self::Vector = lhs.clone();
+                self.vadd_mut(&mut buf, rhs);
+                buf
             }
         }
     };
 
-    (@vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+    (@with_vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         impl<$T> VAdd for $space<$T>
         where
-            $T: Copy + AddAssign<$T>
+            $T: Copy + AddAssign<$T>,
+            for <'a> &'a $T: Add<&'a $T,Output=T>
         {
             type Vector = $name<$T>;
 
@@ -207,7 +222,11 @@ macro_rules! ndarray {
 
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
             {
-                unimplemented!()
+                let mut buf: $inner = Vec::with_capacity($length);
+                for (l, r) in lhs.into_iter().zip(rhs) {
+                    buf.push(l + r)
+                }
+                Self::Vector::new(buf)
             }
         }
     };
