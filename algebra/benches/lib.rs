@@ -3,5 +3,6 @@ use criterion::{criterion_group, criterion_main, Criterion};
 mod vector;
 
 criterion_main!(
-    vector::internal_vector_benches
+    vector::small::small_vector_benchmarks,
+    vector::big::big_vector_benchmarks
 );

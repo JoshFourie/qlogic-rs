@@ -48,6 +48,7 @@ macro_rules! ndarray {
         {
             pub fn new(inner: $inner) -> Self 
             {   
+                assert!(inner.len() == $length);
                 $name(inner)
             }
         }        
@@ -177,31 +178,35 @@ macro_rules! ndarray {
     (@with_array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         impl<$T> VAdd for $space<$T>
         where
-            $T: Copy + AddAssign<$T>
+            for <'a> $T: Copy + AddAssign<&'a $T>,
+            for <'a> &'a $T: Add<&'a $T, Output=$T>
         {
             type Vector = $name<$T>;
-
+            
             fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
             {
                 for idx in 0..$length {
                     unsafe { 
-                        lhs
-                            .0
-                            .get_unchecked_mut(idx)
-                            .add_assign( rhs.0.get_unchecked(idx).clone() ) 
+                        let l: &mut $T = lhs.0.get_unchecked_mut(idx);
+                        let r: &$T = rhs.0.get_unchecked(idx);
+                        l.add_assign(r) 
                     }
                 }
             }
 
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
             {
-                // use std::mem;
+                use std::mem;
 
-                // let mut buf: Self::Vector = Self::Vector::new( [mem::zeroed(); $length] );
-                
-                let mut buf: Self::Vector = lhs.clone();
-                self.vadd_mut(&mut buf, rhs);
-                buf
+                let mut buf: _ = lhs.0.clone();
+                for idx in 0..$length {
+                    unsafe {
+                        let l: &$T = lhs.0.get_unchecked(idx); 
+                        let r: &$T = rhs.0.get_unchecked(idx); 
+                        *buf.get_unchecked_mut(idx) = l + r
+                    }
+                }
+                Self::Vector::new(buf)
             }
         }
     };
@@ -216,22 +221,16 @@ macro_rules! ndarray {
 
             fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
             {
-                for idx in 0..$length {
-                    unsafe { 
-                        lhs.0.get_unchecked_mut(idx).add_assign( rhs.0.get_unchecked(idx).clone() ) 
-                    }
-                }
+                *lhs = self.vadd(&lhs, rhs);
             }
 
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
             {
-                let mut buf: $inner = Vec::new();
-                buf.reserve_exact($length);
-                for (idx, (l, r)) in lhs.into_iter().zip(rhs).enumerate() {
-                    unsafe {
-                        *buf.get_unchecked_mut(idx) = l + r
-                    }
-                }
+                let buf: $inner = lhs
+                    .into_iter()
+                    .zip(rhs)
+                    .map(|(l,r)| l + r)
+                    .collect();
                 Self::Vector::new(buf)
             }
         }
