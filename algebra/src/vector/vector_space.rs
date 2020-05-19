@@ -22,7 +22,9 @@ pub trait VScale
 
     type Vector;
 
-    fn vscale(&self, vector: &mut Self::Vector, scalar: &Self::Scalar);
+    fn vscale_mut(&self, vector: &mut Self::Vector, scalar: &Self::Scalar);
+    
+    fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector;
 }
 
 
@@ -79,7 +81,7 @@ macro_rules! vscale
 {
     ($vector_space:expr, $vec:expr, $scalar:expr) => {
         {
-            $vector_space.vscale(&mut $vec, $scalar);
+            $vector_space.vscale_mut(&mut $vec, $scalar);
             $vec
         }
     };
@@ -100,7 +102,7 @@ mod tests
                 use super::*;
 
                 #[test]
-                fn test_addition() 
+                fn test_addition_mut() 
                 {
                     let vector_space = <$space>::new();
                     let mut x = <$object>::from([ 3, 0, -1 ]);
@@ -113,7 +115,7 @@ mod tests
                 }
 
                 #[test]
-                fn test_multiplication()
+                fn test_multiplication_mut()
                 {
                     let vector_space = <$space>::new();
                     let mut x = <$object>::from([ 3, 0, -1 ]);
@@ -121,11 +123,11 @@ mod tests
 
                     let exp = <$object>::from([ 6, 0, -2 ]);
                     let test = vscale!(vector_space, x, &c);
-                    assert!( vector_space.eq(&exp, &test) );
+                    assert!( vector_space.eq(&exp, &test), "Expected: {:?}, Got: {:?}", &exp, &test );
                 }
 
                 #[test]
-                fn test_commutative()
+                fn test_commutative_mut()
                 {
                     let vector_space = <$space>::new();
                     let mut x1 = <$object>::from([ 3, 1, 5 ]);
@@ -138,7 +140,7 @@ mod tests
                 }
 
                 #[test]
-                fn test_associative_addition()
+                fn test_associative_addition_mut()
                 {
                     let vector_space = <$space>::new();
                     let mut x1: $object = <$object>::from([ 3, 1, 5 ]);
@@ -152,7 +154,7 @@ mod tests
                 }
 
                 #[test]
-                fn test_additive_ident()
+                fn test_additive_ident_mut()
                 {
                     let vector_space = <$space>::new();
                     let exp: $object = <$object>::from([ 0, 0, 0 ]);
@@ -162,7 +164,7 @@ mod tests
                 }
 
                 #[test]
-                fn test_additive_inverse()
+                fn test_additive_inverse_mut()
                 {
                     let vector_space = <$space>::new();
                     let mut x: $object = <$object>::from([ 3, 1, 5 ]);

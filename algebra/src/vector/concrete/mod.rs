@@ -17,9 +17,10 @@ macro_rules! ndarray {
             #[allow(unused_imports)]
             mod [< _ vector $name With $space $length >] 
             {
-                use std::{marker, ops};
+                use std::{marker, fmt, ops};
                 use marker::PhantomData;
-                use ops::{AddAssign, Add, MulAssign, Index, IndexMut, Neg};
+                use fmt::Debug;
+                use ops::{AddAssign, Add, MulAssign, Mul, Index, IndexMut, Neg};
 
                 use super::{VAdd, VScale, VectorSpace, VPartialEq, VAdditiveInverse, ndarray};
 
@@ -88,6 +89,17 @@ macro_rules! ndarray {
                 &mut self.0[idx]
             }
         }
+
+        impl<$T> Debug for $name<$T>
+        where
+            $inner: Debug
+        {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result
+            {
+                write!(f, "{:?}", self.0)
+            }
+        }
+
     };
 
     (@vectorspace $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
@@ -115,24 +127,6 @@ macro_rules! ndarray {
             fn dimensions(&self) -> usize 
             {
                 $length
-            }
-        }
-
-        impl<$T> VScale for $space<$T>
-        where
-            $T: Copy + MulAssign<$T>
-        {
-            type Vector = $name<$T>;
-
-            type Scalar = $T;
-
-            fn vscale(&self, vector: &mut Self::Vector, scalar: &Self::Scalar)
-            {
-                for idx in 0..$length {
-                    unsafe { 
-                        vector.0.get_unchecked_mut(idx).mul_assign( scalar.clone() ) 
-                    }
-                }
             }
         }
 
@@ -198,12 +192,46 @@ macro_rules! ndarray {
             {
                 use std::mem;
 
-                let mut buf: _ = lhs.0.clone();
+                let mut buf: _ = unsafe { [mem::zeroed(); $length] };
                 for idx in 0..$length {
                     unsafe {
                         let l: &$T = lhs.0.get_unchecked(idx); 
                         let r: &$T = rhs.0.get_unchecked(idx); 
                         *buf.get_unchecked_mut(idx) = l + r
+                    }
+                }
+                Self::Vector::new(buf)
+            }
+        }
+
+        impl<$T> VScale for $space<$T>
+        where
+            for <'a> $T: Copy + MulAssign<&'a $T>,
+            for <'a> &'a $T: Mul<&'a $T, Output=$T>
+        {
+            type Vector = $name<$T>;
+
+            type Scalar = $T;
+
+            fn vscale_mut(&self, vector: &mut Self::Vector, scalar: &Self::Scalar)
+            {
+                for idx in 0..$length {
+                    unsafe { 
+                        let l: &mut $T = vector.0.get_unchecked_mut(idx);
+                        l.mul_assign(scalar) 
+                    }
+                }
+            }
+
+            fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector
+            {
+                use std::mem;
+
+                let mut buf: _ = unsafe { [mem::zeroed(); $length] };
+                for idx in 0..$length {
+                    unsafe {
+                        let l: &$T = vector.0.get_unchecked(idx); 
+                        *buf.get_unchecked_mut(idx) = l * scalar
                     }
                 }
                 Self::Vector::new(buf)
@@ -230,6 +258,31 @@ macro_rules! ndarray {
                     .into_iter()
                     .zip(rhs)
                     .map(|(l,r)| l + r)
+                    .collect();
+                Self::Vector::new(buf)
+            }
+        }
+
+
+        impl<$T> VScale for $space<$T>
+        where
+            for <'a> $T: Copy + MulAssign<&'a $T>,
+            for <'a> &'a $T: Mul<&'a $T, Output=$T>
+        {
+            type Vector = $name<$T>;
+
+            type Scalar = $T;
+
+            fn vscale_mut(&self, vector: &mut Self::Vector, scalar: &Self::Scalar)
+            {
+                *vector = self.vscale(&vector, scalar);
+            }
+
+            fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector
+            {
+                let buf: $inner = vector
+                    .into_iter()
+                    .map(|val| val * scalar)
                     .collect();
                 Self::Vector::new(buf)
             }
