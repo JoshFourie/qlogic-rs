@@ -115,7 +115,7 @@ fn bench_multiplication_reference(bench: &mut Criterion)
 
         group.bench_function("stdvec-reference", |c| {
             let x: Vector<isize> = random();
-            let y: Vector<isize> = random();
+            let y: isize = 125;
 
             c.iter(|| {
                 vector_space.vscale(&x, &y)
@@ -342,17 +342,17 @@ fn bench_multiplication_against_nalgebra(bench: &mut Criterion)
 
 fn bench_additive_inverse_against_nalgebra(bench: &mut Criterion)
 {
-    let mut group: _ = bench.benchmark_group("nalgebra-vector-additive-inverse-group");
+    let mut group: _ = bench.benchmark_group("nalgebra-vector-additive-inverse-reference-group");
 
     // Qlogic: 3.7130 us for 10 000
     {
         let vector_space = Space::new();
 
-        group.bench_function("internal-stdvec-vector-additive-inverse-mut", |c| {
-            let mut x: Vector<isize> = random();
+        group.bench_function("internal-stdvec-vector-additive-inverse-reference", |c| {
+            let x: Vector<isize> = random();
 
             c.iter(|| {
-                vector_space.additive_inv(&mut x);
+                vector_space.additive_inv(&x)
             })
         });
     }
@@ -360,11 +360,11 @@ fn bench_additive_inverse_against_nalgebra(bench: &mut Criterion)
     {
         let vector_space = ArraySpace::new();
 
-        group.bench_function("internal-array-vector-additive-inverse-mut", |c| {
-            let mut x: ArrayVector<isize> = random_array();
+        group.bench_function("internal-array-vector-additive-inverse-reference", |c| {
+            let x: ArrayVector<isize> = random_array();
 
             c.iter(|| {
-                vector_space.additive_inv(&mut x);
+                vector_space.additive_inv(&x)
             })
         });
     }
@@ -376,6 +376,47 @@ fn bench_additive_inverse_against_nalgebra(bench: &mut Criterion)
     
             c.iter(|| {
                 -x
+            })
+        });
+    }
+}
+
+fn bench_additive_inverse_mut_against_nalgebra(bench: &mut Criterion)
+{
+    let mut group: _ = bench.benchmark_group("nalgebra-vector-additive-inverse-mutable-group");
+
+    // Qlogic: 3.7130 us for 10 000
+    {
+        let vector_space = Space::new();
+
+        group.bench_function("internal-stdvec-vector-additive-inverse-mutable", |c| {
+            let mut x: Vector<isize> = random();
+
+            c.iter(|| {
+                vector_space.additive_inv_mut(&mut x)
+            })
+        });
+    }
+
+    {
+        let vector_space = ArraySpace::new();
+
+        group.bench_function("internal-array-vector-additive-inverse-mutable", |c| {
+            let mut x: ArrayVector<isize> = random_array();
+
+            c.iter(|| {
+                vector_space.additive_inv_mut(&mut x)
+            })
+        });
+    }
+
+    // Nalgebra: 4.7408 us for 10 000
+    {
+        group.bench_function("nalgebra-vector-additive-inverse-mutable", |c| {
+            let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(BENCH_ADDITION_TEST_SIZE);
+    
+            c.iter(|| {
+                x = - x.clone()
             })
         });
     }
@@ -393,4 +434,5 @@ criterion_group!(
     bench_multiplication_against_nalgebra,
     bench_multiplication_mut_against_nalgebra,
     bench_additive_inverse_against_nalgebra,
+    bench_additive_inverse_mut_against_nalgebra
 );
