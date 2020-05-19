@@ -11,7 +11,9 @@ pub trait VAdd
 {
     type Vector;
 
-    fn vadd(&self, lhs: &mut Self::Vector, rhs: &Self::Vector);
+    fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector);
+
+    fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector;
 }
 
 pub trait VScale 
@@ -66,7 +68,7 @@ macro_rules! vadd
 {
     ($vector_space:expr, $lhs:expr, $($rhs:expr),+) => {
         {
-            $($vector_space.vadd(&mut $lhs, $rhs);)+
+            $($vector_space.vadd_mut(&mut $lhs, $rhs);)+
             $lhs
         }
     };
@@ -90,7 +92,7 @@ mod tests
 {
     use super::*;
     
-    use crate::{ndarray, ndvec};
+    use crate::ndarray;
 
     macro_rules! test {
         ($name:ident, $object:ty, $space:ty) => {
@@ -187,21 +189,56 @@ mod tests
         };
     }
 
-    ndarray!(3, VectorArray, VectorSpaceArray);
-
-    test!(test_ndarray, VectorArray<isize>, VectorSpaceArray<isize>);
-
-    mod unhygenic_test 
+   
+    mod test_array
     {
-        use std::{marker, ops};
-        use marker::PhantomData;
-        use ops::{AddAssign, MulAssign, Index, IndexMut, Neg};
-
-        use num_traits::{Zero, One};
-
         use super::*;
 
-        ndvec!(@dirty 3, VectorVec, VectorSpaceVec);
+        ndarray! {
+            @vector_space(VectorSpaceArray) {
+                @vector_ident(VectorArray)
+                @length(3)
+                @generic(T)
+                @array([T; 3])
+            }
+        }
+
+        test!(test_ndarray, VectorArray<isize>, VectorSpaceArray<isize>);
+    
+        impl VAdditiveIdent for VectorSpaceArray<isize>
+        {
+            type Output = VectorArray<isize>;
+    
+            fn additive_ident(&self) -> Self::Output
+            {
+                VectorArray::new( [0; 3] )
+            }
+        }
+    
+        impl VMultiplicativeIdent for VectorSpaceArray<isize>
+        {
+            type Output = isize;
+    
+            fn mul_ident(&self) -> Self::Output
+            {
+                1
+            }
+        }
+    }
+
+
+    mod test_vec 
+    {
+        use super::*;
+
+        ndarray! {
+            @vector_space(VectorSpaceVec) {
+                @vector_ident(VectorVec)
+                @length(3)
+                @generic(T)
+                @vec(Vec<T>)
+            }
+        }
 
         test!(test_ndvec, VectorVec<isize>, VectorSpaceVec<isize>);
 
@@ -209,6 +246,26 @@ mod tests
         {
             fn from(array: [isize; 3]) -> Self {
                 Self::from( array.to_vec() )
+            }
+        }
+
+        impl VAdditiveIdent for VectorSpaceVec<isize>
+        {
+            type Output = VectorVec<isize>;
+    
+            fn additive_ident(&self) -> Self::Output
+            {
+                VectorVec::new( vec![0; 3] )
+            }
+        }
+    
+        impl VMultiplicativeIdent for VectorSpaceVec<isize>
+        {
+            type Output = isize;
+    
+            fn mul_ident(&self) -> Self::Output
+            {
+                1
             }
         }
     }

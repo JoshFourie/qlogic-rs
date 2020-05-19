@@ -3,18 +3,21 @@ use criterion::{criterion_group, criterion_main, Criterion};
 use algebra::vector::*;
 use algebra::{ndarray, vadd};
 
-pub const BENCH_ADDITION_TEST_SIZE: usize = 1024;
+pub const BENCH_ADDITION_TEST_SIZE: usize = 1234567;
 
-ndarray!(1024);
+ndarray!{
+    @vector_space(Space) {
+        @vector_ident(Vector)
+        @length(1234567)
+        @generic(T)
+        @vec(Vec<T>)        
+    }
+}
 
-type Vector = Vector1024<isize>;
-
-type Space = VectorSpace1024<isize>;
-
-fn random() -> Vector {
+fn random() -> Vector<isize> {
     use rand::{thread_rng, Rng};
 
-    let mut inner: _ = [0; BENCH_ADDITION_TEST_SIZE];
+    let mut inner: _ = vec![0; BENCH_ADDITION_TEST_SIZE];
     for element in inner.iter_mut() {
         *element = thread_rng().gen()
     }
@@ -27,8 +30,8 @@ fn bench_addition(bench: &mut Criterion)
     let vector_space = Space::new();
 
     bench.bench_function("Vector Addition", |c| {
-        let mut x: Vector = random();
-        let y: Vector = random();
+        let mut x: Vector<isize> = random();
+        let y: Vector<isize> = random();
     
         c.iter(|| {
             vector_space.vadd( &mut x, &y )
@@ -42,7 +45,7 @@ fn bench_multiplication(bench: &mut Criterion)
     let scalar: isize = 123456789;
 
     bench.bench_function("Vector Multiplication", |c| {
-        let mut x: Vector = random();
+        let mut x: Vector<isize> = random();
 
         c.iter(|| {
             vector_space.vscale(&mut x, &scalar);
@@ -59,8 +62,8 @@ fn bench_addition_against_nalgebra(bench: &mut Criterion)
         let vector_space = Space::new();
 
         group.bench_function("Q-Logic Vector Addition", |c| {
-            let mut x: Vector = random();
-            let y: Vector = random();
+            let mut x: Vector<isize> = random();
+            let y: Vector<isize> = random();
 
             c.iter(|| {
                 vector_space.vadd(&mut x, &y);
@@ -91,7 +94,7 @@ fn bench_multiplication_against_nalgebra(bench: &mut Criterion)
         let vector_space = Space::new();
 
         group.bench_function("Q-Logic Vector Multiplication", |c| {
-            let mut x: Vector = random();
+            let mut x: Vector<isize> = random();
 
             c.iter(|| {
                 vector_space.vscale(&mut x, &scalar);
@@ -121,7 +124,7 @@ fn bench_additive_inverse_against_nalgebra(bench: &mut Criterion)
         let vector_space = Space::new();
 
         group.bench_function("Q-Logic Vector Additive Inverse", |c| {
-            let mut x: Vector = random();
+            let mut x: Vector<isize> = random();
 
             c.iter(|| {
                 vector_space.additive_inv(&mut x);
@@ -150,10 +153,10 @@ fn bench_vadd_macro(bench: &mut Criterion)
         let vector_space = Space::new();
 
         group.bench_function("Macro", |c| {
-            let y: Vector = random();
-            let z: Vector = random();
-            let a: Vector = random();
-            let b: Vector = random();
+            let y: Vector<isize> = random();
+            let z: Vector<isize> = random();
+            let a: Vector<isize> = random();
+            let b: Vector<isize> = random();
 
             let x: _ = random();
             c.iter(|| {
@@ -167,12 +170,12 @@ fn bench_vadd_macro(bench: &mut Criterion)
         let vector_space = Space::new();
 
         group.bench_function("Hand-Coded", |c| {
-            let y: Vector = random();
-            let z: Vector = random();
-            let a: Vector = random();
-            let b: Vector = random();
+            let y: Vector<isize> = random();
+            let z: Vector<isize> = random();
+            let a: Vector<isize> = random();
+            let b: Vector<isize> = random();
 
-            let mut x: Vector = random();
+            let mut x: Vector<isize> = random();
             c.iter(|| {
                 vector_space.vadd(&mut x, &y);
                 vector_space.vadd(&mut x, &z);
