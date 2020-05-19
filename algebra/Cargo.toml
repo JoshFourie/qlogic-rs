@@ -25,3 +25,6 @@ rand = "0.7.3"
 name = "algebra_benchmarks"
 path = "benches/lib.rs"
 harness = false
+
+[profile.bench]
+opt-level = 3

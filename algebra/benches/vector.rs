@@ -5,12 +5,13 @@ use algebra::{ndarray, vadd};
 
 pub const BENCH_ADDITION_TEST_SIZE: usize = 1024;
 
+// 416.28n/s using array method...
 ndarray!{
     @vector_space(Space) {
         @vector_ident(Vector)
         @length(1024)
         @generic(T)
-        @with_array(Vec<T>)        
+        @with_vec(Vec<T>)        
     }
 }
 
