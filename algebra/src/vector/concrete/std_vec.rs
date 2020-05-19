@@ -1,7 +1,7 @@
 #[allow(unused_macros)]
 
 #[macro_export]
-macro_rules! ndarray {
+macro_rules! ndvec {
     ($length:tt) => {
         paste::item!{
             ndarray!(
@@ -26,7 +26,7 @@ macro_rules! ndarray {
     
                 use super::*;
 
-                ndarray!(@dirty $length, $name, $space);
+                ndvec!(@dirty $length, $name, $space);
             }
         }
     };
@@ -34,20 +34,20 @@ macro_rules! ndarray {
     (@dirty $length:tt, $name:ident, $space:ident) => {
         paste::item! {
             #[derive(Clone)]
-            pub struct $name<T>([T; $length]);  
+            pub struct $name<T>(Vec<T>);  
 
             impl<T> $name<T>
             {
-                pub fn new(inner: [T; $length]) -> Self 
+                pub fn new(inner: Vec<T>) -> Self 
                 {
                     $name(inner)
                 }
             }
 
-            impl<T> From<[T; $length]> for $name<T>
+            impl<T> From<Vec<T>> for $name<T>
             {
-                fn from(inner: [T; $length]) -> Self {
-                    Self::new( inner )
+                fn from(vec: Vec<T>) -> Self {
+                    Self::new( vec )
                 }
             }
 
@@ -150,7 +150,7 @@ macro_rules! ndarray {
 
                 fn additive_ident(&self) -> Self::Output
                 {
-                    $name::new( [T::zero(); $length] )
+                    $name::new( vec![T::zero(); $length] )
                 }
             }
 
