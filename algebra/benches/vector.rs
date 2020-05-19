@@ -10,7 +10,7 @@ ndarray!{
         @vector_ident(Vector)
         @length(1234567)
         @generic(T)
-        @vec(Vec<T>)        
+        @with_vec(Vec<T>)        
     }
 }
 
@@ -34,7 +34,7 @@ fn bench_addition(bench: &mut Criterion)
         let y: Vector<isize> = random();
     
         c.iter(|| {
-            vector_space.vadd( &mut x, &y )
+            vector_space.vadd_mut( &mut x, &y )
         })
     });
 }
@@ -66,7 +66,7 @@ fn bench_addition_against_nalgebra(bench: &mut Criterion)
             let y: Vector<isize> = random();
 
             c.iter(|| {
-                vector_space.vadd(&mut x, &y);
+                vector_space.vadd_mut(&mut x, &y);
             })
         });
     }
@@ -177,10 +177,10 @@ fn bench_vadd_macro(bench: &mut Criterion)
 
             let mut x: Vector<isize> = random();
             c.iter(|| {
-                vector_space.vadd(&mut x, &y);
-                vector_space.vadd(&mut x, &z);
-                vector_space.vadd(&mut x, &a);
-                vector_space.vadd(&mut x, &b);
+                vector_space.vadd_mut(&mut x, &y);
+                vector_space.vadd_mut(&mut x, &z);
+                vector_space.vadd_mut(&mut x, &a);
+                vector_space.vadd_mut(&mut x, &b);
             })
         });
     }

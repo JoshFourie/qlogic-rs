@@ -198,8 +198,8 @@ mod tests
             @vector_space(VectorSpaceArray) {
                 @vector_ident(VectorArray)
                 @length(3)
-                @generic(T)
-                @array([T; 3])
+                @generic(U)
+                @with_array([U; 3])
             }
         }
 
@@ -236,7 +236,7 @@ mod tests
                 @vector_ident(VectorVec)
                 @length(3)
                 @generic(T)
-                @vec(Vec<T>)
+                @with_vec(Vec<T>)
             }
         }
 

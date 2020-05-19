@@ -6,9 +6,9 @@ macro_rules! ndarray {
         @vector_space($space:ident) {
             @vector_ident($name:ident)
             @length($length:expr)
-            @generic($generic:ty)
-            $(@array($array:ty))?
-            $(@vec($vector:ty))?
+            @generic($generic:ident)
+            $(@with_array($array:ty))?
+            $(@with_vec($vector:ty))?
         }
     ) => {
         paste::item! {
@@ -23,23 +23,23 @@ macro_rules! ndarray {
                 use super::{VAdd, VScale, VectorSpace, VPartialEq, VAdditiveInverse, ndarray};
 
                 $(
-                    ndarray!(@implementation $length, $name, $space, $array);
-                    ndarray!(@array $length, $name, $space, $array);
+                    ndarray!(@implementation $length, $name, $space, $array, $generic);
+                    ndarray!(@array $length, $name, $space, $array, $generic);
                 )?
 
                 $(
-                    ndarray!(@implementation $length, $name, $space, $vector);
-                    ndarray!(@vec $length, $name, $space, $vector);
+                    ndarray!(@implementation $length, $name, $space, $vector, $generic);
+                    ndarray!(@vec $length, $name, $space, $vector, $generic);
                 )?
             }
         }
     };
 
-    (@implementation $length:expr, $name:ident, $space:ident, $inner:ty) => {
+    (@implementation $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         #[derive(Clone)]
-        pub struct $name<T>($inner);  
+        pub struct $name<$T>($inner);  
 
-        impl<T> $name<T>
+        impl<$T> $name<$T>
         {
             pub fn new(inner: $inner) -> Self 
             {
@@ -47,17 +47,17 @@ macro_rules! ndarray {
             }
         }
 
-        impl<T> From<$inner> for $name<T>
+        impl<$T> From<$inner> for $name<$T>
         {
             fn from(inner: $inner) -> Self {
                 Self::new( inner )
             }
         }
 
-        impl<'a,T> IntoIterator for &'a $name<T>
+        impl<'a,$T> IntoIterator for &'a $name<$T>
         {
-            type Item = &'a T;
-            type IntoIter = std::slice::Iter<'a,T>;
+            type Item = &'a $T;
+            type IntoIter = std::slice::Iter<'a,$T>;
 
             fn into_iter(self) -> Self::IntoIter
             {
@@ -65,9 +65,9 @@ macro_rules! ndarray {
             }
         }
 
-        impl<T> Index<usize> for $name<T>
+        impl<$T> Index<usize> for $name<$T>
         {
-            type Output = T;
+            type Output = $T;
 
             fn index(&self, idx: usize) -> &Self::Output 
             {
@@ -75,7 +75,7 @@ macro_rules! ndarray {
             }
         }
 
-        impl<T> IndexMut<usize> for $name<T>
+        impl<$T> IndexMut<usize> for $name<$T>
         {
             fn index_mut(&mut self, idx: usize) -> &mut Self::Output 
             {
@@ -83,11 +83,11 @@ macro_rules! ndarray {
             }
         }
 
-        pub struct $space<T> {
-            _phantom: PhantomData<T>
+        pub struct $space<$T> {
+            _phantom: PhantomData<$T>
         }
 
-        impl<T> $space<T>
+        impl<$T> $space<$T>
         {
             #[inline]
             pub fn new() -> Self 
@@ -98,11 +98,11 @@ macro_rules! ndarray {
             }
         }
 
-        impl<T> VectorSpace for $space<T>
+        impl<$T> VectorSpace for $space<$T>
         {
-            type Scalar = T;
+            type Scalar = $T;
 
-            type Vector = $space<T>;
+            type Vector = $space<$T>;
 
             fn dimensions(&self) -> usize 
             {
@@ -110,13 +110,13 @@ macro_rules! ndarray {
             }
         }
 
-        impl<T> VScale for $space<T>
+        impl<$T> VScale for $space<$T>
         where
-            T: Copy + MulAssign<T>
+            $T: Copy + MulAssign<$T>
         {
-            type Vector = $name<T>;
+            type Vector = $name<$T>;
 
-            type Scalar = T;
+            type Scalar = $T;
 
             fn vscale(&self, vector: &mut Self::Vector, scalar: &Self::Scalar)
             {
@@ -128,28 +128,28 @@ macro_rules! ndarray {
             }
         }
 
-        impl<T> VAdditiveInverse for $space<T>
+        impl<$T> VAdditiveInverse for $space<$T>
         where
-            for <'a> &'a T: Neg<Output=T>
+            for <'a> &'a $T: Neg<Output=$T>
         {
-            type Vector = $name<T>;
+            type Vector = $name<$T>;
 
             fn additive_inv(&self, vector: &mut Self::Vector)
             {
                 for idx in 0..$length {
                     unsafe { 
-                        let val: &T = vector.0.get_unchecked(idx);
+                        let val: &$T = vector.0.get_unchecked(idx);
                         *vector.0.get_unchecked_mut(idx) = -val; 
                     }
                 }
             }
         }
 
-        impl<T> VPartialEq for $space<T>
+        impl<$T> VPartialEq for $space<$T>
         where
-            T: PartialEq
+            $T: PartialEq
         {
-            type Vector = $name<T>;
+            type Vector = $name<$T>;
 
             fn eq(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> bool
             {
@@ -166,12 +166,12 @@ macro_rules! ndarray {
         }
     };
 
-    (@array $length:expr, $name:ident, $space:ident, $inner:ty) => {
-        impl<T> VAdd for $space<T>
+    (@array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+        impl<$T> VAdd for $space<$T>
         where
-            T: Copy + AddAssign<T>
+            $T: Copy + AddAssign<$T>
         {
-            type Vector = $name<T>;
+            type Vector = $name<$T>;
 
             fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
             {
@@ -189,12 +189,12 @@ macro_rules! ndarray {
         }
     };
 
-    (@vec $length:expr, $name:ident, $space:ident, $inner:ty) => {
-        impl<T> VAdd for $space<T>
+    (@vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+        impl<$T> VAdd for $space<$T>
         where
-            T: Copy + AddAssign<T>
+            $T: Copy + AddAssign<$T>
         {
-            type Vector = $name<T>;
+            type Vector = $name<$T>;
 
             fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
             {
