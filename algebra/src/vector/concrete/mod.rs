@@ -17,7 +17,8 @@ macro_rules! ndarray {
             #[allow(unused_imports)]
             mod [< _ vector $name With $space $length >] 
             {
-                use std::{marker, fmt, ops};
+                use std::{marker, fmt, ops, iter};
+                use iter::FromIterator;
                 use marker::PhantomData;
                 use fmt::Debug;
                 use ops::{AddAssign, Add, MulAssign, Mul, Index, IndexMut, Neg};
@@ -69,6 +70,36 @@ macro_rules! ndarray {
             fn into_iter(self) -> Self::IntoIter
             {
                 self.0.iter()
+            }
+        }
+
+        impl<$T> FromIterator<$T> for $name<$T>
+        where
+            $inner: FromIterator<$T>
+        {
+            fn from_iter<I>(iterator: I) -> Self
+            where
+                I: IntoIterator<Item=$T>
+            {
+                let buf: $inner = iterator
+                    .into_iter()
+                    .collect();
+                Self::new(buf)
+            }
+        }
+
+        impl<'a,$T> FromIterator<&'a $T> for $name<$T>
+        where
+            $inner: FromIterator<&'a $T>
+        {
+            fn from_iter<I>(iterator: I) -> Self
+            where
+                I: IntoIterator<Item=&'a $T>
+            {
+                let buf: $inner = iterator
+                    .into_iter()
+                    .collect();
+                Self::new(buf)
             }
         }
 
@@ -162,12 +193,11 @@ macro_rules! ndarray {
             
             fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
             {
-                for (idx, r) in rhs.into_iter().enumerate() {
-                    unsafe { 
-                        let l: &mut $T = lhs.0.get_unchecked_mut(idx);
-                        l.add_assign(r) 
-                    }
-                }
+                lhs
+                    .0
+                    .iter_mut()
+                    .zip(rhs)
+                    .for_each(|(l,r)| l.add_assign(r));
             }
 
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
@@ -189,12 +219,11 @@ macro_rules! ndarray {
 
             fn vscale_mut(&self, vector: &mut Self::Vector, scalar: &Self::Scalar)
             {
-                for idx in 0..$length {
-                    unsafe { 
-                        let l: &mut $T = vector.0.get_unchecked_mut(idx);
-                        l.mul_assign(scalar) 
-                    }
-                }
+                vector
+                    .0
+                    .iter_mut()
+                    .for_each(|val| val.mul_assign(scalar));
+
             }
 
             fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector
@@ -214,12 +243,10 @@ macro_rules! ndarray {
 
             fn additive_inv_mut(&self, vector: &mut Self::Vector)
             {
-                for idx in 0..$length {
-                    unsafe { 
-                        let val: &$T = vector.0.get_unchecked(idx);
-                        *vector.0.get_unchecked_mut(idx) = -val; 
-                    }
-                }
+                vector
+                    .0
+                    .iter_mut()
+                    .for_each(|val| *val = (*val).neg() );
             }
 
             fn additive_inv(&self, vector: &Self::Vector) -> Self::Vector
@@ -234,24 +261,27 @@ macro_rules! ndarray {
     (@with_vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         impl<$T> VAdd for $space<$T>
         where
-            $T: Copy + AddAssign<$T>,
+            for <'a> $T: Copy + AddAssign<&'a $T>,
             for <'a> &'a $T: Add<&'a $T,Output=T>
         {
             type Vector = $name<$T>;
 
             fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
             {
-                *lhs = self.vadd(&lhs, rhs);
+                lhs
+                    .0
+                    .iter_mut()
+                    .zip(rhs)
+                    .for_each(|(l, r)| l.add_assign(r));
             }
 
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
             {
-                let buf: $inner = lhs
+                lhs
                     .into_iter()
                     .zip(rhs)
                     .map(|(l,r)| l + r)
-                    .collect();
-                Self::Vector::new(buf)
+                    .collect()
             }
         }
 
@@ -267,37 +297,42 @@ macro_rules! ndarray {
 
             fn vscale_mut(&self, vector: &mut Self::Vector, scalar: &Self::Scalar)
             {
-                *vector = self.vscale(&vector, scalar);
+                vector
+                    .0
+                    .iter_mut()
+                    .for_each(|val| val.mul_assign(scalar));
             }
 
             fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector
             {
-                let buf: $inner = vector
+                vector
                     .into_iter()
                     .map(|val| val * scalar)
-                    .collect();
-                Self::Vector::new(buf)
+                    .collect()
             }
         }
 
         impl<$T> VAdditiveInverse for $space<$T>
         where
+            $T: Copy,
             for <'a> &'a $T: Neg<Output=$T>
         {
             type Vector = $name<$T>;
 
             fn additive_inv_mut(&self, vector: &mut Self::Vector)
             {
-                *vector = self.additive_inv(&vector);
+                vector
+                    .0
+                    .iter_mut()
+                    .for_each(|val| *val = (*val).neg() );
             }
 
             fn additive_inv(&self, vector: &Self::Vector) -> Self::Vector
             {
-                let buf: $inner = vector
+                vector
                     .into_iter()
                     .map(|val| -val)
-                    .collect();
-                Self::Vector::new(buf)
+                    .collect()
             }
         }
     };
