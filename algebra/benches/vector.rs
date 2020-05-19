@@ -1,13 +1,14 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 
 use algebra::vector::*;
-use algebra::{ndvector, vadd};
+use algebra::{ndarray, vadd};
 
 pub const BENCH_ADDITION_TEST_SIZE: usize = 1024;
 
-ndvector!(1024);
+ndarray!(1024);
 
 type Vector = Vector1024<isize>;
+
 type Space = VectorSpace1024<isize>;
 
 fn random() -> Vector {
@@ -40,7 +41,7 @@ fn bench_multiplication(bench: &mut Criterion)
     let vector_space = Space::new();
     let scalar: isize = 123456789;
 
-    bench.bench_function("Q-Logic Vector Multiplication", |c| {
+    bench.bench_function("Vector Multiplication", |c| {
         let mut x: Vector = random();
 
         c.iter(|| {
@@ -110,6 +111,36 @@ fn bench_multiplication_against_nalgebra(bench: &mut Criterion)
     }
 }
 
+
+fn bench_additive_inverse_against_nalgebra(bench: &mut Criterion)
+{
+    let mut group: _ = bench.benchmark_group("Nalgebra Vector Additive Inverse Group");
+
+    // Qlogic: 3.7130 us for 10 000
+    {
+        let vector_space = Space::new();
+
+        group.bench_function("Q-Logic Vector Additive Inverse", |c| {
+            let mut x: Vector = random();
+
+            c.iter(|| {
+                vector_space.additive_inv(&mut x);
+            })
+        });
+    }
+
+    // Nalgebra: 4.7408 us for 10 000
+    {
+        group.bench_function("Nalgebra Vector Additive Inverse", |c| {
+            let ref x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(BENCH_ADDITION_TEST_SIZE);
+    
+            c.iter(|| {
+                -x
+            })
+        });
+    }
+}
+
 fn bench_vadd_macro(bench: &mut Criterion)
 {
     let mut group: _ = bench.benchmark_group("Vector Addition Macro");
@@ -158,7 +189,8 @@ criterion_group!(
     bench_addition,
     bench_vadd_macro,
     bench_addition_against_nalgebra,
-    bench_multiplication_against_nalgebra
+    bench_multiplication_against_nalgebra,
+    bench_additive_inverse_against_nalgebra
 );
 
 criterion_main!(vector_benches);

@@ -1,8 +1,7 @@
 #[allow(unused_macros)]
 
 #[macro_export]
-macro_rules! ndvector {
-
+macro_rules! ndarray {
     ($length:tt) => {
         paste::item! {
             pub use [< _ vector $length >]::{[< Vector $length >], [< VectorSpace $length >]};
@@ -11,12 +10,14 @@ macro_rules! ndvector {
             {
                 use std::{marker, ops};
                 use marker::PhantomData;
-                use ops::{AddAssign, MulAssign, Index, IndexMut};
+                use ops::{AddAssign, MulAssign, Index, IndexMut, Neg};
+
+                use num_traits::{Zero, One};
 
                 use super::*;
 
                 #[derive(Clone)]
-                pub struct [< Vector $length >]<T>(pub [T; $length]);  
+                pub struct [< Vector $length >]<T>([T; $length]);  
 
                 impl<T> [< Vector $length >]<T>
                 {
@@ -112,6 +113,47 @@ macro_rules! ndvector {
                         for idx in 0..$length {
                             unsafe { 
                                 vector.0.get_unchecked_mut(idx).mul_assign( scalar.clone() ) 
+                            }
+                        }
+                    }
+                }
+
+                impl<T> VAdditiveIdent for [< VectorSpace $length >]<T>
+                where
+                    T: Copy + Zero
+                {
+                    type Output = [< Vector $length >]<T>;
+
+                    fn additive_ident(&self) -> Self::Output
+                    {
+                        [< Vector $length >]::new( [T::zero(); $length] )
+                    }
+                }
+
+                impl<T> VMultiplicativeIdent for [< VectorSpace $length >]<T>
+                where
+                    T: One
+                {
+                    type Output = T;
+
+                    fn mul_ident(&self) -> Self::Output
+                    {
+                        T::one()
+                    }
+                }
+
+                impl<T> VAdditiveInverse for [< VectorSpace $length >]<T>
+                where
+                    for <'a> &'a T: Neg<Output=T>
+                {
+                    type Vector = [< Vector $length >]<T>;
+
+                    fn additive_inv(&self, vector: &mut Self::Vector)
+                    {
+                        for idx in 0..$length {
+                            unsafe { 
+                                let val: &T = vector.0.get_unchecked(idx);
+                                *vector.0.get_unchecked_mut(idx) = -val; 
                             }
                         }
                     }

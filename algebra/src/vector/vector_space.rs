@@ -49,9 +49,7 @@ pub trait VAdditiveInverse
 {
     type Vector;
 
-    type Output;
-
-    fn additive_inv(&self, vector: &Self::Vector) -> Self::Output;
+    fn additive_inv(&self, vector: &mut Self::Vector);
 }
 
 
@@ -92,9 +90,9 @@ mod tests
 {
     use super::*;
     
-    use crate::ndvector;
+    use crate::ndarray;
 
-    ndvector!(3);
+    ndarray!(3);
 
     #[test]
     fn test_addition() 
@@ -148,26 +146,26 @@ mod tests
         assert!( vector_space.eq(&lhs, &rhs) );
     }
 
-    // #[test]
-    // fn test_additive_ident()
-    // {
-    //     let vector_space = VectorSpace3;
-    //     let exp = Vector3::new([ 0, 0, 0 ]);
+    #[test]
+    fn test_additive_ident()
+    {
+        let vector_space = VectorSpace3::new();
+        let exp: Vector3<isize> = Vector3::new([ 0, 0, 0 ]);
 
-    //     let test = vector_space.additive_ident();
-    //     assert_eq!(test, exp);
-    // }
+        let test: Vector3<isize> = vector_space.additive_ident();
+        assert!( vector_space.eq(&exp, &test) );
+    }
 
-    // #[test]
-    // fn test_additive_inverse()
-    // {
-    //     let vector_space = VectorSpace3;
-    //     let x: Vec<isize> = Vector3::new([ 3, 1, 5 ]);
-    //     let exp: Vec<isize> = Vector3::new([ -3, -1, -5 ]);
+    #[test]
+    fn test_additive_inverse()
+    {
+        let vector_space = VectorSpace3::new();
+        let mut x: Vector3<isize> = Vector3::new([ 3, 1, 5 ]);
+        let exp: Vector3<isize> = Vector3::new([ -3, -1, -5 ]);
         
-    //     let test: Vec<isize> = vector_space.additive_inv(&x);
-    //     assert_eq!(test, exp);
-    // }
+        vector_space.additive_inv(&mut x);
+        assert!( vector_space.eq(&exp, &x) );
+    }
 
     #[test]
     fn test_vadd() 
