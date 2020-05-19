@@ -179,10 +179,9 @@ macro_rules! ndarray {
             
             fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
             {
-                for idx in 0..$length {
+                for (idx, r) in rhs.into_iter().enumerate() {
                     unsafe { 
                         let l: &mut $T = lhs.0.get_unchecked_mut(idx);
-                        let r: &$T = rhs.0.get_unchecked(idx);
                         l.add_assign(r) 
                     }
                 }
@@ -190,17 +189,9 @@ macro_rules! ndarray {
 
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
             {
-                use std::mem;
-
-                let mut buf: _ = unsafe { [mem::zeroed(); $length] };
-                for idx in 0..$length {
-                    unsafe {
-                        let l: &$T = lhs.0.get_unchecked(idx); 
-                        let r: &$T = rhs.0.get_unchecked(idx); 
-                        *buf.get_unchecked_mut(idx) = l + r
-                    }
-                }
-                Self::Vector::new(buf)
+                let mut buf: _ = lhs.clone();
+                self.vadd_mut(&mut buf, rhs);
+                buf
             }
         }
 
@@ -225,16 +216,9 @@ macro_rules! ndarray {
 
             fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector
             {
-                use std::mem;
-
-                let mut buf: _ = unsafe { [mem::zeroed(); $length] };
-                for idx in 0..$length {
-                    unsafe {
-                        let l: &$T = vector.0.get_unchecked(idx); 
-                        *buf.get_unchecked_mut(idx) = l * scalar
-                    }
-                }
-                Self::Vector::new(buf)
+                let mut buf: _ = vector.clone();
+                self.vscale_mut(&mut buf, scalar);
+                buf
             }
         }
     };
