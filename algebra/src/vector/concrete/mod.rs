@@ -130,23 +130,6 @@ macro_rules! ndarray {
             }
         }
 
-        impl<$T> VAdditiveInverse for $space<$T>
-        where
-            for <'a> &'a $T: Neg<Output=$T>
-        {
-            type Vector = $name<$T>;
-
-            fn additive_inv(&self, vector: &mut Self::Vector)
-            {
-                for idx in 0..$length {
-                    unsafe { 
-                        let val: &$T = vector.0.get_unchecked(idx);
-                        *vector.0.get_unchecked_mut(idx) = -val; 
-                    }
-                }
-            }
-        }
-
         impl<$T> VPartialEq for $space<$T>
         where
             $T: PartialEq
@@ -189,7 +172,7 @@ macro_rules! ndarray {
 
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
             {
-                let mut buf: _ = lhs.clone();
+                let mut buf: Self::Vector = lhs.clone();
                 self.vadd_mut(&mut buf, rhs);
                 buf
             }
@@ -216,8 +199,33 @@ macro_rules! ndarray {
 
             fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector
             {
-                let mut buf: _ = vector.clone();
+                let mut buf: Self::Vector = vector.clone();
                 self.vscale_mut(&mut buf, scalar);
+                buf
+            }
+        }
+
+        impl<$T> VAdditiveInverse for $space<$T>
+        where
+            $T: Copy,
+            for <'a> &'a $T: Neg<Output=$T>
+        {
+            type Vector = $name<$T>;
+
+            fn additive_inv_mut(&self, vector: &mut Self::Vector)
+            {
+                for idx in 0..$length {
+                    unsafe { 
+                        let val: &$T = vector.0.get_unchecked(idx);
+                        *vector.0.get_unchecked_mut(idx) = -val; 
+                    }
+                }
+            }
+
+            fn additive_inv(&self, vector: &Self::Vector) -> Self::Vector
+            {
+                let mut buf: Self::Vector = vector.clone();
+                self.additive_inv_mut(&mut buf);
                 buf
             }
         }
@@ -267,6 +275,27 @@ macro_rules! ndarray {
                 let buf: $inner = vector
                     .into_iter()
                     .map(|val| val * scalar)
+                    .collect();
+                Self::Vector::new(buf)
+            }
+        }
+
+        impl<$T> VAdditiveInverse for $space<$T>
+        where
+            for <'a> &'a $T: Neg<Output=$T>
+        {
+            type Vector = $name<$T>;
+
+            fn additive_inv_mut(&self, vector: &mut Self::Vector)
+            {
+                *vector = self.additive_inv(&vector);
+            }
+
+            fn additive_inv(&self, vector: &Self::Vector) -> Self::Vector
+            {
+                let buf: $inner = vector
+                    .into_iter()
+                    .map(|val| -val)
                     .collect();
                 Self::Vector::new(buf)
             }

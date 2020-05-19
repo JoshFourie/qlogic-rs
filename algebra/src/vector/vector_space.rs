@@ -53,7 +53,9 @@ pub trait VAdditiveInverse
 {
     type Vector;
 
-    fn additive_inv(&self, vector: &mut Self::Vector);
+    fn additive_inv_mut(&self, vector: &mut Self::Vector);
+
+    fn additive_inv(&self, vector: &Self::Vector) -> Self::Vector;
 }
 
 
@@ -170,7 +172,7 @@ mod tests
                     let mut x: $object = <$object>::from([ 3, 1, 5 ]);
                     let exp: $object = <$object>::from([ -3, -1, -5 ]);
                     
-                    vector_space.additive_inv(&mut x);
+                    vector_space.additive_inv_mut(&mut x);
                     assert!( vector_space.eq(&exp, &x) );
                 }
 
