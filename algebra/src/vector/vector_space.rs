@@ -171,7 +171,7 @@ mod tests
                     let vector_space = <$space>::new();
                     let mut x: $object = <$object>::from([ 3, 1, 5 ]);
                     let exp: $object = <$object>::from([ -3, -1, -5 ]);
-                    
+                        
                     vector_space.additive_inv_mut(&mut x);
                     assert!( vector_space.eq(&exp, &x) );
                 }

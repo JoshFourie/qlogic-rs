@@ -37,8 +37,12 @@ __pycache__/
 /src/libcore/unicode/SpecialCasing.txt
 /src/libcore/unicode/UnicodeData.txt
 /stage[0-9]+/
-/target
-target/
+
+# /target
+!target
+target/*
+!target/criterion
+
 /test/
 /tmp/
 tags
