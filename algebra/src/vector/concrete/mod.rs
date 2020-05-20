@@ -182,7 +182,6 @@ macro_rules! ndarray {
         }
     };
 
-    /********************* VAdd *******************************/
     (@with_array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         impl<$T> VAdd for $space<$T>
         where
