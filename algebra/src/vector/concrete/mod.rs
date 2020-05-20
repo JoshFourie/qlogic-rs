@@ -25,11 +25,13 @@ macro_rules! ndarray {
 
                 use super::{VAdd, VScale, VectorSpace, VPartialEq, VAdditiveInverse, ndarray};
 
+
                 $(
                     ndarray!(@vector $length, $name, $array, $generic);
                     ndarray!(@vectorspace $length, $name, $space, $array, $generic);
 
                     ndarray!(@with_array $length, $name, $space, $array, $generic);
+                    ndarray!(@iterable_common $length, $name, $space, $array, $generic);
                 )?
 
                 $(
@@ -37,6 +39,8 @@ macro_rules! ndarray {
                     ndarray!(@vectorspace $length, $name, $space, $vector, $generic);
 
                     ndarray!(@with_vec $length, $name, $space, $vector, $generic);
+                    ndarray!(@iterable_common $length, $name, $space, $vector, $generic);
+                    ndarray!(@iterable_collectable $length, $name, $space, $vector, $generic);
                 )?
             }
         }
@@ -67,39 +71,10 @@ macro_rules! ndarray {
             type Item = &'a $T;
             type IntoIter = std::slice::Iter<'a,$T>;
 
+            #[inline]
             fn into_iter(self) -> Self::IntoIter
             {
                 self.0.iter()
-            }
-        }
-
-        impl<$T> FromIterator<$T> for $name<$T>
-        where
-            $inner: FromIterator<$T>
-        {
-            fn from_iter<I>(iterator: I) -> Self
-            where
-                I: IntoIterator<Item=$T>
-            {
-                let buf: $inner = iterator
-                    .into_iter()
-                    .collect();
-                Self::new(buf)
-            }
-        }
-
-        impl<'a,$T> FromIterator<&'a $T> for $name<$T>
-        where
-            $inner: FromIterator<&'a $T>
-        {
-            fn from_iter<I>(iterator: I) -> Self
-            where
-                I: IntoIterator<Item=&'a $T>
-            {
-                let buf: $inner = iterator
-                    .into_iter()
-                    .collect();
-                Self::new(buf)
             }
         }
 
@@ -182,22 +157,101 @@ macro_rules! ndarray {
         }
     };
 
+    (@iterable_common $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+        impl<$T> $name<$T>
+        {
+            #[inline]
+            fn for_each<F>(&mut self, closure: F)
+            where 
+                F: Fn(&mut $T)
+            {
+                self
+                    .0
+                    .iter_mut()
+                    .for_each(|val| closure(val) );
+            }
+
+            #[inline]
+            fn for_each_with<F>(&mut self, other: &Self, closure: F)
+            where 
+                F: Fn(&mut $T, &$T)
+            {
+                self
+                    .0
+                    .iter_mut()
+                    .zip(other)
+                    .for_each(|(l, r)| closure(l, r) );
+            }
+        }
+    };
+
+    (@iterable_collectable $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+        impl<$T> $name<$T>
+        {
+            #[inline]
+            fn map<F>(&self, closure: F) -> Self
+            where 
+                F: Fn(&$T) -> $T,
+            {
+                self
+                    .into_iter()
+                    .map(|val| closure(val) )
+                    .collect()
+            }
+
+            #[inline]
+            fn map_with<F>(&self, other: &Self, closure: F) -> Self
+            where 
+                F: Fn(&$T, &$T) -> $T
+            {
+                self
+                    .into_iter()
+                    .zip(other)
+                    .map(|(l,r)| closure(l,r) )
+                    .collect()
+            }
+        }
+
+        impl<$T> FromIterator<$T> for $name<$T>
+        {
+            fn from_iter<I>(iterator: I) -> Self
+            where
+                I: IntoIterator<Item=$T>
+            {
+                let buf: $inner = iterator
+                    .into_iter()
+                    .collect();
+                Self::new(buf)
+            }
+        }
+
+        impl<'a,$T> FromIterator<&'a $T> for $name<$T>
+        where
+            $inner: FromIterator<&'a $T>
+        {
+            fn from_iter<I>(iterator: I) -> Self
+            where
+                I: IntoIterator<Item=&'a $T>
+            {
+                let buf: $inner = iterator
+                    .into_iter()
+                    .collect();
+                Self::new(buf)
+            }
+        }
+    };
+
     /********************* VAdd *******************************/
     (@with_array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         impl<$T> VAdd for $space<$T>
         where
             for <'a> $T: Copy + AddAssign<&'a $T>,
-            for <'a> &'a $T: Add<&'a $T, Output=$T>
         {
             type Vector = $name<$T>;
             
             fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
             {
-                lhs
-                    .0
-                    .iter_mut()
-                    .zip(rhs)
-                    .for_each(|(l,r)| l.add_assign(r));
+                lhs.for_each_with(rhs, |l, r| l.add_assign(r));
             }
 
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
@@ -211,7 +265,6 @@ macro_rules! ndarray {
         impl<$T> VScale for $space<$T>
         where
             for <'a> $T: Copy + MulAssign<&'a $T>,
-            for <'a> &'a $T: Mul<&'a $T, Output=$T>
         {
             type Vector = $name<$T>;
 
@@ -219,11 +272,7 @@ macro_rules! ndarray {
 
             fn vscale_mut(&self, vector: &mut Self::Vector, scalar: &Self::Scalar)
             {
-                vector
-                    .0
-                    .iter_mut()
-                    .for_each(|val| val.mul_assign(scalar));
-
+                vector.for_each(|val| val.mul_assign(scalar));
             }
 
             fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector
@@ -243,10 +292,7 @@ macro_rules! ndarray {
 
             fn additive_inv_mut(&self, vector: &mut Self::Vector)
             {
-                vector
-                    .0
-                    .iter_mut()
-                    .for_each(|val| *val = (*val).neg() );
+                vector.for_each(|val| *val = (*val).neg() );
             }
 
             fn additive_inv(&self, vector: &Self::Vector) -> Self::Vector
@@ -268,20 +314,12 @@ macro_rules! ndarray {
 
             fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
             {
-                lhs
-                    .0
-                    .iter_mut()
-                    .zip(rhs)
-                    .for_each(|(l, r)| l.add_assign(r));
+                lhs.for_each_with(rhs, |l, r| l.add_assign(r));
             }
 
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
             {
-                lhs
-                    .into_iter()
-                    .zip(rhs)
-                    .map(|(l,r)| l + r)
-                    .collect()
+                lhs.map_with(rhs, |l,r| l.add(r))
             }
         }
 
@@ -297,18 +335,12 @@ macro_rules! ndarray {
 
             fn vscale_mut(&self, vector: &mut Self::Vector, scalar: &Self::Scalar)
             {
-                vector
-                    .0
-                    .iter_mut()
-                    .for_each(|val| val.mul_assign(scalar));
+                vector.for_each(|val| val.mul_assign(scalar));
             }
 
             fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector
             {
-                vector
-                    .into_iter()
-                    .map(|val| val * scalar)
-                    .collect()
+                vector.map(|val| val.mul(scalar))
             }
         }
 
@@ -321,18 +353,12 @@ macro_rules! ndarray {
 
             fn additive_inv_mut(&self, vector: &mut Self::Vector)
             {
-                vector
-                    .0
-                    .iter_mut()
-                    .for_each(|val| *val = (*val).neg() );
+                vector.for_each(|val| *val = (*val).neg() );
             }
 
             fn additive_inv(&self, vector: &Self::Vector) -> Self::Vector
             {
-                vector
-                    .into_iter()
-                    .map(|val| -val)
-                    .collect()
+                vector.map(|val| -val)
             }
         }
     };
