@@ -50,12 +50,12 @@ macro_rules! bench_vectors {
                 
                 fn bench_addition_reference(bench: &mut Criterion) 
                 {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "internal-vector-addition-reference-small-group"));
+                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-vector-addition-reference"));
                 
                     {
                         let vector_space = Space::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "stdvec-reference"), |c| {
+                        group.bench_function("stdvec", |c| {
                             let x: Vector<isize> = random();
                             let y: Vector<isize> = random();
                 
@@ -68,7 +68,7 @@ macro_rules! bench_vectors {
                     {
                         let vector_space = ArraySpace::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "array-reference"), |c| {
+                        group.bench_function("array", |c| {
                             let x: ArrayVector<isize> = random_array();
                             let y: ArrayVector<isize> = random_array();
                 
@@ -81,12 +81,12 @@ macro_rules! bench_vectors {
                 
                 fn bench_addition_mutable(bench: &mut Criterion) 
                 {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "internal-vector-addition-mutable-small-group"));
+                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-vector-addition-mutable"));
                 
                     {
                         let vector_space = Space::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "stdvec-mutable"), |c| {
+                        group.bench_function("stdvec", |c| {
                             let mut x: Vector<isize> = random();
                             let y: Vector<isize> = random();
                 
@@ -99,7 +99,7 @@ macro_rules! bench_vectors {
                     {
                         let vector_space = ArraySpace::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "array-mutable"), |c| {
+                        group.bench_function("array", |c| {
                             let mut x: ArrayVector<isize> = random_array();
                             let y: ArrayVector<isize> = random_array();
                 
@@ -112,12 +112,12 @@ macro_rules! bench_vectors {
                 
                 fn bench_multiplication_reference(bench: &mut Criterion) 
                 {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "internal-vector-multiplication-reference-small-group"));
+                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-vector-multiplication-reference"));
                 
                     {
                         let vector_space = Space::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "stdvec-reference"), |c| {
+                        group.bench_function("stdvec", |c| {
                             let x: Vector<isize> = random();
                             let y: isize = 125;
                 
@@ -130,7 +130,7 @@ macro_rules! bench_vectors {
                     {
                         let vector_space = ArraySpace::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "array-reference"), |c| {
+                        group.bench_function("array", |c| {
                             let x: ArrayVector<isize> = random_array();
                             let y: isize = 125;
                 
@@ -143,12 +143,12 @@ macro_rules! bench_vectors {
                 
                 fn bench_multiplication_mutable(bench: &mut Criterion) 
                 {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "internal-vector-multiplication-mutable-small-group"));
+                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-vector-multiplication-mutable"));
                 
                     {
                         let vector_space = Space::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "stdvec-mutable"), |c| {
+                        group.bench_function("stdvec", |c| {
                             let mut x: Vector<isize> = random();
                             let y: isize = 125;
                 
@@ -161,7 +161,7 @@ macro_rules! bench_vectors {
                     {
                         let vector_space = ArraySpace::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "array-mutable"), |c| {
+                        group.bench_function("array", |c| {
                             let mut x: ArrayVector<isize> = random_array();
                             let y: isize = 125;
                 
@@ -174,14 +174,14 @@ macro_rules! bench_vectors {
                 
                 fn bench_addition_mut_against_nalgebra(bench: &mut Criterion)
                 {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "nalgebra-vector-additional-mutable-group"));
+                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-nalgebra-vector-addition-mutable"));
                 
                     // Qlogic: 3.7130 us for 10 000
                     {
 
                         let vector_space = Space::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "internal-stdvec-addition"), |c| {
+                        group.bench_function("std-vec", |c| {
                             let mut x: Vector<isize> = random();
                             let y: Vector<isize> = random();
                 
@@ -194,7 +194,7 @@ macro_rules! bench_vectors {
                     {
                         let vector_space = ArraySpace::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "internal-array-addition"), |c| {
+                        group.bench_function("array", |c| {
                             let mut x: ArrayVector<isize> = random_array();
                             let y: ArrayVector<isize> = random_array();
                 
@@ -206,7 +206,7 @@ macro_rules! bench_vectors {
                 
                     // Nalgebra: 4.7408 us for 10 000
                     {
-                        group.bench_function(concat!(stringify!($uid), "nalgebra-vector-addition"), |c| {
+                        group.bench_function("nalgebra", |c| {
                             let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
                             let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
                     
@@ -219,13 +219,13 @@ macro_rules! bench_vectors {
                 
                 fn bench_addition_against_nalgebra(bench: &mut Criterion)
                 {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "nalgebra-vector-addition-reference-group"));
+                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-nalgebra-vector-addition-reference"));
                 
                     // Qlogic: 3.7130 us for 10 000
                     {
                         let vector_space = Space::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "internal-stdvec-addition"), |c| {
+                        group.bench_function("std-vec", |c| {
                             let x: Vector<isize> = random();
                             let y: Vector<isize> = random();
                 
@@ -238,7 +238,7 @@ macro_rules! bench_vectors {
                     {
                         let vector_space = ArraySpace::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "internal-array-addition"), |c| {
+                        group.bench_function("array", |c| {
                             let x: ArrayVector<isize> = random_array();
                             let y: ArrayVector<isize> = random_array();
                 
@@ -250,7 +250,7 @@ macro_rules! bench_vectors {
                 
                     // Nalgebra: 4.7408 us for 10 000
                     {
-                        group.bench_function(concat!(stringify!($uid), "nalgebra-vector-addition"), |c| {
+                        group.bench_function("nalgebra", |c| {
                             let x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
                             let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
                     
@@ -263,14 +263,14 @@ macro_rules! bench_vectors {
                 
                 fn bench_multiplication_mut_against_nalgebra(bench: &mut Criterion)
                 {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "nalgebra-vector-multiplication-mutable-group"));
+                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-nalgebra-vector-multiplication-mutable"));
                     let scalar: isize = 125;
                 
                     // Qlogic: 3.7130 us for 10 000
                     {
                         let vector_space = Space::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "internal-stdvec-multiplication-mutable"), |c| {
+                        group.bench_function("stdvec", |c| {
                             let mut x: Vector<isize> = random();
                 
                             c.iter(|| {
@@ -282,7 +282,7 @@ macro_rules! bench_vectors {
                     {
                         let vector_space = ArraySpace::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "internal-array-multiplication-mutable"), |c| {
+                        group.bench_function("array", |c| {
                             let mut x: ArrayVector<isize> = random_array();
                 
                             c.iter(|| {
@@ -293,7 +293,7 @@ macro_rules! bench_vectors {
                 
                     // Nalgebra: 4.7408 us for 10 000
                     {
-                        group.bench_function(concat!(stringify!($uid), "nalgebra-vector-multiplication-mutable"), |c| {
+                        group.bench_function("-nalgebra", |c| {
                             let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
                     
                             c.iter(|| {
@@ -305,14 +305,14 @@ macro_rules! bench_vectors {
                 
                 fn bench_multiplication_against_nalgebra(bench: &mut Criterion)
                 {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "nalgebra-vector-multiplication-reference-group"));
+                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-nalgebra-vector-multiplication-reference"));
                     let scalar: isize = 125;
                 
                     // Qlogic: 3.7130 us for 10 000
                     {
                         let vector_space = Space::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "internal-stdvec-multiplication-reference"), |c| {
+                        group.bench_function("stdvec", |c| {
                             let x: Vector<isize> = random();
                 
                             c.iter(|| {
@@ -324,7 +324,7 @@ macro_rules! bench_vectors {
                     {
                         let vector_space = ArraySpace::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "internal-array-multiplication-reference"), |c| {
+                        group.bench_function("array", |c| {
                             let x: ArrayVector<isize> = random_array();
                 
                             c.iter(|| {
@@ -335,7 +335,7 @@ macro_rules! bench_vectors {
                 
                     // Nalgebra: 4.7408 us for 10 000
                     {
-                        group.bench_function(concat!(stringify!($uid), "nalgebra-vector-multiplication-reference"), |c| {
+                        group.bench_function("nalgebra", |c| {
                             let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
                     
                             c.iter(|| {
@@ -347,13 +347,13 @@ macro_rules! bench_vectors {
                 
                 fn bench_additive_inverse_against_nalgebra(bench: &mut Criterion)
                 {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "nalgebra-vector-additive-inverse-reference-group"));
+                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-nalgebra-vector-additive-inverse-reference"));
                 
                     // Qlogic: 3.7130 us for 10 000
                     {
                         let vector_space = Space::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "internal-stdvec-vector-additive-inverse-reference"), |c| {
+                        group.bench_function("stdvec", |c| {
                             let x: Vector<isize> = random();
                 
                             c.iter(|| {
@@ -365,7 +365,7 @@ macro_rules! bench_vectors {
                     {
                         let vector_space = ArraySpace::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "internal-array-vector-additive-inverse-reference"), |c| {
+                        group.bench_function("array", |c| {
                             let x: ArrayVector<isize> = random_array();
                 
                             c.iter(|| {
@@ -376,7 +376,7 @@ macro_rules! bench_vectors {
                 
                     // Nalgebra: 4.7408 us for 10 000
                     {
-                        group.bench_function(concat!(stringify!($uid), "nalgebra-vector-additive-inverse-reference"), |c| {
+                        group.bench_function("nalgebra", |c| {
                             let ref x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
                     
                             c.iter(|| {
@@ -388,13 +388,13 @@ macro_rules! bench_vectors {
                 
                 fn bench_additive_inverse_mut_against_nalgebra(bench: &mut Criterion)
                 {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "nalgebra-vector-additive-inverse-mutable-group"));
+                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-nalgebra-vector-additive-inverse-mutable"));
                 
                     // Qlogic: 3.7130 us for 10 000
                     {
                         let vector_space = Space::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "internal-stdvec-vector-additive-inverse-mutable"), |c| {
+                        group.bench_function("stdvec", |c| {
                             let mut x: Vector<isize> = random();
                 
                             c.iter(|| {
@@ -406,7 +406,7 @@ macro_rules! bench_vectors {
                     {
                         let vector_space = ArraySpace::new();
                 
-                        group.bench_function(concat!(stringify!($uid), "internal-array-vector-additive-inverse-mutable"), |c| {
+                        group.bench_function("array", |c| {
                             let mut x: ArrayVector<isize> = random_array();
                 
                             c.iter(|| {
@@ -417,7 +417,7 @@ macro_rules! bench_vectors {
                 
                     // Nalgebra: 4.7408 us for 10 000
                     {
-                        group.bench_function(concat!(stringify!($uid), "nalgebra-vector-additive-inverse-mutable"), |c| {
+                        group.bench_function("nalgebra", |c| {
                             let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
                     
                             c.iter(|| {
