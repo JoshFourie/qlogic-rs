@@ -336,10 +336,9 @@ macro_rules! bench_vectors {
                     // Nalgebra: 4.7408 us for 10 000
                     {
                         group.bench_function("nalgebra", |c| {
-                            let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
-                    
+                            let x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
                             c.iter(|| {
-                                x *= scalar
+                                &x * scalar
                             })
                         });
                     }

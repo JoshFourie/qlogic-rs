@@ -304,10 +304,9 @@ macro_rules! ndarray {
 
             fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector
             {
-                vector
-                    .into_iter()
-                    .map(|val| val * scalar)
-                    .collect()
+                let mut buf: Self::Vector = vector.clone();
+                self.vscale_mut(&mut buf, scalar);
+                buf
             }
         }
 
