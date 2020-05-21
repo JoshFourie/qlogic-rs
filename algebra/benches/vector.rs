@@ -6,7 +6,7 @@ macro_rules! bench_vectors {
                 use criterion::{criterion_group, Criterion};
 
                 use algebra::vector::*;
-                use algebra::{ndarray, vadd};
+                use algebra::ndarray;
 
                 const LENGTH: usize = $vec_length;
                 
@@ -65,7 +65,7 @@ macro_rules! bench_vectors {
                         });
                     }
                 
-                    {
+                    if $array_length > 0 {
                         let vector_space = ArraySpace::new();
                 
                         group.bench_function("array", |c| {
@@ -96,7 +96,7 @@ macro_rules! bench_vectors {
                         });
                     }
                 
-                    {
+                    if $array_length > 0 {
                         let vector_space = ArraySpace::new();
                 
                         group.bench_function("array", |c| {
@@ -127,7 +127,7 @@ macro_rules! bench_vectors {
                         });
                     }
                 
-                    {
+                    if $array_length > 0 {
                         let vector_space = ArraySpace::new();
                 
                         group.bench_function("array", |c| {
@@ -158,7 +158,7 @@ macro_rules! bench_vectors {
                         });
                     }
                 
-                    {
+                    if $array_length > 0 {
                         let vector_space = ArraySpace::new();
                 
                         group.bench_function("array", |c| {
@@ -191,7 +191,7 @@ macro_rules! bench_vectors {
                         });
                     }
                 
-                    {
+                    if $array_length > 0 {
                         let vector_space = ArraySpace::new();
                 
                         group.bench_function("array", |c| {
@@ -235,7 +235,7 @@ macro_rules! bench_vectors {
                         });
                     }
                 
-                    {
+                    if $array_length > 0 {
                         let vector_space = ArraySpace::new();
                 
                         group.bench_function("array", |c| {
@@ -279,7 +279,7 @@ macro_rules! bench_vectors {
                         });
                     }
                 
-                    {
+                    if $array_length > 0 {
                         let vector_space = ArraySpace::new();
                 
                         group.bench_function("array", |c| {
@@ -293,7 +293,7 @@ macro_rules! bench_vectors {
                 
                     // Nalgebra: 4.7408 us for 10 000
                     {
-                        group.bench_function("-nalgebra", |c| {
+                        group.bench_function("nalgebra", |c| {
                             let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
                     
                             c.iter(|| {
@@ -321,7 +321,7 @@ macro_rules! bench_vectors {
                         });
                     }
                 
-                    {
+                    if $array_length > 0 {
                         let vector_space = ArraySpace::new();
                 
                         group.bench_function("array", |c| {
@@ -362,7 +362,7 @@ macro_rules! bench_vectors {
                         });
                     }
                 
-                    {
+                    if $array_length > 0 {
                         let vector_space = ArraySpace::new();
                 
                         group.bench_function("array", |c| {
@@ -403,7 +403,7 @@ macro_rules! bench_vectors {
                         });
                     }
                 
-                    {
+                    if $array_length > 0 {
                         let vector_space = ArraySpace::new();
                 
                         group.bench_function("array", |c| {
