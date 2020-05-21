@@ -26,10 +26,17 @@ pub trait VScale
     type Scalar;
 
     type Vector;
-
-    fn vscale_mut(&self, vector: &mut Self::Vector, scalar: &Self::Scalar);
     
     fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector;
+}
+
+pub trait VScaleMut 
+{
+    type Scalar;
+
+    type Vector;
+
+    fn vscale_mut(&self, vector: &mut Self::Vector, scalar: &Self::Scalar);    
 }
 
 
