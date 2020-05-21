@@ -6,7 +6,7 @@ macro_rules! bench_vectors {
                 use criterion::{criterion_group, Criterion};
 
                 use algebra::vector::*;
-                use algebra::ndarray;
+                use vector::ndarray;
 
                 const LENGTH: usize = $vec_length;
                 
@@ -15,7 +15,7 @@ macro_rules! bench_vectors {
                         @vector_ident(Vector)
                         @length($vec_length)
                         @generic(T)
-                        @with_big_vec(Vec<T>)        
+                        @with_vec(Vec<T>)        
                     }
                 }
                 

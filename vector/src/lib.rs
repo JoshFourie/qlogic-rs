@@ -1,3 +1,6 @@
+mod array;
+mod vec;
+
 #[allow(unused_macros)]
 
 #[macro_export]
@@ -9,7 +12,7 @@ macro_rules! ndarray {
             @generic($generic:ident)
             $(@with_array($array:ty))?
             $(@with_vec($vector:ty))?
-            $(@with_vec($big_vector:ty))?
+            $(@with_big_vec($big_vector:ty))?
         }
     ) => {
         paste::item! {
