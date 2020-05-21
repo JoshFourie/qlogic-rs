@@ -20,21 +20,26 @@ macro_rules! ndarray {
             #[allow(unused_imports)]
             mod [< _ vector $name With $space $length >] 
             {
-                use std::{marker, fmt, ops, iter};
-                use iter::FromIterator;
-                use marker::PhantomData;
-                use fmt::Debug;
-                use ops::{AddAssign, Add, MulAssign, Mul, Index, IndexMut, Neg};
+                use vector::ndarray;
 
-                use super::{VAdd, VScale, VectorSpace, VPartialEq, VAdditiveInverse, ndarray};
-
-                use vector::{binops, uniops, structural, vectorspace};
+                ndarray!(@imports);
 
                 structural!($length, $name, $array, $generic);
                 vectorspace!($length, $name, $space, $array, $generic);
                 ndarray!(@array $length, $name, $space, $array, $generic);
             }
         }
+    };
+
+    (@imports) => {
+        use std::{marker, fmt, ops, iter};
+        use iter::FromIterator;
+        use marker::PhantomData;
+        use fmt::Debug;
+        use ops::{AddAssign, Add, MulAssign, Mul, Index, IndexMut, Neg};
+
+        use algebra::vector::{VAdd, VScale, VectorSpace, VPartialEq, VAdditiveInverse};
+        use vector::{binops, uniops, structural, vectorspace};
     };
 
     (@array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
