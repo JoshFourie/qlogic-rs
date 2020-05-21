@@ -6,6 +6,8 @@ macro_rules! benchmark
        $(($uid:ident, $vec_length:expr, $array_length:expr)),+
     ) => {     
         $(        
+            pub use $uid::$uid;
+
             mod $uid
             {    
                 use criterion::{criterion_group, Criterion};
@@ -50,257 +52,200 @@ macro_rules! benchmark
                     Vector::new(inner)
                 }
 
-                fn bench_addition_mut_against_nalgebra(bench: &mut Criterion)
-                {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-nalgebra-vector-addition-mutable"));
-                
-                    // Qlogic: 3.7130 us for 10 000
-                    {
 
-                        let vector_space = Space::new();
-                
-                        group.bench_function("std-vec", |c| {
-                            let mut x: Vector<isize> = random();
-                            let y: Vector<isize> = random();
-                
-                            c.iter(|| {
-                                vector_space.vadd_mut(&mut x, &y);
-                            })
-                        });
-                    }
-                
-                    if $array_length > 0 {
-                        let vector_space = ArraySpace::new();
-                
-                        group.bench_function("array", |c| {
-                            let mut x: ArrayVector<isize> = random_array();
-                            let y: ArrayVector<isize> = random_array();
-                
-                            c.iter(|| {
-                                vector_space.vadd_mut(&mut x, &y);
-                            })
-                        });
-                    }
-                
-                    // Nalgebra: 4.7408 us for 10 000
+                benchmark!{
+                    Vector<isize>, ArrayVector<isize>
                     {
-                        group.bench_function("nalgebra", |c| {
-                            let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
-                            let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
-                    
-                            c.iter(|| {
-                                x += &y
-                            })
-                        });
-                    }
-                }
-                
-                fn bench_addition_against_nalgebra(bench: &mut Criterion)
-                {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-nalgebra-vector-addition-reference"));
-                
-                    // Qlogic: 3.7130 us for 10 000
-                    {
-                        let vector_space = Space::new();
-                
-                        group.bench_function("std-vec", |c| {
-                            let x: Vector<isize> = random();
-                            let y: Vector<isize> = random();
-                
-                            c.iter(|| {
-                                vector_space.vadd(&x, &y)
-                            })
-                        });
-                    }
-                
-                    if $array_length > 0 {
-                        let vector_space = ArraySpace::new();
-                
-                        group.bench_function("array", |c| {
-                            let x: ArrayVector<isize> = random_array();
-                            let y: ArrayVector<isize> = random_array();
-                
-                            c.iter(|| {
-                                vector_space.vadd(&x, &y)
-                            })
-                        });
-                    }
-                
-                    // Nalgebra: 4.7408 us for 10 000
-                    {
-                        group.bench_function("nalgebra", |c| {
-                            let x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
-                            let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
-                    
-                            c.iter(|| {
-                                &x + &y
-                            })
-                        });
-                    }
-                }
-                
-                fn bench_multiplication_mut_against_nalgebra(bench: &mut Criterion)
-                {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-nalgebra-vector-multiplication-mutable"));
-                    let scalar: isize = 125;
-                
-                    // Qlogic: 3.7130 us for 10 000
-                    {
-                        let vector_space = Space::new();
-                
-                        group.bench_function("stdvec", |c| {
-                            let mut x: Vector<isize> = random();
-                
-                            c.iter(|| {
-                                vector_space.vscale_mut(&mut x, &scalar)
-                            })
-                        });
-                    }
-                
-                    if $array_length > 0 {
-                        let vector_space = ArraySpace::new();
-                
-                        group.bench_function("array", |c| {
-                            let mut x: ArrayVector<isize> = random_array();
-                
-                            c.iter(|| {
-                                vector_space.vscale_mut(&mut x, &scalar)
-                            })
-                        });
-                    }
-                
-                    // Nalgebra: 4.7408 us for 10 000
-                    {
-                        group.bench_function("nalgebra", |c| {
-                            let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
-                    
-                            c.iter(|| {
-                                x *= scalar
-                            })
-                        });
-                    }
-                }
-                
-                fn bench_multiplication_against_nalgebra(bench: &mut Criterion)
-                {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-nalgebra-vector-multiplication-reference"));
-                    let scalar: isize = 125;
-                
-                    // Qlogic: 3.7130 us for 10 000
-                    {
-                        let vector_space = Space::new();
-                
-                        group.bench_function("stdvec", |c| {
-                            let x: Vector<isize> = random();
-                
-                            c.iter(|| {
-                                vector_space.vscale(&x, &scalar)
-                            })
-                        });
-                    }
-                
-                    if $array_length > 0 {
-                        let vector_space = ArraySpace::new();
-                
-                        group.bench_function("array", |c| {
-                            let x: ArrayVector<isize> = random_array();
-                
-                            c.iter(|| {
-                                vector_space.vscale(&x, &scalar)
-                            })
-                        });
-                    }
-                
-                    // Nalgebra: 4.7408 us for 10 000
-                    {
-                        group.bench_function("nalgebra", |c| {
-                            let x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
-                            c.iter(|| {
-                                &x * scalar
-                            })
-                        });
-                    }
-                }
-                
-                fn bench_additive_inverse_against_nalgebra(bench: &mut Criterion)
-                {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-nalgebra-vector-additive-inverse-reference"));
-                
-                    // Qlogic: 3.7130 us for 10 000
-                    {
-                        let vector_space = Space::new();
-                
-                        group.bench_function("stdvec", |c| {
-                            let x: Vector<isize> = random();
-                
-                            c.iter(|| {
-                                vector_space.additive_inv(&x)
-                            })
-                        });
-                    }
-                
-                    if $array_length > 0 {
-                        let vector_space = ArraySpace::new();
-                
-                        group.bench_function("array", |c| {
-                            let x: ArrayVector<isize> = random_array();
-                
-                            c.iter(|| {
-                                vector_space.additive_inv(&x)
-                            })
-                        });
-                    }
-                
-                    // Nalgebra: 4.7408 us for 10 000
-                    {
-                        group.bench_function("nalgebra", |c| {
-                            let ref x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
-                    
-                            c.iter(|| {
-                                -x
-                            })
-                        });
-                    }
-                }
-                
-                fn bench_additive_inverse_mut_against_nalgebra(bench: &mut Criterion)
-                {
-                    let mut group: _ = bench.benchmark_group(concat!(stringify!($uid), "-nalgebra-vector-additive-inverse-mutable"));
-                
-                    // Qlogic: 3.7130 us for 10 000
-                    {
-                        let vector_space = Space::new();
-                
-                        group.bench_function("stdvec", |c| {
-                            let mut x: Vector<isize> = random();
-                
-                            c.iter(|| {
-                                vector_space.additive_inv_mut(&mut x)
-                            })
-                        });
-                    }
-                
-                    if $array_length > 0 {
-                        let vector_space = ArraySpace::new();
-                
-                        group.bench_function("array", |c| {
-                            let mut x: ArrayVector<isize> = random_array();
-                
-                            c.iter(|| {
-                                vector_space.additive_inv_mut(&mut x)
-                            })
-                        });
-                    }
-                
-                    // Nalgebra: 4.7408 us for 10 000
-                    {
-                        group.bench_function("nalgebra", |c| {
-                            let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
-                    
-                            c.iter(|| {
-                                x = - x.clone()
-                            })
-                        });
+                        Global: 
+                        {
+                            ArrayLength: $array_length,
+                            Module: $uid
+                        },
+                        
+                        Benches: 
+                        {
+                            bench_multiplication_against_nalgebra
+                            {
+                                GroupIdentifier: "-nalgebra-vector-multiplication-reference",
+                                TargetAlpha: {
+                                    let vector_space = Space::new();
+                                    let x: Vector<isize> = random();
+                                    let scalar: isize = 125;
+
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.vscale(&x, &scalar)
+                                        })
+                                    }
+                                },
+                                TargetBeta: {
+                                    let vector_space = ArraySpace::new();
+                                    let x: ArrayVector<isize> = random_array();
+                                    let scalar: isize = 125;
+
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.vscale(&x, &scalar)
+                                        })
+                                    }
+                                },
+                                Nalgebra: {
+                                    let x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                                    let scalar: isize = 125;
+
+                                    move |c| {
+                                        c.iter(|| {
+                                            &x * scalar
+                                        })
+                                    }
+                                }
+                            },
+
+                            bench_addition_mut_against_nalgebra
+                            {
+                                GroupIdentifier: "-nalgebra-vector-addition-mutable",
+                                TargetAlpha: {
+                                    let vector_space = Space::new();
+                                    let mut x: Vector<isize> = random();
+                                    let y: Vector<isize> = random();    
+
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.vadd_mut(&mut x, &y);
+                                        })
+                                    }
+                                },
+                                TargetBeta: {
+                                    let vector_space = ArraySpace::new();
+                                    let mut x: ArrayVector<isize> = random_array();
+                                    let y: ArrayVector<isize> = random_array();    
+
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.vadd_mut(&mut x, &y);
+                                        })
+                                    }
+                                },
+                                Nalgebra: {
+                                    let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                                    let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                            
+                                    move |c| {
+                                        c.iter(|| {
+                                            x += &y
+                                        })
+                                    }
+                                }
+                            },
+
+                            bench_addition_against_nalgebra
+                            {
+                                GroupIdentifier: "-nalgebra-vector-addition-reference",
+                                TargetAlpha: {
+                                    let vector_space = Space::new();
+                                    let x: Vector<isize> = random();
+                                    let y: Vector<isize> = random();
+                        
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.vadd(&x, &y)
+                                        })
+                                    }
+                                },
+                                TargetBeta: {
+                                    let vector_space = ArraySpace::new();
+                                    let x: ArrayVector<isize> = random_array();
+                                    let y: ArrayVector<isize> = random_array();    
+
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.vadd(&x, &y)
+                                        })
+                                    }
+                                },
+                                Nalgebra: {
+                                    let x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                                    let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                            
+                                    move |c| {
+                                        c.iter(|| {
+                                            &x + &y
+                                        })
+                                    }
+                                }
+                            },
+
+                            bench_multiplication_mut_against_nalgebra
+                            {
+                                GroupIdentifier: "-nalgebra-vector-multiplication-mutable",
+                                TargetAlpha: {
+                                    let vector_space = Space::new();
+                                    let mut x: Vector<isize> = random();
+                                    let scalar: isize = 125;
+                        
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.vscale_mut(&mut x, &scalar)
+                                        })
+                                    }
+                                },
+                                TargetBeta: {
+                                    let vector_space = ArraySpace::new();
+                                    let mut x: ArrayVector<isize> = random_array();
+                                    let scalar: isize = 125;
+
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.vscale_mut(&mut x, &scalar)
+                                        })
+                                    }
+                                },
+                                Nalgebra: {
+                                    let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                                    let scalar: isize = 125;
+                            
+                                    move |c| {
+                                        c.iter(|| {
+                                            x *= scalar
+                                        })
+                                    }
+                                }
+                            },
+
+                            bench_additive_inverse_mut_against_nalgebra
+                            {
+                                GroupIdentifier: "-nalgebra-vector-additive-inverse-mutable",
+                                TargetAlpha: {
+                                    let vector_space = Space::new();
+                                    let mut x: Vector<isize> = random();
+                        
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.additive_inv_mut(&mut x)
+                                        })
+                                    }
+                                },
+                                TargetBeta: {
+                                    let vector_space = ArraySpace::new();
+                                    let mut x: ArrayVector<isize> = random_array();
+
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.additive_inv_mut(&mut x)
+                                        })
+                                    }
+                                },
+                                Nalgebra: {
+                                    let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                            
+                                    move |c| {
+                                        c.iter(|| {
+                                            x = - x.clone()
+                                        })
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 
@@ -310,16 +255,58 @@ macro_rules! benchmark
                     bench_addition_mut_against_nalgebra,
                     bench_multiplication_against_nalgebra,
                     bench_multiplication_mut_against_nalgebra,
-                    bench_additive_inverse_against_nalgebra,
                     bench_additive_inverse_mut_against_nalgebra
                 );   
             }
         )+
-    }
+    };
+
+    (
+        $space:ty, $array_space:ty
+        {
+            Global: {
+                ArrayLength: $array_length:expr,
+                Module: $uid:ident
+            },
+            Benches: {
+                $(
+                    $function_name:ident {    
+                        GroupIdentifier: $group_name:expr,
+                        TargetAlpha: $target_alpha:block,
+                        TargetBeta: $target_beta:block,
+                        Nalgebra: $nalgebra:block
+                    }
+                ),*
+            }
+        }
+    ) => {
+        $(
+            fn $function_name(bench: &mut Criterion)
+            {
+                let mut group: _ = bench.benchmark_group(
+                    concat!( stringify!($uid), $group_name )
+                );
+            
+                // Qlogic: 3.7130 us for 10 000
+                {
+                    group.bench_function("stdvec", $target_alpha);
+                }
+            
+                if $array_length > 0 {
+                    group.bench_function("array", $target_beta);
+                }
+            
+                // Nalgebra: 4.7408 us for 10 000
+                {
+                    group.bench_function("nalgebra", $nalgebra);
+                }
+            }
+        )*
+    };
 }
 
 benchmark!{
-    (smallvec, 32, 32),
-    (medvec, 512, 512),
-    (bigvec, 1000000, 0)
+    (nalgebra_smallvec, 32, 32),
+    (nalgebra_medvec, 1024, 1024),
+    (nalgebra_bigvec, 1000000, 0)
 }

@@ -8,8 +8,6 @@ macro_rules! bench_vectors {
                 use algebra::vector::*;
                 use vector::ndarray;
 
-                const LENGTH: usize = $vec_length;
-
                 ndarray! {
                     Space {
                         vector: Vector,
