@@ -65,9 +65,14 @@ pub trait VAdditiveInverse
 {
     type Vector;
 
-    fn additive_inv_mut(&self, vector: &mut Self::Vector);
-
     fn additive_inv(&self, vector: &Self::Vector) -> Self::Vector;
+}
+
+pub trait VAdditiveInverseMut
+{
+    type Vector;
+
+    fn additive_inv_mut(&self, vector: &mut Self::Vector);
 }
 
 
