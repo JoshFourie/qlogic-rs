@@ -20,7 +20,9 @@ pub enum UniOps {
 }
 
 #[macro_export]
-macro_rules! ndarray {
+macro_rules! ndarray 
+{
+    /********************* Convenience DSL ************************/
     (
         $space:ident {
             vector: $name:ident,
@@ -31,13 +33,7 @@ macro_rules! ndarray {
             $space {
                 vector: $name,
                 dimension: $length,
-                using: Vec<T>,
-                Implements::BinOps::VAddMut,
-                Implements::BinOps::VAdd,
-                Implements::BinOps::VScale,
-                Implements::BinOps::VScaleMut,
-                Implements::UniOps::VAdditiveInverse,
-                Implements::UniOps::VAdditiveInverseMut
+                using: Vec<T>
             }
         }
     };
@@ -64,6 +60,7 @@ macro_rules! ndarray {
         }
     };
 
+    /********************* Implementation ************************/
     (
         $space:ident {
             vector: $name:ident,
@@ -95,51 +92,6 @@ macro_rules! ndarray {
             $kind!(@ $branch $name, $space);
         )*      
     };
-
-    // (
-    //     @vector_space($space:ident) {
-    //         @vector_ident($name:ident)
-    //         @length($length:expr)
-    //     }
-    // ) => {
-    //     vector::ndarray!{
-    //         @vector_space($space) {
-    //             @vector_ident($name)
-    //             @length($length)
-    //             @generic(T)
-    //             @with(Vec<T>)
-    //         }
-    //     }
-    // };
-
-    // (
-    //     @vector_space($space:ident) {
-    //         @vector_ident($name:ident)
-    //         @length($length:expr)
-    //         @generic($generic:ident)
-    //         @with($array:ty)
-    //     }
-    // ) => {
-    //     paste::item! {
-    //         pub use [< $space:lower >]::{$name, $space};
-                
-    //         #[allow(unused_imports)]
-    //         mod [< $space:lower >]
-    //         {
-    //             use vector::ndarray;
-    
-    //             ndarray!(@imports);
-    
-    //             vector_base!($length, $name, $array, $generic);
-    //             vectorspace!($length, $name, $space, $array, $generic);
-                
-    //             binops!(@addition $length, $name, $space, $array, $generic);
-    //             binops!(@scale $length, $name, $space, $array, $generic);
-    
-    //             uniops!(@additive_inverse $length, $name, $space, $array, $generic);
-    //         }
-    //     }
-    // };
 
     (@imports) => {
         use std::{marker, fmt, ops, iter};
