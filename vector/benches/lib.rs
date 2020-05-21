@@ -1,6 +1,7 @@
 use criterion::criterion_main;
 
 mod vector;
+mod comparative;
 
 criterion_main!(
     vector::smallvec::smallvec,
