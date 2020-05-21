@@ -1,5 +1,5 @@
 mod array;
-mod vec;
+mod space;
 mod structural;
 
 #[allow(unused_macros)]
@@ -29,71 +29,23 @@ macro_rules! ndarray {
 
                 use super::{VAdd, VScale, VectorSpace, VPartialEq, VAdditiveInverse, ndarray};
 
-                use vector::{binops, uniops, structural};
+                use vector::{binops, uniops, structural, vectorspace};
 
                 $(
                     structural!($length, $name, $array, $generic);
-                    ndarray!(@vectorspace $length, $name, $space, $array, $generic);
+                    vectorspace!($length, $name, $space, $array, $generic);
                     ndarray!(@array $length, $name, $space, $array, $generic);
                 )?
 
                 $(
                     structural!($length, $name, $vector, $generic);
-                    ndarray!(@vectorspace $length, $name, $space, $vector, $generic);
+                    vectorspace!($length, $name, $space, $vector, $generic);
                     ndarray!(@vec $length, $name, $space, $vector, $generic);
                 )?
             }
         }
     };
 
-    (@vectorspace $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
-        pub struct $space<$T> {
-            _phantom: PhantomData<$T>
-        }
-
-        impl<$T> $space<$T>
-        {
-            #[inline]
-            pub fn new() -> Self 
-            {
-                $space {
-                    _phantom: PhantomData
-                }
-            }
-        }
-
-        impl<$T> VectorSpace for $space<$T>
-        {
-            type Scalar = $T;
-
-            type Vector = $space<$T>;
-
-            fn dimensions(&self) -> usize 
-            {
-                $length
-            }
-        }
-
-        impl<$T> VPartialEq for $space<$T>
-        where
-            $T: PartialEq
-        {
-            type Vector = $name<$T>;
-
-            fn eq(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> bool
-            {
-                for (l, r) in lhs
-                    .into_iter()
-                    .zip( rhs.into_iter() ) 
-                {
-                    if (l != r) {
-                        return false
-                    }
-                }
-                return true
-            }
-        }
-    };
 
     (@array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         binops!(@addition $length, $name, $space, $inner, $T);
