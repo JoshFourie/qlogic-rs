@@ -11,14 +11,9 @@ pub trait VAdd
 {
     type Vector;
 
-    fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector;
-}
-
-pub trait VAddMut
-{
-    type Vector;
-
     fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector);
+
+    fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector;
 }
 
 pub trait VScale 
