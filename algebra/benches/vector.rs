@@ -447,7 +447,7 @@ macro_rules! bench_vectors {
 }
 
 bench_vectors!{
-    (smallvec, 100, 100);
-    (medvec, 1024, 1024);
+    (smallvec, 32, 32);
+    (medvec, 512, 512);
     (bigvec, 1000000, 0);
 }
