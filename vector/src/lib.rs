@@ -29,7 +29,7 @@ macro_rules! ndarray {
 
                 use super::{VAdd, VScale, VectorSpace, VPartialEq, VAdditiveInverse, ndarray};
 
-                use vector::binops;
+                use vector::{binops, uniops};
 
                 $(
                     ndarray!(@vector $length, $name, $array, $generic);
@@ -195,38 +195,13 @@ macro_rules! ndarray {
     (@array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         binops!(@addition $length, $name, $space, $inner, $T);
         binops!(@scale $length, $name, $space, $inner, $T);
-        ndarray!(@common_additive_inv $length, $name, $space, $inner, $T);
+        uniops!(@additive_inverse $length, $name, $space, $inner, $T);
     };
 
     (@vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         binops!(@addition $length, $name, $space, $inner, $T);
         binops!(@scale $length, $name, $space, $inner, $T);
-        ndarray!(@common_additive_inv $length, $name, $space, $inner, $T);
-    };
-
-    (@common_additive_inv $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
-        impl<$T> VAdditiveInverse for $space<$T>
-        where
-            $T: Copy,
-            for <'a> &'a $T: Neg<Output=$T>
-        {
-            type Vector = $name<$T>;
-
-            fn additive_inv_mut(&self, vector: &mut Self::Vector)
-            {
-                vector
-                    .0
-                    .iter_mut()
-                    .for_each(|val| *val = (*val).neg() );
-            }
-
-            fn additive_inv(&self, vector: &Self::Vector) -> Self::Vector
-            {
-                let mut buf: Self::Vector = vector.clone();
-                self.additive_inv_mut(&mut buf);
-                buf
-            }
-        }
+        uniops!(@additive_inverse $length, $name, $space, $inner, $T);
     };
 
     (@big_vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
