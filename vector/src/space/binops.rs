@@ -4,7 +4,20 @@ macro_rules! binops {
         impl<$T> VAdd for $space<$T>
         where
             for <'a> $T: Copy + AddAssign<&'a $T>,
-            for <'a> &'a $T: Add<&'a $T, Output=$T>
+        {
+            type Vector = $name<$T>;
+            
+            fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
+            {
+                let mut buf: Self::Vector = lhs.clone();
+                self.vadd_mut(&mut buf, rhs);
+                buf
+            }
+        }
+        
+        impl<$T> VAddMut for $space<$T>
+        where
+            for <'a> $T: Copy + AddAssign<&'a $T>,
         {
             type Vector = $name<$T>;
             
@@ -15,13 +28,6 @@ macro_rules! binops {
                     .iter_mut()
                     .zip(rhs)
                     .for_each(|(l,r)| l.add_assign(r));
-            }
-
-            fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
-            {
-                let mut buf: Self::Vector = lhs.clone();
-                self.vadd_mut(&mut buf, rhs);
-                buf
             }
         }
     };

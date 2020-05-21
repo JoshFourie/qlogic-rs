@@ -41,7 +41,7 @@ macro_rules! ndarray {
         use fmt::Debug;
         use ops::{AddAssign, Add, MulAssign, Mul, Index, IndexMut, Neg};
 
-        use algebra::vector::{VAdd, VScale, VectorSpace, VPartialEq, VAdditiveInverse};
+        use algebra::vector::{VAdd, VAddMut, VScale, VectorSpace, VPartialEq, VAdditiveInverse};
         use vector::{binops, uniops, vector_base, vectorspace};
     };
 } 
