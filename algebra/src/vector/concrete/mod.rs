@@ -29,14 +29,14 @@ macro_rules! ndarray {
                     ndarray!(@vector $length, $name, $array, $generic);
                     ndarray!(@vectorspace $length, $name, $space, $array, $generic);
 
-                    ndarray!(@with_array $length, $name, $space, $array, $generic);
+                    ndarray!(@array $length, $name, $space, $array, $generic);
                 )?
 
                 $(
                     ndarray!(@vector $length, $name, $vector, $generic);
                     ndarray!(@vectorspace $length, $name, $space, $vector, $generic);
 
-                    ndarray!(@with_vec $length, $name, $space, $vector, $generic);
+                    ndarray!(@vec $length, $name, $space, $vector, $generic);
                 )?
             }
         }
@@ -182,7 +182,25 @@ macro_rules! ndarray {
         }
     };
 
-    (@with_array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+    (@array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+        ndarray!(@common_add $length, $name, $space, $inner, $T);
+        ndarray!(@common_scale $length, $name, $space, $inner, $T);
+        ndarray!(@common_additive_inv $length, $name, $space, $inner, $T);
+    };
+
+    (@vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+        ndarray!(@common_add $length, $name, $space, $inner, $T);
+        ndarray!(@common_scale $length, $name, $space, $inner, $T);
+        ndarray!(@common_additive_inv $length, $name, $space, $inner, $T);
+    };
+
+    (@big_vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+        ndarray!(@big_vec_add $length, $name, $space, $inner, $T);
+        ndarray!(@common_scale $length, $name, $space, $inner, $T);
+        ndarray!(@common_additive_inv $length, $name, $space, $inner, $T);
+    };    
+
+    (@common_add $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         impl<$T> VAdd for $space<$T>
         where
             for <'a> $T: Copy + AddAssign<&'a $T>,
@@ -206,7 +224,9 @@ macro_rules! ndarray {
                 buf
             }
         }
+    };
 
+    (@common_scale $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         impl<$T> VScale for $space<$T>
         where
             for <'a> $T: Copy + MulAssign<&'a $T>,
@@ -232,7 +252,9 @@ macro_rules! ndarray {
                 buf
             }
         }
+    };
 
+    (@common_additive_inv $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         impl<$T> VAdditiveInverse for $space<$T>
         where
             $T: Copy,
@@ -257,7 +279,7 @@ macro_rules! ndarray {
         }
     };
 
-    (@with_vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+    (@big_vec_add $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         /// When vector is big, cloning is slower than collecting...
         impl<$T> VAdd for $space<$T>
         where
@@ -279,55 +301,6 @@ macro_rules! ndarray {
                 let mut buf: Self::Vector = lhs.clone();
                 self.vadd_mut(&mut buf, rhs);
                 buf
-            }
-        }
-
-
-        impl<$T> VScale for $space<$T>
-        where
-            for <'a> $T: Copy + MulAssign<&'a $T>,
-        {
-            type Vector = $name<$T>;
-
-            type Scalar = $T;
-
-            fn vscale_mut(&self, vector: &mut Self::Vector, scalar: &Self::Scalar)
-            {
-                vector
-                    .0
-                    .iter_mut()
-                    .for_each(|val| val.mul_assign(scalar));
-            }
-
-            fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector
-            {
-                let mut buf: Self::Vector = vector.clone();
-                self.vscale_mut(&mut buf, scalar);
-                buf
-            }
-        }
-
-        impl<$T> VAdditiveInverse for $space<$T>
-        where
-            $T: Copy,
-            for <'a> &'a $T: Neg<Output=$T>
-        {
-            type Vector = $name<$T>;
-
-            fn additive_inv_mut(&self, vector: &mut Self::Vector)
-            {
-                vector
-                    .0
-                    .iter_mut()
-                    .for_each(|val| *val = (*val).neg() );
-            }
-
-            fn additive_inv(&self, vector: &Self::Vector) -> Self::Vector
-            {
-                vector
-                    .into_iter()
-                    .map(|val| -val)
-                    .collect()
             }
         }
     };
