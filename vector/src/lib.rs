@@ -11,8 +11,7 @@ macro_rules! ndarray {
             @vector_ident($name:ident)
             @length($length:expr)
             @generic($generic:ident)
-            $(@with_array($array:ty))?
-            $(@with_vec($vector:ty))?
+            @with($array:ty)
         }
     ) => {
         paste::item! {
@@ -31,29 +30,14 @@ macro_rules! ndarray {
 
                 use vector::{binops, uniops, structural, vectorspace};
 
-                $(
-                    structural!($length, $name, $array, $generic);
-                    vectorspace!($length, $name, $space, $array, $generic);
-                    ndarray!(@array $length, $name, $space, $array, $generic);
-                )?
-
-                $(
-                    structural!($length, $name, $vector, $generic);
-                    vectorspace!($length, $name, $space, $vector, $generic);
-                    ndarray!(@vec $length, $name, $space, $vector, $generic);
-                )?
+                structural!($length, $name, $array, $generic);
+                vectorspace!($length, $name, $space, $array, $generic);
+                ndarray!(@array $length, $name, $space, $array, $generic);
             }
         }
     };
 
-
     (@array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
-        binops!(@addition $length, $name, $space, $inner, $T);
-        binops!(@scale $length, $name, $space, $inner, $T);
-        uniops!(@additive_inverse $length, $name, $space, $inner, $T);
-    };
-
-    (@vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         binops!(@addition $length, $name, $space, $inner, $T);
         binops!(@scale $length, $name, $space, $inner, $T);
         uniops!(@additive_inverse $length, $name, $space, $inner, $T);

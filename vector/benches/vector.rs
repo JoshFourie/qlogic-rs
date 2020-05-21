@@ -15,7 +15,7 @@ macro_rules! bench_vectors {
                         @vector_ident(Vector)
                         @length($vec_length)
                         @generic(T)
-                        @with_vec(Vec<T>)        
+                        @with(Vec<T>)        
                     }
                 }
                 
@@ -24,7 +24,7 @@ macro_rules! bench_vectors {
                         @vector_ident(ArrayVector)
                         @length($array_length)
                         @generic(T)
-                        @with_array([T; $array_length])        
+                        @with([T; $array_length])        
                     }
                 }
                 

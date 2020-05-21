@@ -103,7 +103,7 @@ ndarray! {
         @vector_ident(VectorArray)
         @length(3)
         @generic(U)
-        @with_array([U; 3])
+        @with([U; 3])
     }
 }
 
@@ -135,7 +135,7 @@ ndarray! {
         @vector_ident(VectorVec)
         @length(3)
         @generic(T)
-        @with_vec(Vec<T>)
+        @with(Vec<T>)
     }
 }   
 
