@@ -134,8 +134,6 @@ ndarray! {
     @vector_space(VectorSpaceVec) {
         @vector_ident(VectorVec)
         @length(3)
-        @generic(T)
-        @with(Vec<T>)
     }
 }   
 
