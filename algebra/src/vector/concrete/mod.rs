@@ -258,6 +258,7 @@ macro_rules! ndarray {
     };
 
     (@with_vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+        /// When vector is big, cloning is slower than collecting...
         impl<$T> VAdd for $space<$T>
         where
             for <'a> $T: Copy + AddAssign<&'a $T>,
