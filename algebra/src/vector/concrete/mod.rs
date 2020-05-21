@@ -261,7 +261,6 @@ macro_rules! ndarray {
         impl<$T> VAdd for $space<$T>
         where
             for <'a> $T: Copy + AddAssign<&'a $T>,
-            for <'a> &'a $T: Add<&'a $T,Output=T>
         {
             type Vector = $name<$T>;
 
@@ -276,11 +275,9 @@ macro_rules! ndarray {
 
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
             {
-                lhs
-                    .into_iter()
-                    .zip(rhs)
-                    .map(|(l,r)| l + r)
-                    .collect()
+                let mut buf: Self::Vector = lhs.clone();
+                self.vadd_mut(&mut buf, rhs);
+                buf
             }
         }
 
@@ -288,7 +285,6 @@ macro_rules! ndarray {
         impl<$T> VScale for $space<$T>
         where
             for <'a> $T: Copy + MulAssign<&'a $T>,
-            for <'a> &'a $T: Mul<&'a $T, Output=$T>
         {
             type Vector = $name<$T>;
 
