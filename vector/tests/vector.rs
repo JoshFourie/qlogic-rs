@@ -93,17 +93,22 @@ macro_rules! test {
     };
 }
 
-use vector::ndarray;
+use vector::{ndarray, BinOps, Implements};
 
 use algebra::vector::*;
 use algebra::{vadd, vscale};
 
 ndarray! {
-    @vector_space(VectorSpaceArray) {
-        @vector_ident(VectorArray)
-        @length(3)
-        @generic(U)
-        @with([U; 3])
+    VectorSpaceArray {
+        vector: VectorArray,
+        dimension: 3,
+        using: [T; 3],
+        Implements::BinOps::VAddMut,
+        Implements::BinOps::VAdd,
+        Implements::BinOps::VScale,
+        Implements::BinOps::VScaleMut,
+        Implements::UniOps::VAdditiveInverse,
+        Implements::UniOps::VAdditiveInverseMut
     }
 }
 
@@ -131,32 +136,39 @@ impl VMultiplicativeIdent for VectorSpaceArray<isize>
 
 
 ndarray! {
-    @vector_space(VectorSpaceVec) {
-        @vector_ident(VectorVec)
-        @length(3)
+    VectorSpaceDefault {
+        vector: VectorDefault,
+        dimension: 3,
+        using: Vec<T>,
+        Implements::BinOps::VAddMut,
+        Implements::BinOps::VAdd,
+        Implements::BinOps::VScale,
+        Implements::BinOps::VScaleMut,
+        Implements::UniOps::VAdditiveInverse,
+        Implements::UniOps::VAdditiveInverseMut
     }
-}   
+}
 
-test!(test_ndvec, VectorVec<isize>, VectorSpaceVec<isize>);
+test!(test_ndvec, VectorDefault<isize>, VectorSpaceDefault<isize>);
 
-impl From<[isize; 3]> for VectorVec<isize>
+impl From<[isize; 3]> for VectorDefault<isize>
 {
     fn from(array: [isize; 3]) -> Self {
         Self::from( array.to_vec() )
     }
 }
 
-impl VAdditiveIdent for VectorSpaceVec<isize>
+impl VAdditiveIdent for VectorSpaceDefault<isize>
 {
-    type Output = VectorVec<isize>;
+    type Output = VectorDefault<isize>;
 
     fn additive_ident(&self) -> Self::Output
     {
-        VectorVec::new( vec![0; 3] )
+        VectorDefault::new( vec![0; 3] )
     }
 }
 
-impl VMultiplicativeIdent for VectorSpaceVec<isize>
+impl VMultiplicativeIdent for VectorSpaceDefault<isize>
 {
     type Output = isize;
 

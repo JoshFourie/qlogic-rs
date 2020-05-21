@@ -1,11 +1,11 @@
 #[macro_export]
-macro_rules! binops {
-    (@addition $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
-        impl<$T> VAdd for $space<$T>
+macro_rules! BinOps {
+    (@VAdd $name:ident, $space:ident) => {
+        impl<T> VAdd for $space<T>
         where
-            for <'a> $T: Copy + AddAssign<&'a $T>,
+            for <'a> T: Copy + AddAssign<&'a T>,
         {
-            type Vector = $name<$T>;
+            type Vector = $name<T>;
             
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
             {
@@ -14,12 +14,14 @@ macro_rules! binops {
                 buf
             }
         }
-        
-        impl<$T> VAddMut for $space<$T>
+    };
+
+    (@VAddMut $name:ident, $space:ident) => {
+        impl<T> VAddMut for $space<T>
         where
-            for <'a> $T: Copy + AddAssign<&'a $T>,
+            for <'a> T: Copy + AddAssign<&'a T>,
         {
-            type Vector = $name<$T>;
+            type Vector = $name<T>;
             
             fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
             {
@@ -32,14 +34,14 @@ macro_rules! binops {
         }
     };
 
-    (@scale $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
-        impl<$T> VScale for $space<$T>
+    (@VScale $name:ident, $space:ident) => {
+        impl<T> VScale for $space<T>
         where
-            for <'a> $T: Copy + MulAssign<&'a $T>,
+            for <'a> T: Copy + MulAssign<&'a T>,
         {
-            type Vector = $name<$T>;
+            type Vector = $name<T>;
 
-            type Scalar = $T;
+            type Scalar = T;
 
             fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector
             {
@@ -48,14 +50,16 @@ macro_rules! binops {
                 buf
             }
         }
+    };
 
-        impl<$T> VScaleMut for $space<$T>
+    (@VScaleMut $name:ident, $space:ident) => {
+        impl<T> VScaleMut for $space<T>
         where
-            for <'a> $T: Copy + MulAssign<&'a $T>,
+            for <'a> T: Copy + MulAssign<&'a T>,
         {
-            type Vector = $name<$T>;
+            type Vector = $name<T>;
 
-            type Scalar = $T;
+            type Scalar = T;
 
             fn vscale_mut(&self, vector: &mut Self::Vector, scalar: &Self::Scalar)
             {

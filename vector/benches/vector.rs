@@ -9,22 +9,22 @@ macro_rules! bench_vectors {
                 use vector::ndarray;
 
                 const LENGTH: usize = $vec_length;
-                
-                ndarray!{
-                    @vector_space(Space) {
-                        @vector_ident(Vector)
-                        @length($vec_length)
+
+                ndarray! {
+                    Space {
+                        vector: Vector,
+                        dimension: $vec_length
                     }
                 }
                 
-                ndarray!{
-                    @vector_space(ArraySpace) {
-                        @vector_ident(ArrayVector)
-                        @length($array_length)
-                        @generic(T)
-                        @with([T; $array_length])        
+                ndarray! {
+                    ArraySpace {
+                        vector: ArrayVector,
+                        dimension: $array_length,
+                        using: [T; $array_length]
                     }
                 }
+                
                 
                 fn random_array() -> ArrayVector<isize> {
                     use rand::{thread_rng, Rng};
