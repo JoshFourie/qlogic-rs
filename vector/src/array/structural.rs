@@ -1,5 +1,5 @@
 #[macro_export]
-macro_rules! structural {
+macro_rules! vector_base {
     ($length:expr, $name:ident, $inner:ty, $T:ident) => {
         #[derive(Clone)]
         pub struct $name<$T>($inner);  
