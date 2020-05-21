@@ -1,4 +1,4 @@
-#[macro_use]
+#[macro_export]
 macro_rules! binops {
     (@addition $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         impl<$T> VAdd for $space<$T>

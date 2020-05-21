@@ -29,6 +29,8 @@ macro_rules! ndarray {
 
                 use super::{VAdd, VScale, VectorSpace, VPartialEq, VAdditiveInverse, ndarray};
 
+                use vector::binops;
+
                 $(
                     ndarray!(@vector $length, $name, $array, $generic);
                     ndarray!(@vectorspace $length, $name, $space, $array, $generic);
@@ -191,7 +193,7 @@ macro_rules! ndarray {
     };
 
     (@array $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
-        ndarray!(@common_add $length, $name, $space, $inner, $T);
+        binops!(@addition $length, $name, $space, $inner, $T);
         ndarray!(@common_scale $length, $name, $space, $inner, $T);
         ndarray!(@common_additive_inv $length, $name, $space, $inner, $T);
     };
