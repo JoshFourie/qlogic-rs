@@ -14,8 +14,6 @@ macro_rules! bench_vectors {
                     @vector_space(Space) {
                         @vector_ident(Vector)
                         @length($vec_length)
-                        @generic(T)
-                        @with(Vec<T>)        
                     }
                 }
                 

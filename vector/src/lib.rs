@@ -9,6 +9,22 @@ macro_rules! ndarray {
         @vector_space($space:ident) {
             @vector_ident($name:ident)
             @length($length:expr)
+        }
+    ) => {
+        vector::ndarray!{
+            @vector_space($space) {
+                @vector_ident($name)
+                @length($length)
+                @generic(T)
+                @with(Vec<T>)
+            }
+        }
+    };
+
+    (
+        @vector_space($space:ident) {
+            @vector_ident($name:ident)
+            @length($length:expr)
             @generic($generic:ident)
             @with($array:ty)
         }
