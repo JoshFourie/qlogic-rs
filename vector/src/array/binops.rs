@@ -25,4 +25,32 @@ macro_rules! binops {
             }
         }
     };
+
+    (@scale $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+        impl<$T> VScale for $space<$T>
+        where
+            for <'a> $T: Copy + MulAssign<&'a $T>,
+            for <'a> &'a $T: Mul<&'a $T, Output=$T>
+        {
+            type Vector = $name<$T>;
+
+            type Scalar = $T;
+
+            fn vscale_mut(&self, vector: &mut Self::Vector, scalar: &Self::Scalar)
+            {
+                vector
+                    .0
+                    .iter_mut()
+                    .for_each(|val| val.mul_assign(scalar));
+
+            }
+
+            fn vscale(&self, vector: &Self::Vector, scalar: &Self::Scalar) -> Self::Vector
+            {
+                let mut buf: Self::Vector = vector.clone();
+                self.vscale_mut(&mut buf, scalar);
+                buf
+            }
+        }
+    };
 }
