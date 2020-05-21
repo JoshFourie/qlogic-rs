@@ -1,1 +1,2 @@
-pub mod binops;
+mod binops;
+mod uniops;
