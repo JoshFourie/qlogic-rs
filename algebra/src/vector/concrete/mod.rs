@@ -9,6 +9,7 @@ macro_rules! ndarray {
             @generic($generic:ident)
             $(@with_array($array:ty))?
             $(@with_vec($vector:ty))?
+            $(@with_vec($big_vector:ty))?
         }
     ) => {
         paste::item! {
@@ -28,15 +29,19 @@ macro_rules! ndarray {
                 $(
                     ndarray!(@vector $length, $name, $array, $generic);
                     ndarray!(@vectorspace $length, $name, $space, $array, $generic);
-
                     ndarray!(@array $length, $name, $space, $array, $generic);
                 )?
 
                 $(
                     ndarray!(@vector $length, $name, $vector, $generic);
                     ndarray!(@vectorspace $length, $name, $space, $vector, $generic);
-
                     ndarray!(@vec $length, $name, $space, $vector, $generic);
+                )?
+
+                $(
+                    ndarray!(@vector $length, $name, $big_vector, $generic);
+                    ndarray!(@vectorspace $length, $name, $space, $big_vector, $generic);
+                    ndarray!(@big_vec $length, $name, $space, $big_vector, $generic);
                 )?
             }
         }
@@ -194,12 +199,6 @@ macro_rules! ndarray {
         ndarray!(@common_additive_inv $length, $name, $space, $inner, $T);
     };
 
-    (@big_vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
-        ndarray!(@big_vec_add $length, $name, $space, $inner, $T);
-        ndarray!(@common_scale $length, $name, $space, $inner, $T);
-        ndarray!(@common_additive_inv $length, $name, $space, $inner, $T);
-    };    
-
     (@common_add $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
         impl<$T> VAdd for $space<$T>
         where
@@ -279,11 +278,17 @@ macro_rules! ndarray {
         }
     };
 
+    (@big_vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
+        ndarray!(@big_vec_add $length, $name, $space, $inner, $T);
+        ndarray!(@common_scale $length, $name, $space, $inner, $T);
+        ndarray!(@common_additive_inv $length, $name, $space, $inner, $T);
+    };    
+
     (@big_vec_add $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
-        /// When vector is big, cloning is slower than collecting...
         impl<$T> VAdd for $space<$T>
         where
             for <'a> $T: Copy + AddAssign<&'a $T>,
+            for <'a> &'a $T: Add<&'a $T, Output=$T>
         {
             type Vector = $name<$T>;
 
@@ -298,9 +303,11 @@ macro_rules! ndarray {
 
             fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
             {
-                let mut buf: Self::Vector = lhs.clone();
-                self.vadd_mut(&mut buf, rhs);
-                buf
+                lhs
+                    .into_iter()
+                    .zip(rhs)
+                    .map(|(l,r)| l + r)
+                    .collect()
             }
         }
     };

@@ -15,7 +15,7 @@ macro_rules! bench_vectors {
                         @vector_ident(Vector)
                         @length($vec_length)
                         @generic(T)
-                        @with_vec(Vec<T>)        
+                        @with_big_vec(Vec<T>)        
                     }
                 }
                 
