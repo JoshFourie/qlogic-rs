@@ -12,7 +12,6 @@ macro_rules! ndarray {
             @generic($generic:ident)
             $(@with_array($array:ty))?
             $(@with_vec($vector:ty))?
-            $(@with_big_vec($big_vector:ty))?
         }
     ) => {
         paste::item! {
@@ -41,12 +40,6 @@ macro_rules! ndarray {
                     ndarray!(@vector $length, $name, $vector, $generic);
                     ndarray!(@vectorspace $length, $name, $space, $vector, $generic);
                     ndarray!(@vec $length, $name, $space, $vector, $generic);
-                )?
-
-                $(
-                    ndarray!(@vector $length, $name, $big_vector, $generic);
-                    ndarray!(@vectorspace $length, $name, $space, $big_vector, $generic);
-                    ndarray!(@big_vec $length, $name, $space, $big_vector, $generic);
                 )?
             }
         }
@@ -202,39 +195,5 @@ macro_rules! ndarray {
         binops!(@addition $length, $name, $space, $inner, $T);
         binops!(@scale $length, $name, $space, $inner, $T);
         uniops!(@additive_inverse $length, $name, $space, $inner, $T);
-    };
-
-    (@big_vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
-        ndarray!(@big_vec_add $length, $name, $space, $inner, $T);
-        ndarray!(@common_scale $length, $name, $space, $inner, $T);
-        ndarray!(@common_additive_inv $length, $name, $space, $inner, $T);
-    };    
-
-    (@big_vec_add $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
-        impl<$T> VAdd for $space<$T>
-        where
-            for <'a> $T: Copy + AddAssign<&'a $T>,
-            for <'a> &'a $T: Add<&'a $T, Output=$T>
-        {
-            type Vector = $name<$T>;
-
-            fn vadd_mut(&self, lhs: &mut Self::Vector, rhs: &Self::Vector)
-            {
-                lhs
-                    .0
-                    .iter_mut()
-                    .zip(rhs)
-                    .for_each(|(l, r)| l.add_assign(r));
-            }
-
-            fn vadd(&self, lhs: &Self::Vector, rhs: &Self::Vector) -> Self::Vector
-            {
-                lhs
-                    .into_iter()
-                    .zip(rhs)
-                    .map(|(l,r)| l + r)
-                    .collect()
-            }
-        }
     };
 } 
