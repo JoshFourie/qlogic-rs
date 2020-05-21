@@ -199,7 +199,7 @@ macro_rules! ndarray {
     };
 
     (@vec $length:expr, $name:ident, $space:ident, $inner:ty, $T:ident) => {
-        ndarray!(@common_add $length, $name, $space, $inner, $T);
+        binops!(@addition $length, $name, $space, $inner, $T);
         ndarray!(@common_scale $length, $name, $space, $inner, $T);
         ndarray!(@common_additive_inv $length, $name, $space, $inner, $T);
     };
