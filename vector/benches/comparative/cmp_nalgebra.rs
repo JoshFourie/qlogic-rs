@@ -248,30 +248,30 @@ macro_rules! benchmark
                                 }
                             },
 
-                            bench_axpy_mut_against_nalgebra
+                            bench_vaxpy_mut_against_nalgebra
                             {
-                                GroupIdentifier: "-nalgebra-vector-axpy-reference",
+                                GroupIdentifier: "-nalgebra-vector-vaxpy-mutable",
                                 TargetAlpha: {
                                     let vector_space = Space::new();
-                                    let mut x: Vector<isize> = random();
-                                    let y: Vector<isize> = random();
+                                    let x: Vector<isize> = random();
+                                    let mut y: Vector<isize> = random();
                                     let a: isize = 125;
                         
                                     move |c| {
                                         c.iter(|| {
-                                            vector_space.vaxpy_mut(&a, &mut x, &y)
+                                            vector_space.vaxpy_mut(&a, &x, &mut y)
                                         })
                                     }
                                 },
                                 TargetBeta: {
                                     let vector_space = ArraySpace::new();
-                                    let mut x: ArrayVector<isize> = random_array();
-                                    let y: ArrayVector<isize> = random_array();
+                                    let x: ArrayVector<isize> = random_array();
+                                    let mut y: ArrayVector<isize> = random_array();
                                     let a: isize = 125;
                         
                                     move |c| {
                                         c.iter(|| {
-                                            vector_space.vaxpy_mut(&a, &mut x, &y)
+                                            vector_space.vaxpy_mut(&a, &x, &mut y)
                                         })
                                     }
                                 },
@@ -298,7 +298,7 @@ macro_rules! benchmark
                     bench_multiplication_against_nalgebra,
                     bench_multiplication_mut_against_nalgebra,
                     bench_additive_inverse_mut_against_nalgebra,
-                    bench_axpy_mut_against_nalgebra
+                    bench_vaxpy_mut_against_nalgebra
                 );   
             }
         )+

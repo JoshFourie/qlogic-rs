@@ -80,7 +80,7 @@ macro_rules! ndarray
     ) => {
         paste::item! {
             pub use [< $space:lower >]::{$name, $space};
-                
+
             #[allow(unused_imports)]
             mod [< $space:lower >]
             {
