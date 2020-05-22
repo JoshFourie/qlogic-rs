@@ -100,7 +100,7 @@ macro_rules! ndarray
         use fmt::Debug;
         use ops::{AddAssign, Add, MulAssign, Mul, Index, IndexMut, Neg};
 
-        use algebra::vector::{VAdd, VAddMut, VScale, VScaleMut, VectorSpace, VPartialEq, VAdditiveInverse, VAdditiveInverseMut};
+        use algebra::{VAdd, VAddMut, VScale, VScaleMut, VectorSpace, VPartialEq, VAdditiveInverse, VAdditiveInverseMut};
         use vector::{BinOps, UniOps, vector_base, vectorspace};
     };
 } 

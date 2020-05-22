@@ -14,7 +14,7 @@ macro_rules! benchmark
             {    
                 use criterion::{criterion_group, Criterion};
                 use vector::ndarray;             
-                use algebra::vector::*;   
+                use algebra::*;   
 
                 const LENGTH: usize = $vec_length;
 

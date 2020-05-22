@@ -95,7 +95,7 @@ macro_rules! test {
 
 use vector::{ndarray, BinOps, Implements};
 
-use algebra::vector::*;
+use algebra::*;
 use algebra::{vadd, vscale};
 
 ndarray! {
@@ -108,7 +108,7 @@ ndarray! {
         Implements::BinOps::VScale,
         Implements::BinOps::VScaleMut,
         Implements::UniOps::VAdditiveInverse,
-        Implements::UniOps::VAdditiveInverseMut
+        Implements::UniOps::VAdditiveInverseMut    
     }
 }
 
