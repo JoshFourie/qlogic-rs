@@ -54,12 +54,10 @@ macro_rules! BlasOps {
         
             fn dotv_mut(&self, x: &Self::Vector, y: &Self::Vector, output: &mut Self::Scalar)
             {
-                for (xi, yi) in x
+                x
                     .into_iter()
                     .zip(y) 
-                {
-                    output.add_assign(xi * yi)
-                }
+                    .for_each(|(xi,yi)| output.add_assign(xi * yi));
             }
         }
     };

@@ -290,7 +290,7 @@ macro_rules! benchmark
 
                             bench_dotv_against_nalgebra
                             {
-                                GroupIdentifier: "-nalgebra-vector-dotv-mutable",
+                                GroupIdentifier: "-nalgebra-vector-dotv-reference",
                                 TargetAlpha: {
                                     let vector_space = Space::new();
                                     let x: Vector<isize> = random();
