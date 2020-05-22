@@ -1,3 +1,5 @@
+mod blas;
+
 pub trait VectorSpace
 {
     type Scalar;

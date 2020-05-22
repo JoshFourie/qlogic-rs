@@ -246,6 +246,46 @@ macro_rules! benchmark
                                         })
                                     }
                                 }
+                            },
+
+                            bench_axpy_against_nalgebra
+                            {
+                                GroupIdentifier: "-nalgebra-vector-axpy-reference",
+                                TargetAlpha: {
+                                    let vector_space = Space::new();
+                                    let x: Vector<isize> = random();
+                                    let y: Vector<isize> = random();
+                                    let a: isize = 125;
+                        
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.vaxpy(&a, &x, &y)
+                                        })
+                                    }
+                                },
+                                TargetBeta: {
+                                    let vector_space = ArraySpace::new();
+                                    let x: ArrayVector<isize> = random_array();
+                                    let y: ArrayVector<isize> = random_array();
+                                    let a: isize = 125;
+                        
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.vaxpy(&a, &x, &y)
+                                        })
+                                    }
+                                },
+                                Nalgebra: {
+                                    let x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                                    let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                                    let a: isize = 125;
+
+                                    move |c| {
+                                        c.iter(|| {
+                                            x.axpy(a, &y, 0)
+                                        })
+                                    }
+                                }
                             }
                         }
                     }
