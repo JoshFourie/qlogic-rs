@@ -4,7 +4,9 @@ mod space;
 #[allow(unused_macros)]
 
 pub enum Implements {
-    BinOps
+    BinOps,
+    UniOps,
+    BlasOps
 }
 
 pub enum BinOps {
@@ -17,6 +19,11 @@ pub enum BinOps {
 pub enum UniOps {
     VAdditiveInverse,
     VAdditiveInverseMut
+}
+
+pub enum BlasOps {
+    VAXPY,
+    VAXPYMut
 }
 
 #[macro_export]
@@ -55,7 +62,9 @@ macro_rules! ndarray
                 Implements::BinOps::VScale,
                 Implements::BinOps::VScaleMut,
                 Implements::UniOps::VAdditiveInverse,
-                Implements::UniOps::VAdditiveInverseMut
+                Implements::UniOps::VAdditiveInverseMut,
+                Implements::BlasOps::VAXPY,
+                Implements::BlasOps::VAXPYMut
             }
         }
     };
@@ -100,7 +109,7 @@ macro_rules! ndarray
         use fmt::Debug;
         use ops::{AddAssign, Add, MulAssign, Mul, Index, IndexMut, Neg};
 
-        use algebra::{VAdd, VAddMut, VScale, VScaleMut, VectorSpace, VPartialEq, VAdditiveInverse, VAdditiveInverseMut};
-        use vector::{BinOps, UniOps, vector_base, vectorspace};
+        use algebra::*;
+        use vector::*;
     };
 } 

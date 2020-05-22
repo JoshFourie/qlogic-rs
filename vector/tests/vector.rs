@@ -117,13 +117,7 @@ ndarray! {
     VectorSpaceArray {
         vector: VectorArray,
         dimension: 3,
-        using: [T; 3],
-        Implements::BinOps::VAddMut,
-        Implements::BinOps::VAdd,
-        Implements::BinOps::VScale,
-        Implements::BinOps::VScaleMut,
-        Implements::UniOps::VAdditiveInverse,
-        Implements::UniOps::VAdditiveInverseMut    
+        using: [T; 3]
     }
 }
 
@@ -154,13 +148,7 @@ ndarray! {
     VectorSpaceDefault {
         vector: VectorDefault,
         dimension: 3,
-        using: Vec<T>,
-        Implements::BinOps::VAddMut,
-        Implements::BinOps::VAdd,
-        Implements::BinOps::VScale,
-        Implements::BinOps::VScaleMut,
-        Implements::UniOps::VAdditiveInverse,
-        Implements::UniOps::VAdditiveInverseMut
+        using: Vec<T>
     }
 }
 

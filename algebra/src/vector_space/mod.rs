@@ -1,4 +1,5 @@
 mod blas;
+pub use blas::*;
 
 pub trait VectorSpace
 {
