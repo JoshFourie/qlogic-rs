@@ -44,6 +44,9 @@ macro_rules! BlasOps {
 
     (@DotVMut $name:ident, $space:ident) => {
         impl<T> DotVMut for $space<T>
+        where
+            T: AddAssign<T>,
+            for <'a> &'a T: Mul<&'a T,Output=T>
         {
             type Vector = $name<T>;
 
@@ -51,13 +54,21 @@ macro_rules! BlasOps {
         
             fn dotv_mut(&self, x: &Self::Vector, y: &Self::Vector, output: &mut Self::Scalar)
             {
-                unimplemented!()
+                for (xi, yi) in x
+                    .into_iter()
+                    .zip(y) 
+                {
+                    output.add_assign(xi * yi)
+                }
             }
         }
     };
 
     (@DotV $name:ident, $space:ident) => {
         impl<T> DotV for $space<T>
+        where
+            T: AddAssign<T> + AdditiveIdent<Output=T>,
+            for <'a> &'a T: Mul<&'a T,Output=T>,
         {
             type Vector = $name<T>;
 
@@ -65,7 +76,9 @@ macro_rules! BlasOps {
         
             fn dotv(&self, x: &Self::Vector, y: &Self::Vector) -> Self::Scalar
             {
-                unimplemented!()
+                let mut scalar: Self::Scalar = T::additive_ident();
+                self.dotv_mut(x, y, &mut scalar);
+                scalar              
             }
         }
     };
