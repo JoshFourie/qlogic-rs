@@ -15,5 +15,25 @@ pub trait VAXPYMut
 
     type Scalar;
 
-    fn vaxpy_mut(&self, alpha: &Self::Scalar, x: &mut Self::Vector, y: &Self::Vector);
+    fn vaxpy_mut(&self, alpha: &Self::Scalar, x: &Self::Vector, y: &mut Self::Vector);
+}
+
+/// The `dotv` BLAS routine.
+pub trait DotV
+{
+    type Vector;
+
+    type Scalar;
+
+    fn dotv(&self, alpha: &Self::Scalar, x: &Self::Vector, y: &Self::Vector) -> Self::Vector;
+}
+
+/// The `dotv` BLAS routine.
+pub trait DotVMut
+{
+    type Vector;
+
+    type Scalar;
+
+    fn dotv_mut(&self, alpha: &Self::Scalar, x: &mut Self::Vector, y: &Self::Vector);
 }
