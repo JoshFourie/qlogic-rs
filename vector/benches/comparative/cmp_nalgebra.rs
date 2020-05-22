@@ -288,30 +288,28 @@ macro_rules! benchmark
                                 }
                             },
 
-                            bench_dotv_mut_against_nalgebra
+                            bench_dotv_against_nalgebra
                             {
                                 GroupIdentifier: "-nalgebra-vector-dotv-mutable",
                                 TargetAlpha: {
                                     let vector_space = Space::new();
                                     let x: Vector<isize> = random();
-                                    let mut y: Vector<isize> = random();
-                                    let a: isize = 125;
+                                    let y: Vector<isize> = random();
                         
                                     move |c| {
                                         c.iter(|| {
-                                            vector_space.dotv_mut(&a, &x, &mut y)
+                                            vector_space.dotv(&x, &y)
                                         })
                                     }
                                 },
                                 TargetBeta: {
                                     let vector_space = ArraySpace::new();
                                     let x: ArrayVector<isize> = random_array();
-                                    let mut y: ArrayVector<isize> = random_array();
-                                    let a: isize = 125;
+                                    let y: ArrayVector<isize> = random_array();
                         
                                     move |c| {
                                         c.iter(|| {
-                                            vector_space.vaxpy_mut(&a, &x, &mut y)
+                                            vector_space.dotv(&x, &y)
                                         })
                                     }
                                 },
@@ -322,7 +320,7 @@ macro_rules! benchmark
 
                                     move |c| {
                                         c.iter(|| {
-                                            x.axpy(a, &y, 0)
+                                            x.dot(&y)
                                         })
                                     }
                                 }
@@ -338,7 +336,8 @@ macro_rules! benchmark
                     bench_multiplication_against_nalgebra,
                     bench_multiplication_mut_against_nalgebra,
                     bench_additive_inverse_mut_against_nalgebra,
-                    bench_vaxpy_mut_against_nalgebra
+                    bench_vaxpy_mut_against_nalgebra,
+                    bench_dotv_against_nalgebra
                 );   
             }
         )+

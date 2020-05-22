@@ -104,6 +104,20 @@ macro_rules! test {
                 let exp: $object = <$object>::from([12, 4, 17]);
                 assert!( vector_space.eq(&test, &exp) );
             }
+
+            #[test]
+            fn test_dotv()
+            {
+                let vector_space = <$space>::new();
+
+                let x: $object = <$object>::from([ 3, 1, 5 ]);
+                let y: $object = <$object>::from([ 6, 2, 7 ]);
+
+                let test: _ = vector_space.dotv(&x, &y);
+
+                let exp: _ = 55;
+                assert_eq!(&test, &exp);
+            }
         }
     };
 }

@@ -23,7 +23,9 @@ pub enum UniOps {
 
 pub enum BlasOps {
     VAXPY,
-    VAXPYMut
+    VAXPYMut,
+    DotV,
+    DotVMut     
 }
 
 #[macro_export]
@@ -64,7 +66,9 @@ macro_rules! ndarray
                 Implements::UniOps::VAdditiveInverse,
                 Implements::UniOps::VAdditiveInverseMut,
                 Implements::BlasOps::VAXPY,
-                Implements::BlasOps::VAXPYMut
+                Implements::BlasOps::VAXPYMut,
+                Implements::BlasOps::DotV,
+                Implements::BlasOps::DotVMut                
             }
         }
     };

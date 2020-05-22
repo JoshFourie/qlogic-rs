@@ -41,4 +41,32 @@ macro_rules! BlasOps {
             }
         }
     };
+
+    (@DotVMut $name:ident, $space:ident) => {
+        impl<T> DotVMut for $space<T>
+        {
+            type Vector = $name<T>;
+
+            type Scalar = T;
+        
+            fn dotv_mut(&self, x: &Self::Vector, y: &Self::Vector, output: &mut Self::Scalar)
+            {
+                unimplemented!()
+            }
+        }
+    };
+
+    (@DotV $name:ident, $space:ident) => {
+        impl<T> DotV for $space<T>
+        {
+            type Vector = $name<T>;
+
+            type Scalar = T;
+        
+            fn dotv(&self, x: &Self::Vector, y: &Self::Vector) -> Self::Scalar
+            {
+                unimplemented!()
+            }
+        }
+    };
 }
