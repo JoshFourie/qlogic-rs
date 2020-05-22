@@ -286,6 +286,46 @@ macro_rules! benchmark
                                         })
                                     }
                                 }
+                            },
+
+                            bench_dotv_mut_against_nalgebra
+                            {
+                                GroupIdentifier: "-nalgebra-vector-dotv-mutable",
+                                TargetAlpha: {
+                                    let vector_space = Space::new();
+                                    let x: Vector<isize> = random();
+                                    let mut y: Vector<isize> = random();
+                                    let a: isize = 125;
+                        
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.dotv_mut(&a, &x, &mut y)
+                                        })
+                                    }
+                                },
+                                TargetBeta: {
+                                    let vector_space = ArraySpace::new();
+                                    let x: ArrayVector<isize> = random_array();
+                                    let mut y: ArrayVector<isize> = random_array();
+                                    let a: isize = 125;
+                        
+                                    move |c| {
+                                        c.iter(|| {
+                                            vector_space.vaxpy_mut(&a, &x, &mut y)
+                                        })
+                                    }
+                                },
+                                Nalgebra: {
+                                    let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                                    let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                                    let a: isize = 125;
+
+                                    move |c| {
+                                        c.iter(|| {
+                                            x.axpy(a, &y, 0)
+                                        })
+                                    }
+                                }
                             }
                         }
                     }

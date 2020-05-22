@@ -25,7 +25,7 @@ pub trait DotV
 
     type Scalar;
 
-    fn dotv(&self, alpha: &Self::Scalar, x: &Self::Vector, y: &Self::Vector) -> Self::Vector;
+    fn dotv(&self, x: &Self::Vector, y: &Self::Vector) -> Self::Vector;
 }
 
 /// The `dotv` BLAS routine.
@@ -35,5 +35,5 @@ pub trait DotVMut
 
     type Scalar;
 
-    fn dotv_mut(&self, alpha: &Self::Scalar, x: &mut Self::Vector, y: &Self::Vector);
+    fn dotv_mut(&self, x: &mut Self::Vector, y: &Self::Vector);
 }
