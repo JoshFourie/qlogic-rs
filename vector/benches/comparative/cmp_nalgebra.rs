@@ -314,9 +314,8 @@ macro_rules! benchmark
                                     }
                                 },
                                 Nalgebra: {
-                                    let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                                    let x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
                                     let y: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
-                                    let a: isize = 125;
 
                                     move |c| {
                                         c.iter(|| {
