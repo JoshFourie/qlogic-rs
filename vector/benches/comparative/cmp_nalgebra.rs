@@ -3,7 +3,9 @@
 macro_rules! benchmark
 {
     (
-       $(($uid:ident, $vec_length:expr, $array_length:expr)),+
+       $(
+           ($uid:ident, $vec_length:expr, $array_length:expr)
+        ),+
     ) => {     
         $(        
             pub use $uid::$uid;
