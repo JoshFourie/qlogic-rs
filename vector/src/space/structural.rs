@@ -21,11 +21,6 @@ macro_rules! vectorspace {
             type Scalar = $T;
 
             type Vector = $space<$T>;
-
-            fn dimensions(&self) -> usize 
-            {
-                $length
-            }
         }
 
         impl<$T> VPartialEq for $space<$T>

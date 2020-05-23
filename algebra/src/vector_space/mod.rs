@@ -6,8 +6,6 @@ pub trait VectorSpace
     type Scalar;
 
     type Vector;
-
-    fn dimensions(&self) -> usize;
 }
 
 pub trait VAdd
