@@ -41,25 +41,25 @@ pub trait VScaleMut
 }
 
 
-pub trait VIdentity: VMultiplicativeIdent + VAdditiveIdent
+pub trait VIdentity: VMultiplicativeIdentity + VAdditiveIdentity
 {
     // Supertrait.
 }  
 
 
-pub trait VAdditiveIdent
+pub trait VAdditiveIdentity
 {
     type Output;
 
-    fn additive_ident(&self) -> Self::Output;    
+    fn additive_identity(&self) -> Self::Output;    
 }
 
 
-pub trait VMultiplicativeIdent
+pub trait VMultiplicativeIdentity
 {
     type Output;
 
-    fn mul_ident(&self) -> Self::Output;
+    fn multiplicative_identity(&self) -> Self::Output;
 }
 
 pub trait VAdditiveInverse

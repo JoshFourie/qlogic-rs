@@ -56,12 +56,12 @@ macro_rules! test {
             }
 
             #[test]
-            fn test_additive_ident_mut()
+            fn test_additive_identity_mut()
             {
                 let vector_space = <$space>::new();
                 let exp: $object = <$object>::from([ 0, 0, 0 ]);
 
-                let test: $object = vector_space.additive_ident();
+                let test: $object = vector_space.additive_identity();
                 assert!( vector_space.eq(&exp, &test) );
             }
 
@@ -137,21 +137,21 @@ vspace! {
 
 test!(test_vspace, VectorArray<isize>, VectorSpaceArray<isize>);
 
-impl VAdditiveIdent for VectorSpaceArray<isize>
+impl VAdditiveIdentity for VectorSpaceArray<isize>
 {
     type Output = VectorArray<isize>;
 
-    fn additive_ident(&self) -> Self::Output
+    fn additive_identity(&self) -> Self::Output
     {
         VectorArray::new( [0; 3] )
     }
 }
 
-impl VMultiplicativeIdent for VectorSpaceArray<isize>
+impl VMultiplicativeIdentity for VectorSpaceArray<isize>
 {
     type Output = isize;
 
-    fn mul_ident(&self) -> Self::Output
+    fn multiplicative_identity(&self) -> Self::Output
     {
         1
     }
@@ -175,21 +175,21 @@ impl From<[isize; 3]> for VectorDefault<isize>
     }
 }
 
-impl VAdditiveIdent for VectorSpaceDefault<isize>
+impl VAdditiveIdentity for VectorSpaceDefault<isize>
 {
     type Output = VectorDefault<isize>;
 
-    fn additive_ident(&self) -> Self::Output
+    fn additive_identity(&self) -> Self::Output
     {
         VectorDefault::new( vec![0; 3] )
     }
 }
 
-impl VMultiplicativeIdent for VectorSpaceDefault<isize>
+impl VMultiplicativeIdentity for VectorSpaceDefault<isize>
 {
     type Output = isize;
 
-    fn mul_ident(&self) -> Self::Output
+    fn multiplicative_identity(&self) -> Self::Output
     {
         1
     }

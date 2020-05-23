@@ -65,7 +65,7 @@ macro_rules! BlasOps {
     (@DotV $name:ident, $space:ident) => {
         impl<T> DotV for $space<T>
         where
-            T: Add<T,Output=T> + AdditiveIdent<Output=T>,
+            T: Add<T,Output=T> + AdditiveIdentity<Output=T>,
             for <'a> &'a T: Mul<&'a T,Output=T>,
         {
             type Vector = $name<T>;
@@ -74,7 +74,7 @@ macro_rules! BlasOps {
         
             fn dotv(&self, x: &Self::Vector, y: &Self::Vector) -> Self::Scalar
             {
-                let acc: Self::Scalar = T::additive_ident();
+                let acc: Self::Scalar = T::additive_identity();
                 x
                     .into_iter()
                     .zip(y)

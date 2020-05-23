@@ -1,8 +1,8 @@
-pub trait AdditiveIdent
+pub trait AdditiveIdentity
 {
     type Output;
 
-    fn additive_ident() -> Self::Output;
+    fn additive_identity() -> Self::Output;
 }
 
 #[macro_use]
@@ -11,31 +11,31 @@ macro_rules! primitives {
         $($primitive:ty),*
     ) => {
         $(
-            impl AdditiveIdent for $primitive
+            impl AdditiveIdentity for $primitive
             {
                 type Output = $primitive;
 
-                fn additive_ident() -> Self::Output
+                fn additive_identity() -> Self::Output
                 {
                     0
                 }
             }   
             
-            impl<'a> AdditiveIdent for &'a $primitive
+            impl<'a> AdditiveIdentity for &'a $primitive
             {
                 type Output = $primitive;
 
-                fn additive_ident() -> Self::Output
+                fn additive_identity() -> Self::Output
                 {
                     0
                 }
             } 
 
-            impl<'a> AdditiveIdent for &'a mut $primitive
+            impl<'a> AdditiveIdentity for &'a mut $primitive
             {
                 type Output = $primitive;
 
-                fn additive_ident() -> Self::Output
+                fn additive_identity() -> Self::Output
                 {
                     0
                 }
@@ -47,31 +47,31 @@ macro_rules! primitives {
         @float $($primitive:ty),*
     ) => {
         $(
-            impl AdditiveIdent for $primitive
+            impl AdditiveIdentity for $primitive
             {
                 type Output = $primitive;
 
-                fn additive_ident() -> Self::Output
+                fn additive_identity() -> Self::Output
                 {
                     0.0
                 }
             }   
             
-            impl<'a> AdditiveIdent for &'a $primitive
+            impl<'a> AdditiveIdentity for &'a $primitive
             {
                 type Output = $primitive;
 
-                fn additive_ident() -> Self::Output
+                fn additive_identity() -> Self::Output
                 {
                     0.0
                 }
             } 
 
-            impl<'a> AdditiveIdent for &'a mut $primitive
+            impl<'a> AdditiveIdentity for &'a mut $primitive
             {
                 type Output = $primitive;
 
-                fn additive_ident() -> Self::Output
+                fn additive_identity() -> Self::Output
                 {
                     0.0
                 }
