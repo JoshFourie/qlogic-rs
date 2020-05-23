@@ -13,19 +13,19 @@ macro_rules! benchmark
             mod $uid
             {    
                 use criterion::{criterion_group, Criterion};
-                use vector::ndarray;             
+                use vector::vspace;             
                 use algebra::*;   
 
                 const LENGTH: usize = $vec_length;
 
-                ndarray! {
+                vspace! {
                     Space {
                         vector: Vector,
                         dimension: $vec_length
                     }
                 }
 
-                ndarray! {
+                vspace! {
                     ArraySpace {
                         vector: ArrayVector,
                         dimension: $array_length,
@@ -214,39 +214,39 @@ macro_rules! benchmark
                                 }
                             },
 
-                            bench_additive_inverse_mut_against_nalgebra
-                            {
-                                GroupIdentifier: "-nalgebra-vector-additive-inverse-mutable",
-                                TargetAlpha: {
-                                    let vector_space = Space::new();
-                                    let mut x: Vector<isize> = random();
+                            // bench_additive_inverse_mut_against_nalgebra
+                            // {
+                            //     GroupIdentifier: "-nalgebra-vector-additive-inverse-mutable",
+                            //     TargetAlpha: {
+                            //         let vector_space = Space::new();
+                            //         let mut x: Vector<isize> = random();
                         
-                                    move |c| {
-                                        c.iter(|| {
-                                            vector_space.additive_inv_mut(&mut x)
-                                        })
-                                    }
-                                },
-                                TargetBeta: {
-                                    let vector_space = ArraySpace::new();
-                                    let mut x: ArrayVector<isize> = random_array();
+                            //         move |c| {
+                            //             c.iter(|| {
+                            //                 vector_space.additive_inv_mut(&mut x)
+                            //             })
+                            //         }
+                            //     },
+                            //     TargetBeta: {
+                            //         let vector_space = ArraySpace::new();
+                            //         let mut x: ArrayVector<isize> = random_array();
 
-                                    move |c| {
-                                        c.iter(|| {
-                                            vector_space.additive_inv_mut(&mut x)
-                                        })
-                                    }
-                                },
-                                Nalgebra: {
-                                    let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
+                            //         move |c| {
+                            //             c.iter(|| {
+                            //                 vector_space.additive_inv_mut(&mut x)
+                            //             })
+                            //         }
+                            //     },
+                            //     Nalgebra: {
+                            //         let mut x: nalgebra::DVector<isize> = nalgebra::DVector::new_random(LENGTH);
                             
-                                    move |c| {
-                                        c.iter(|| {
-                                            x = - x.clone()
-                                        })
-                                    }
-                                }
-                            },
+                            //         move |c| {
+                            //             c.iter(|| {
+                            //                 x = - x.clone()
+                            //             })
+                            //         }
+                            //     }
+                            // },
 
                             bench_vaxpy_mut_against_nalgebra
                             {
@@ -334,7 +334,7 @@ macro_rules! benchmark
                     bench_addition_mut_against_nalgebra,
                     bench_multiplication_against_nalgebra,
                     bench_multiplication_mut_against_nalgebra,
-                    bench_additive_inverse_mut_against_nalgebra,
+                    // bench_additive_inverse_mut_against_nalgebra,
                     bench_vaxpy_mut_against_nalgebra,
                     bench_dotv_against_nalgebra
                 );   

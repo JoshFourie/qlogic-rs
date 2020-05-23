@@ -29,7 +29,7 @@ pub enum BlasOps {
 }
 
 #[macro_export]
-macro_rules! ndarray 
+macro_rules! vspace 
 {
     /********************* Convenience DSL ************************/
     (
@@ -38,7 +38,7 @@ macro_rules! ndarray
             dimension: $length:expr
         }
     ) => {
-        ndarray! {
+        vspace! {
             $space {
                 vector: $name,
                 dimension: $length,
@@ -54,7 +54,7 @@ macro_rules! ndarray
             using: $inner:ty
         }
     ) => {
-        ndarray! {
+        vspace! {
             $space {
                 vector: $name,
                 dimension: $length,
@@ -88,14 +88,14 @@ macro_rules! ndarray
             #[allow(unused_imports)]
             mod [< $space:lower >]
             {
-                use vector::ndarray;
+                use vector::vspace;
     
-                ndarray!(@imports);
+                vspace!(@imports);
     
                 vector_base!($length, $name, $inner, T);
                 vectorspace!($length, $name, $space, $inner, T);    
 
-                ndarray!(@implements $name, $space, $($kind, $branch),*);
+                vspace!(@implements $name, $space, $($kind, $branch),*);
             }
         }
     };

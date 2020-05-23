@@ -19,6 +19,7 @@ multithread = [ "rayon" ]
 [dev-dependencies]
 criterion = "0.3"
 nalgebra = "0.21.0"
+ndarray = "0.13.1"
 rand = "0.7.3"
 
 algebra = { path = "../algebra" }

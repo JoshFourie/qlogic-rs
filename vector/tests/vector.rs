@@ -122,12 +122,12 @@ macro_rules! test {
     };
 }
 
-use vector::{ndarray, BinOps, Implements};
+use vector::{vspace, BinOps, Implements};
 
 use algebra::*;
 use algebra::{vadd, vscale};
 
-ndarray! {
+vspace! {
     VectorSpaceArray {
         vector: VectorArray,
         dimension: 3,
@@ -135,7 +135,7 @@ ndarray! {
     }
 }
 
-test!(test_ndarray, VectorArray<isize>, VectorSpaceArray<isize>);
+test!(test_vspace, VectorArray<isize>, VectorSpaceArray<isize>);
 
 impl VAdditiveIdent for VectorSpaceArray<isize>
 {
@@ -158,7 +158,7 @@ impl VMultiplicativeIdent for VectorSpaceArray<isize>
 }
 
 
-ndarray! {
+vspace! {
     VectorSpaceDefault {
         vector: VectorDefault,
         dimension: 3,
