@@ -1,5 +1,5 @@
 pipeline {
-    agent { docker { image 'rust' } }
+    agent { docker { image 'rust:1.44' } }
     stages {
         stage('build') {
             steps {
@@ -11,16 +11,16 @@ pipeline {
                 sh 'cargo test'
             }
         }
-        post {
-            always {
-                echo 'The Enraged Magic Carp has...'
-            }
-            success {
-                echo 'Succeeded!'
-            }
-            failure {
-                echo 'Failed.'
-            }
+    }
+    post {
+        always {
+            echo 'The Enraged Magic Carp has...'
+        }
+        success {
+            echo 'Succeeded!'
+        }
+        failure {
+            echo 'Failed.'
         }
     }
 }
