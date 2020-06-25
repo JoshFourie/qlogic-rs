@@ -3,6 +3,7 @@ pipeline {
     stages {
         stage('build') {
             steps {
+                sh 'cargo check'
                 sh 'cargo build --release'
             }
         }
