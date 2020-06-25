@@ -1,7 +1,7 @@
 pipeline {
     agent { docker { image 'rust' } }
     triggers {
-        cron('25 16 * * *')
+        cron('45 16 * * *')
     }
     stages {
         stage('build') {
