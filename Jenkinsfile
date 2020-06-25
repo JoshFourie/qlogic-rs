@@ -6,10 +6,9 @@ pipeline {
                 sh 'cargo build --release'
             }
         }
-        stage('test-vector') {
+        stage('test') {
             steps {
-                sh 'cd vector'
-                sh 'cargo test'
+                sh 'cargo test --all'
             }
         }
     }  
