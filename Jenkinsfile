@@ -6,5 +6,10 @@ pipeline {
                 sh 'cargo build --release'
             }
         }
+        stage('test') {
+            steps {
+                sh 'cargo test'
+            }
+        }
     }  
 }
