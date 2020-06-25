@@ -3,12 +3,12 @@ pipeline {
     stages {
         stage('build') {
             steps {
-                sh 'cargo build --release'
+                sh 'cargo build --release > log.txt'
             }
         }
         stage('test') {
             steps {
-                sh 'cargo test'
+                sh 'cargo test >> log.txt'
             }
         }
     }
@@ -21,6 +21,7 @@ pipeline {
         }
         failure {
             echo 'Failed.'
+            sh 'cat log.txt'
         }
     }
 }
