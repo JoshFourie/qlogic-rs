@@ -7,8 +7,7 @@ pipeline {
 apiVersion: v1
 kind: Pod
 metadata:
-  labels:
-    app: jenkins-ci
+  name: jenkins-ci
 spec:
   serviceAccountName: default
   containers:
