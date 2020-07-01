@@ -3,6 +3,7 @@ pipeline {
         kubernetes { 
             label 'qlogic-rs'
             defaultContainer 'rust'
+            idleMinutes 30
             yaml """
 apiVersion: v1
 kind: Pod
