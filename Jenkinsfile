@@ -8,7 +8,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    component: ci
+    app: jenkins-ci
 spec:
   serviceAccountName: default
   containers:
