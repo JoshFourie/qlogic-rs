@@ -1,7 +1,7 @@
 pipeline {
     agent { 
         kubernetes { 
-            label 'qlogic-rs/dev'
+            label 'qlogic-rs'
             defaultContainer 'rust'
             yaml """
 apiVersion: v1
