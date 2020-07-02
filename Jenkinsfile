@@ -4,6 +4,9 @@ pipeline {
         cron('H 2 * * *')
     }
     stages {
+        stage('update') {
+            sh 'apt update -y && apt upgrade -y'
+        }
         stage('build') {
             steps {
                 sh 'cargo check'
