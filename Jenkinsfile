@@ -4,9 +4,9 @@ pipeline {
         cron('H 2 * * *')
     }
     stages {
-        stage('update') {
+        stage('sanity') {
             steps {
-                sh 'apt update -y && apt upgrade -y'
+                sh 'curl https://github.com/rust-lang/crates.io-index'
             }
         }
         stage('build') {
