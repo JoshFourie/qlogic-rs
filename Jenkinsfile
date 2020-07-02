@@ -5,7 +5,9 @@ pipeline {
     }
     stages {
         stage('update') {
-            sh 'apt update -y && apt upgrade -y'
+            steps {
+                sh 'apt update -y && apt upgrade -y'
+            }
         }
         stage('build') {
             steps {
